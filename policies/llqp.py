@@ -38,6 +38,8 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
 
         self.evaluate(llqp_job)
 
+        self.save_status()
+
         return llqp_job
 
     def release(self, llqp_job):
@@ -51,6 +53,8 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
         user_queue_to_free = self.users_queues[user_to_release_index]
 
         user_queue_to_free.popleft()
+
+        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
@@ -81,3 +85,13 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now
             llqp_job.request_event.succeed(llqp_job.service_rate[llqp_index])
+
+    def policy_status(self):
+        """
+Evaluates the current state of the policy. Overrides parent method with LLQP specific logic.
+        :return: returns a list where the first item is the global queue length (in LLQP always zero) and all subsequent elements are the respective user queues length.
+        """
+        current_status = [0]
+        for i in range(self.number_of_users):
+            current_status.append(len(self.users_queues[i]))
+        return current_status
