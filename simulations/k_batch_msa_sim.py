@@ -1,11 +1,11 @@
 import simpy
 
-from Policies.plot import evolution
-from optimaltaskassignment.elements.workflow_process_elements import StartEvent, UserTask, connect
-from optimaltaskassignment.evaluation.statistics import calculate_statistics
-from optimaltaskassignment.policies.k_batch import KBatch
-from optimaltaskassignment.simulations import *
-from optimaltaskassignment.solvers.msa_solver import msa
+from evaluation.plot import evolution
+from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.statistics import calculate_statistics
+from policies.k_batch import KBatch
+from simulations import *
+from solvers.msa_solver import msa
 
 # creates simulation environment
 env = simpy.Environment()

@@ -1,4 +1,4 @@
-from optimaltaskassignment.policies import *
+from policies import *
 from collections import deque
 
 

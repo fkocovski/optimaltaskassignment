@@ -1,4 +1,4 @@
-from optimaltaskassignment.policies import *
+from policies import *
 
 
 class KBatchOne(Policy):

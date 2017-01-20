@@ -1,4 +1,4 @@
-from optimaltaskassignment.policies import RANDOM_STATE
+from policies import RANDOM_STATE
 
 
 class StartEvent(object):

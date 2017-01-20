@@ -1,5 +1,5 @@
 from gurobipy import *
-from optimaltaskassignment.solvers.esdmf_solver import esdmf
+from solvers.esdmf_solver import esdmf
 
 
 def st(a, p, w, batch_queue_length, number_of_users):
