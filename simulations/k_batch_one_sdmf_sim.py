@@ -11,7 +11,7 @@ from solvers.sdmf_solver import sdmf
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("batchone_sdmf")
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batchone_sdmf".format(BATCH_SIZE))
 
 # initialize policy
 policy = KBatchOne(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, sdmf, file_policy, file_statistics)

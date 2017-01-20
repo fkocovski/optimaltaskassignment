@@ -11,7 +11,7 @@ from solvers.msa_solver import msa
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("batch_msa")
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batch_msa".format(BATCH_SIZE))
 
 # initialize policy
 policy = KBatch(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, msa, file_policy, file_statistics)

@@ -11,7 +11,7 @@ from solvers.esdmf_solver import esdmf
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("batch_esdmf")
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batch_esdmf".format(BATCH_SIZE))
 
 # initialize policy
 policy = KBatch(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, esdmf, file_policy, file_statistics)
