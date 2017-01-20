@@ -4,12 +4,25 @@ from collections import deque
 
 class MMC(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics):
+        """
+Initialize an MMC policy.
+        :param env: simpy environment.
+        :param number_of_users: the number of users present in the system.
+        :param worker_variability: worker variability in absolute value.
+        :param file_policy: file object to calculate policy related statistics.
+        :param file_statistics: file object to draw the policy evolution.
+        """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.name = "M/M/{}".format(self.number_of_users)
         self.waiting_queue = deque()
         self.assigned_job_to_user = [None] * self.number_of_users
 
     def request(self, user_task):
+        """
+Request method for MMC policies. Creates a PolicyJob object and calls for the appropriate evaluation method.
+        :param user_task: a user task object.
+        :return: a policyjob object to be yielded in the simpy environment.
+        """
         super().request(user_task)
 
         self.save_status()
@@ -33,6 +46,10 @@ class MMC(Policy):
         return mmc_job
 
     def release(self, mmc_job):
+        """
+Release method for MMC policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the waiting queue is not empty, it assigns the next policyjob to be worked to the currently freed user.
+        :param mmc_job: a policyjob object.
+        """
         super().release(mmc_job)
 
         self.save_status()
@@ -48,6 +65,10 @@ class MMC(Policy):
             next_mmc_job.request_event.succeed(next_mmc_job.service_rate[user_to_release_index])
 
     def evaluate(self, mmc_job):
+        """
+Evaluate method for MMC policies. Looks if there is currently a free user. If yes it assigned the policyjob to him otherwise appends the policyjob in the global queue.
+        :param mmc_job: a policyjob object to be assigned.
+        """
         try:
             idle_user_index = self.assigned_job_to_user.index(None)
             self.assigned_job_to_user[idle_user_index] = mmc_job
@@ -58,6 +79,10 @@ class MMC(Policy):
             self.waiting_queue.append(mmc_job)
 
     def policy_status(self):
+        """
+Evaluates the current state of the policy. Overrides parent method with MMC specific logic.
+        :return: returns a list where the first item is the global queue length and all subsequent elements are the respective user queues length.
+        """
         current_status = [len(self.waiting_queue)]
         for i in range(self.number_of_users):
             if self.assigned_job_to_user[i] is None:

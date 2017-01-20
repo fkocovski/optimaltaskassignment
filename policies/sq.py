@@ -47,7 +47,7 @@ Request method for SQ policies. Creates a PolicyJob object and calls for the app
     def release(self, sq_job):
         """
 Release method for SQ policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the waiting queue is not empty, it assigns the next policyjob to be worked to the currently freed user.
-        :param sq_job:
+        :param sq_job: a policyjob object.
         """
         super().release(sq_job)
         self.save_status()
