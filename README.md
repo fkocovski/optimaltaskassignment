@@ -11,6 +11,8 @@ Included policies:
 5. KBatch
 6. KBatch1
 
+For solving the optimization problem present in the batching policies, the [Gurobi Optimization](http://www.gurobi.com) suite was used
+
 # References
 
 - Zeng, Daniel D., and J. Leon Zhao. "Effective role resolution in workflow management." INFORMS journal on computing 17.3 (2005): 374-387.
