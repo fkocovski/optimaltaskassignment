@@ -31,17 +31,17 @@ Request method for KBatchOne policies. Creates a PolicyJob object and calls for 
             user_task.service_interval ** 2 / user_task.task_variability,
             user_task.task_variability / user_task.service_interval)
 
-        k_batch_job_one = PolicyJob(user_task)
-        k_batch_job_one.request_event = self.env.event()
-        k_batch_job_one.arrival = self.env.now
-        k_batch_job_one.service_rate = [
+        k_batch_one_job = PolicyJob(user_task)
+        k_batch_one_job.request_event = self.env.event()
+        k_batch_one_job.arrival = self.env.now
+        k_batch_one_job.service_rate = [
             RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
                                self.worker_variability / average_processing_time) for
             _ in range(self.number_of_users)]
 
         self.save_status()
 
-        self.batch_queue.append(k_batch_job_one)
+        self.batch_queue.append(k_batch_one_job)
 
         self.save_status()
 
@@ -50,7 +50,7 @@ Request method for KBatchOne policies. Creates a PolicyJob object and calls for 
 
         self.save_status()
 
-        return k_batch_job_one
+        return k_batch_one_job
 
     def release(self, k_batch_one_job):
         """
