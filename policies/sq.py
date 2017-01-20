@@ -60,7 +60,7 @@ Release method for SQ policies. Uses the passed parameter, which is a policyjob 
             next_sq_job.started = self.env.now
             next_sq_job.assigned_user = user_to_release_index
             next_sq_job.request_event.succeed(next_sq_job.service_rate[user_to_release_index])
-            self.save_status()
+        self.save_status()
 
     def evaluate(self, sq_job):
         """
