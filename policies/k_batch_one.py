@@ -13,8 +13,9 @@ Initializes a KBatchOne policy.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
         """
-        super().__init__(env, number_of_users, worker_variability, solver, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.batch_size = batch_size
+        self.solver = solver
         self.name = "{}Batch".format(self.batch_size)
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
