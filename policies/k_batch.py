@@ -113,7 +113,7 @@ Evaluate method for KBatch policies. Sets the required variables by the solver t
     def policy_status(self):
         """
 Evaluates the current state of the policy. Overrides parent method with KBatch specific logic.
-        :return: returns a list where the first item is the global queue length and all subsequent elements are the respective user queue length.
+        :return: returns a list where the first item is the global queue length and all subsequent elements are the respective user queues length.
         """
         current_status = [len(self.batch_queue)]
         for i in range(self.number_of_users):
