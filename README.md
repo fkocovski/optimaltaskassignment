@@ -11,7 +11,7 @@ Included policies:
 5. KBatch
 6. KBatch1
 
-For solving the optimization problem present in the batching policies, the [Gurobi Optimization] (http://www.gurobi.com) suite was used
+For solving the optimization problem present in the batching policies, the [Gurobi Optimization](http://www.gurobi.com) suite was used
 
 # References
 
