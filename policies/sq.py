@@ -15,7 +15,7 @@ Initializes an SQ policy.
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.name = "SQ"
         self.waiting_queue = deque()
-        self.users_queues = [None] * self.number_of_users
+        self.assigned_job_to_user = [None] * self.number_of_users
 
     def request(self, user_task):
         """
@@ -53,7 +53,7 @@ Release method for SQ policies. Uses the passed parameter, which is a policyjob 
         self.save_status()
         user_to_release_index = sq_job.assigned_user
 
-        self.users_queues[user_to_release_index] = None
+        self.assigned_job_to_user[user_to_release_index] = None
 
         if len(self.waiting_queue) > 0:
             next_sq_job = self.waiting_queue.popleft()
@@ -69,8 +69,8 @@ Evaluate method for SQ policies. Looks if there is currently a free user. If yes
         """
         try:
             idle_user_job_index, idle_user_job = next(
-                (index, job) for index, job in enumerate(self.users_queues) if job is None)
-            self.users_queues[idle_user_job_index] = sq_job
+                (index, job) for index, job in enumerate(self.assigned_job_to_user) if job is None)
+            self.assigned_job_to_user[idle_user_job_index] = sq_job
             sq_job.assigned_user = idle_user_job_index
             sq_job.started = self.env.now
             sq_job.request_event.succeed(sq_job.service_rate[idle_user_job_index])
@@ -84,5 +84,8 @@ Evaluates the current state of the policy. Overrides parent method with SQ speci
         """
         current_status = [len(self.waiting_queue)]
         for i in range(self.number_of_users):
-            current_status.append(len(self.users_queues[i]))
+            if self.assigned_job_to_user[i] is None:
+                current_status.append(0)
+            else:
+                current_status.append(1)
         return current_status
