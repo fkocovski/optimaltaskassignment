@@ -16,8 +16,8 @@ Uses the passed string name to initialize the required files for the analysis. R
     :param name: string passed from the specific simulation script.
     :return: two file objects and their respective file names including the extension.
     """
-    file_policy_name = "{}{}.csv".format(BATCH_SIZE, name)
-    file_statistics_name = "{}{}_evolution.csv".format(BATCH_SIZE, name)
+    file_policy_name = "{}.csv".format(name)
+    file_statistics_name = "{}_evolution.csv".format(name)
     file_policy = open(file_policy_name, "w")
     file_statistics = open(file_statistics_name, "w")
     file_policy.write("job,arrival,started,finished,user")
