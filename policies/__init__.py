@@ -4,20 +4,18 @@ RANDOM_STATE = numpy.random.RandomState(1)
 
 
 class Policy(object):
-    def __init__(self, env, number_of_users, worker_variability, solver, file_policy, file_statistics):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics):
         """
 Parent class initialization for all policy objects.
         :param env: simpy environment.
         :param number_of_users: the number of users present in the system.
         :param worker_variability: worker variability in absolute value.
-        :param solver: the solver used for the optimal task assignment.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
         """
         self.env = env
         self.number_of_users = number_of_users
         self.worker_variability = worker_variability
-        self.solver = solver
         self.file_policy = file_policy
         self.file_statistics = file_statistics
 
