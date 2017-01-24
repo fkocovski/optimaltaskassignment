@@ -3,14 +3,14 @@ import simpy
 from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.mc_llqp import LLQP
+from policies.mcd_llqp import LLQP
 from simulations import *
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("mc_llqp")
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("mcd_llqp")
 
 # initialize policy
 policy = LLQP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics)

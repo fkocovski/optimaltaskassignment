@@ -16,12 +16,11 @@ Initializes an LLQP policy.
         self.name = "LLQP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
 
-        self.state_space = self.init_state_space()
-        self.state_action = self.init_state_action()
-        self.state_action_counts = self.init_state_action_count()
+        self.states_actions, self.states_actions_counts, self.returns = self.init_state_space_action_count()
+        self.rewards = []
+        self.history = []
         self.mc_chunk = 0
         self.current_state = None
-        self.returns = {}
 
     def request(self, user_task):
         """
@@ -73,38 +72,36 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
 Evaluate method for LLQP policies. Looks for the currently least loaded person to assign the policyjob.
         :param llqp_job: a policyjob object to be assigned.
         """
-        if self.mc_chunk == 0:
-            self.current_state = self.state_space[0]
 
-        if self.mc_chunk % 2 == 0 and self.mc_chunk != 0:
-            for key in self.returns:
-                self.returns[key] = self.get_reward(llqp_job)
-                self.state_action[key] = self.state_action[key] + (1/self.state_action_counts[key])*(self.returns[key]-self.state_action[key])
+        if self.mc_chunk % 10 == 0 and self.mc_chunk != 0:
+            for action in range(2):
+                for a_one in range(100):
+                    for a_two in range(100):
+                        self.states_actions[action, a_one, a_two] += (1 /self.states_actions_counts[action, a_one, a_two]) * (self.returns[action, a_one, a_two] -self.states_actions[action, a_one, a_two])
 
-        current_total_time = [None]*self.number_of_users
+        current_total_time = [None] * self.number_of_users
         for user_index, user_deq in enumerate(self.users_queues):
             if len(user_deq) > 0:
                 leftmost_queue_element = user_deq[0]
                 current_total_time[user_index] = sum(job.service_rate[user_index] for job in user_deq)
                 if leftmost_queue_element.is_busy(self.env.now):
-                    current_total_time[user_index] += leftmost_queue_element.will_finish() - self.env.now
+                    current_total_time[user_index] -=  self.env.now - leftmost_queue_element.started
+            else:
+                current_total_time[user_index] = 0
 
-        act_probs = self.qsv(self.current_state)
         if numpy.random.random() < 0.1:
-            action = numpy.random.randint(0,self.number_of_users)
+            action = numpy.random.randint(0, self.number_of_users)
         else:
-            action = numpy.argmax(act_probs)
-        sa = (self.current_state,action)
-        self.returns[sa] = 0
-        self.state_action_counts[sa] += 1
-        new_state = (action,llqp_job.service_rate[action])
-        current_index = self.state_space.index(self.current_state)
-        self.state_space[current_index] = new_state
+            a_one_max = numpy.amax(self.states_actions[0])
+            a_two_max = numpy.amax(self.states_actions[1])
+            if a_one_max > a_two_max:
+                action = 0
+            else:
+                action = 1
+        a_one, a_two = self.get_current_state(current_total_time)
 
-        for a in range(self.number_of_users):
-            self.state_action[(new_state,a)] = 0.0
-            self.state_action_counts[(new_state,a)] = 0.0
-        self.current_state = new_state
+        self.states_actions_counts[action, a_one, a_two] += 1
+        self.set_reward(action, a_one, a_two)
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -115,9 +112,6 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
             llqp_job.request_event.succeed(llqp_job.service_rate[action])
 
         self.mc_chunk += 1
-        if not all(v is None for v in current_total_time):
-            print(max(tot for tot in current_total_time if tot is not None))
-
 
     def policy_status(self):
         """
@@ -129,40 +123,31 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
             current_status.append(len(self.users_queues[i]))
         return current_status
 
-    def init_state_space(self):
-        # [(user,user_wait)]
-        states = []
-        for i in range(self.number_of_users):
-            states.append((i,0.0))
-        return states
+    def init_state_space_action_count(self):
+        states_actions = numpy.zeros((2, 100, 100))
+        states_actions_counts = numpy.ones((2, 100, 100), dtype=int)
+        returns = numpy.zeros((2, 100, 100))
+        return states_actions, states_actions_counts, returns
 
-    def init_state_action(self):
-        # {((user,user_wait),action):0.0}
-        av = {}
-        for state in self.state_space:
-            for i in range(self.number_of_users):
-                av[(state, i)] = 0.0
-        return av
-
-    def init_state_action_count(self):
-        counts = {}
-        for sa in self.state_action:
-            counts[sa] = 0
-        return counts
-
-    def qsv(self,state):
-        qsv_values = [None]*self.number_of_users
-        for i in range(self.number_of_users):
-            qsv_values[i] = self.state_action[(state,i)]
-        return numpy.array(qsv_values)
-
-    def get_reward(self,llqp_job):
-        current_st = self.current_state[1]
-        if current_st == min(llqp_job.service_rate):
-            reward = 1
+    def set_reward(self, action, a_one, a_two):
+        if a_one < a_two and action == 0:
+            self.returns[action, a_one, a_two] = 1
+        elif a_one > a_two and action == 1:
+            self.returns[action, a_one, a_two] = 1
+        elif a_one == a_two:
+            self.returns[action, a_one, a_two] = 1
         else:
-            reward = -1
+            self.returns[action, a_one, a_two] = -10
 
-        return reward
+    def get_current_state(self, current_waiting_times):
+        if current_waiting_times[0] is None:
+            a_one = 0
+        else:
+            a_one = int(current_waiting_times[0])
 
+        if current_waiting_times[1] is None:
+            a_two = 0
+        else:
+            a_two = int(current_waiting_times[1])
 
+        return a_one, a_two
