@@ -6,34 +6,36 @@ from evaluation.statistics import calculate_statistics
 from policies.mcd_llqp import LLQP
 from simulations import *
 
-# creates simulation environment
-env = simpy.Environment()
 
-# open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("mcd_llqp")
+for i in range(2):
+    # creates simulation environment
+    env = simpy.Environment()
 
-# initialize policy
-policy = LLQP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics)
+    # open file and write header
+    file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("mcd_llqp")
 
-# start event
-start_event = StartEvent(env, GENERATION_INTERVAL)
+    # initialize policy
+    policy = LLQP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics,test)
 
-# user tasks
-user_task = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
+    # start event
+    start_event = StartEvent(env, GENERATION_INTERVAL)
 
-# connections
-connect(start_event, user_task)
+    # user tasks
+    user_task = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
 
-# calls generation tokens process
-env.process(start_event.generate_tokens())
+    # connections
+    connect(start_event, user_task)
 
-# runs simulation
-env.run(until=SIM_TIME)
+    # calls generation tokens process
+    env.process(start_event.generate_tokens())
 
-# close file
-file_policy.close()
-file_statistics.close()
+    # runs simulation
+    env.run(until=SIM_TIME)
 
-# calculate statistics and plots
-calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
+    # close file
+    file_policy.close()
+    file_statistics.close()
+
+    # calculate statistics and plots
+    calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
+    evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))

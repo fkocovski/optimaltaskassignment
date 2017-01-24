@@ -22,6 +22,7 @@ Initializes an LLQP policy.
         self.mc_chunk = 0
         self.current_state = None
 
+
     def request(self, user_task):
         """
 Request method for LLQP policies. Creates a PolicyJob object and calls for the appropriate evaluation method.
@@ -46,7 +47,7 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
 
         self.save_status()
 
-        return llqp_job
+        return llqp_job,self.test
 
     def release(self, llqp_job):
         """
@@ -112,6 +113,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
             llqp_job.request_event.succeed(llqp_job.service_rate[action])
 
         self.mc_chunk += 1
+        self.test = 3
 
     def policy_status(self):
         """

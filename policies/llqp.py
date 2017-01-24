@@ -74,7 +74,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
                 leftmost_queue_element = user_deq[0]
                 current_total_time = sum(job.service_rate[user_index] for job in user_deq)
                 if leftmost_queue_element.is_busy(self.env.now):
-                    current_total_time += leftmost_queue_element.will_finish() - self.env.now
+                    current_total_time -= self.env.now - leftmost_queue_element.started
             if lowest_time is None or lowest_time > current_total_time:
                 llqp_index = user_index
                 lowest_time = current_total_time
