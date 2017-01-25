@@ -1,11 +1,12 @@
 import numpy as np
 from collections import deque
+
 RANDOM_STATE = np.random.RandomState(1)
 
 
-
 class LLQP(object):
-    def __init__(self, env, number_of_users, worker_variability, task_variability,service_interval,states_actions,file_statistics,file_policy):
+    def __init__(self, env, number_of_users, worker_variability, task_variability, service_interval, states_actions,
+                 file_statistics, file_policy):
         self.env = env
         self.number_of_users = number_of_users
         self.worker_variability = worker_variability
@@ -32,11 +33,11 @@ class LLQP(object):
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
 
-        rwd,current_state = self.evaluate(llqp_job)
+        rwd, current_state = self.evaluate(llqp_job)
 
         self.save_status()
 
-        return llqp_job,rwd,current_state
+        return llqp_job, rwd, current_state
 
     def release(self, llqp_job):
 
@@ -61,15 +62,13 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         :param llqp_job: a policyjob object to be assigned.
         """
 
-
-
         current_total_time = [None] * self.number_of_users
         for user_index, user_deq in enumerate(self.users_queues):
             if len(user_deq) > 0:
                 leftmost_queue_element = user_deq[0]
                 current_total_time[user_index] = sum(job.service_rate[user_index] for job in user_deq)
                 if leftmost_queue_element.is_busy(self.env.now):
-                    current_total_time[user_index] -=  self.env.now - leftmost_queue_element.started
+                    current_total_time[user_index] -= self.env.now - leftmost_queue_element.started
             else:
                 current_total_time[user_index] = 0
 
@@ -77,14 +76,15 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         if np.random.random() < 0.1:
             action = np.random.randint(0, 2)
         else:
-            a_one_max = np.amax(self.states_actions[a_one,a_two,0])
-            a_two_max = np.amax(self.states_actions[a_one,a_two,1])
+            a_one_max = np.amax(self.states_actions[a_one, a_two, 0])
+            print(np.argmax(self.states_actions[a_one,a_two]))
+            a_two_max = np.amax(self.states_actions[a_one, a_two, 1])
             if a_one_max > a_two_max:
                 action = 0
             else:
                 action = 1
 
-        current_state = (a_one,a_two,action)
+        current_state = (a_one, a_two, action)
 
         rwd = self.set_reward(action, a_one, a_two)
 
@@ -96,8 +96,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
             llqp_job.started = self.env.now
             llqp_job.request_event.succeed(llqp_job.service_rate[action])
 
-        return rwd,current_state
-
+        return rwd, current_state
 
     def set_reward(self, action, a_one, a_two):
         if a_one < a_two and action == 0:
@@ -112,7 +111,6 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
     def get_current_state(self, current_waiting_times):
 
         a_one = int(current_waiting_times[0])
-
 
         a_two = int(current_waiting_times[1])
 
@@ -136,6 +134,7 @@ Parent class method that is overriden by its children to save policy specific st
         for i in range(self.number_of_users):
             current_status.append(len(self.users_queues[i]))
         return current_status
+
 
 class PolicyJob(object):
     def __init__(self):

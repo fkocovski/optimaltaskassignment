@@ -47,7 +47,7 @@ def update_q():
     for index,sa in enumerate(history):
         states_actions[sa] += (1 / history.count(sa)) * (rewards[index] - states_actions[sa])
 
-for i in range(10):
+for i in range(2):
     # creates simulation environment
     env = simpy.Environment()
 
