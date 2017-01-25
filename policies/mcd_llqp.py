@@ -5,13 +5,15 @@ RANDOM_STATE = np.random.RandomState(1)
 
 
 class LLQP(object):
-    def __init__(self, env, number_of_users, worker_variability, task_variability,service_interval,states_actions):
+    def __init__(self, env, number_of_users, worker_variability, task_variability,service_interval,states_actions,file_statistics,file_policy):
         self.env = env
         self.number_of_users = number_of_users
         self.worker_variability = worker_variability
         self.task_variability = task_variability
         self.service_interval = service_interval
         self.name = "LLQP"
+        self.file_statistics = file_statistics
+        self.file_policy = file_policy
         self.users_queues = [deque() for _ in range(self.number_of_users)]
 
         self.states_actions = states_actions
@@ -32,16 +34,21 @@ class LLQP(object):
 
         rwd,current_state = self.evaluate(llqp_job)
 
+        self.save_status()
 
         return llqp_job,rwd,current_state
 
     def release(self, llqp_job):
+
+        llqp_job.finished = self.env.now
+        llqp_job.save_info(self.file_policy)
         user_to_release_index = llqp_job.assigned_user
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
         user_queue_to_free.popleft()
 
+        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
@@ -66,16 +73,16 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
             else:
                 current_total_time[user_index] = 0
 
+        a_one, a_two = self.get_current_state(current_total_time)
         if np.random.random() < 0.1:
             action = np.random.randint(0, 2)
         else:
-            a_one_max = np.amax(self.states_actions[:,:,0])
-            a_two_max = np.amax(self.states_actions[:,:,1])
+            a_one_max = np.amax(self.states_actions[a_one,a_two,0])
+            a_two_max = np.amax(self.states_actions[a_one,a_two,1])
             if a_one_max > a_two_max:
                 action = 0
             else:
                 action = 1
-        a_one, a_two = self.get_current_state(current_total_time)
 
         current_state = (a_one,a_two,action)
 
@@ -111,6 +118,25 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
 
         return a_one, a_two
 
+    def save_status(self):
+        """
+Parent class method that saves information required to plot the policy evolution over time.
+        """
+        current_status = self.policy_status()
+        self.file_statistics.write("{}".format(self.env.now))
+        for val in current_status:
+            self.file_statistics.write(",{}".format(val))
+        self.file_statistics.write("\n")
+
+    def policy_status(self):
+        """
+Parent class method that is overriden by its children to save policy specific status information.
+        """
+        current_status = [0]
+        for i in range(self.number_of_users):
+            current_status.append(len(self.users_queues[i]))
+        return current_status
+
 class PolicyJob(object):
     def __init__(self):
         """
@@ -143,3 +169,14 @@ Method used to determine future finish time of a policy job object by adding its
         :return: returns a simpy time
         """
         return self.started + self.service_rate[self.assigned_user]
+
+    def save_info(self, file):
+        """
+Method used to save information required to calculate key metrics.
+        :param file: passed file object to write key metrics into.
+        """
+        file.write(
+            "{},{},{},{},{}".format(id(self), self.arrival, self.started, self.finished, self.assigned_user + 1))
+        for st in self.service_rate:
+            file.write(",{}".format(st))
+        file.write("\n")
