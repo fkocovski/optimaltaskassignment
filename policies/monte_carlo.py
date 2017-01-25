@@ -4,7 +4,7 @@ from collections import deque
 
 
 class MC(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics,q_table,epsilon,gamma):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, q_table, epsilon, gamma):
         """
 Initializes an LLQP policy.
         :param env: simpy environment.
@@ -72,35 +72,27 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
 Evaluate method for LLQP policies. Looks for the currently least loaded person to assign the policyjob.
         :param llqp_job: a policyjob object to be assigned.
         """
-        # llqp_index = None
-        # lowest_time = None
-        busy_times = [None]*self.number_of_users
+        busy_times = [None] * self.number_of_users
         for user_index, user_deq in enumerate(self.users_queues):
-            # current_total_time = 0
             if len(user_deq) > 0:
                 leftmost_queue_element = user_deq[0]
                 busy_times[user_index] = sum(job.service_rate[user_index] for job in user_deq)
                 if leftmost_queue_element.is_busy(self.env.now):
                     busy_times[user_index] -= self.env.now - leftmost_queue_element.started
-            # if lowest_time is None or lowest_time > current_total_time:
-            #     llqp_index = user_index
-            #     lowest_time = current_total_time
             else:
                 busy_times[user_index] = 0
 
-
         # FIXME: do not use fixed index for current_state
-        current_state = [None]*self.number_of_users
-        for i,a in enumerate(busy_times):
+        current_state = [None] * self.number_of_users
+        for i, a in enumerate(busy_times):
             current_state[i] = int(a)
 
         if RANDOM_STATE.rand() < self.epsilon:
-            action = RANDOM_STATE.randint(0,2)
+            action = RANDOM_STATE.randint(0, 2)
         else:
-            action = np.argmax(self.q_table[current_state[0],current_state[1]])
+            action = np.argmax(self.q_table[current_state[0], current_state[1]])
 
-
-        self.update_policy_status(current_state[0],current_state[1],action)
+        self.update_policy_status(current_state[0], current_state[1], action)
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -130,7 +122,7 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
         else:
             self.returns.append(-1)
 
-        self.history.append((user_one,user_two,action))
+        self.history.append((user_one, user_two, action))
 
     def update_q_table(self):
         rewards = [None] * len(self.returns)
