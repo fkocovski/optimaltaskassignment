@@ -86,7 +86,6 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         current_state = [None] * self.number_of_users
         for i, a in enumerate(busy_times):
             current_state[i] = int(a)
-
         if RANDOM_STATE.rand() < self.epsilon:
             action = RANDOM_STATE.randint(0, 2)
         else:

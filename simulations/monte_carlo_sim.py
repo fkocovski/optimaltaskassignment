@@ -8,9 +8,9 @@ from simulations import *
 
 # init q_table and reinforcement learning variables
 q_table = np.zeros((100, 100, NUMBER_OF_USERS))
-epsilon = 0.1
-gamma = 0.9
-epochs = 3
+epsilon = 0.3
+gamma = 0.5
+epochs = 50
 
 for i in range(epochs):
     # creates simulation environment
