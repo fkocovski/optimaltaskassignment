@@ -8,12 +8,11 @@ from simulations import *
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS**2)
-epsilon = 0.3
-gamma = 0.5
-epochs = 50
-alpha = -0.5
+# epsilon = 0.1
+gamma = 0.9
+epochs = 20
+alpha = 0.001
 
-print(theta)
 
 for i in range(epochs):
     # creates simulation environment
@@ -21,6 +20,8 @@ for i in range(epochs):
 
     # open file and write header
     file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("run{}_mc".format(i))
+
+    epsilon = 1/(i+1)
 
     # initialize policy
     policy = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics,theta,epsilon,gamma,alpha)
@@ -41,8 +42,11 @@ for i in range(epochs):
     env.run(until=SIM_TIME)
 
     # update q_table
-    new_theta = MC.update_theta(policy)
-    theta = new_theta
+    # print(theta,"old")
+    delta_theta = MC.update_theta(policy)
+    # print(delta_theta, "new")
+    print("EPISODE END")
+    # theta += delta_theta
 
     # close file
     file_policy.close()

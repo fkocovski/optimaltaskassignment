@@ -45,6 +45,8 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
 
+        self.save_status()
+
         self.evaluate(llqp_job)
 
         self.save_status()
@@ -62,6 +64,8 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
+        self.save_status()
+
         user_queue_to_free.popleft()
 
         self.save_status()
@@ -70,6 +74,8 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
+
+        self.save_status()
 
     def evaluate(self, llqp_job):
         """
@@ -88,11 +94,19 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
 
         if RANDOM_STATE.rand() < self.epsilon:
             action = RANDOM_STATE.randint(0, self.number_of_users)
+            action_t = "rand"
+            # q_values = None
         else:
+            q_values = [None]*self.number_of_users
+            for i in range(self.number_of_users):
+                q_values[i] = self.action_value_approximator(busy_times,i)
+            action_old = q_values.index(max(q_values))
             action = max(range(self.number_of_users),
                          key=lambda action: self.action_value_approximator(busy_times, action))
+            action_t = "greedy"
 
-        self.history.append((busy_times,action))
+
+        self.history.append((busy_times,action,action_t))
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -114,20 +128,28 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
 
 
     def action_value_approximator(self, states, action):
-        values = 0.0
+        value = 0.0
+        # print("init func")
         for i, busy_time in enumerate(states):
-            values += busy_time * self.theta[i+action*self.number_of_users]
-        return values
+            # print(states,action,"sa")
+            # print(i,busy_time,"busy_index")
+            # print(self.theta,"theta")
+            value += busy_time * self.theta[i+action*self.number_of_users]
+            # print(value,"value")
+        return value
 
     def update_theta(self):
         avg_lateness = np.average(self.jobs_lateness)
-        previous_return = 0.0
         delta_theta = np.zeros(self.number_of_users**2)
-        for i,(state,action) in enumerate(reversed(self.history)):
-            previous_return =
-            self.q_table[sa] += (1 / self.history.count(sa)) * (rewards[index] - self.q_table[sa])
-
-        return self.q_table
+        for i,(states,action,action_t) in enumerate(reversed(self.history)):
+            delta_theta = self.alpha*(self.gamma**i*-avg_lateness - self.action_value_approximator(states,action))*self.gradient(states,action)
+            # print(self.gamma**i*-avg_lateness,"G_t")
+            # print(self.theta,"theta")
+            # print(self.action_value_approximator(states,action),states,action,action_t,q_values,"Q_sa")
+            # print(self.gradient(states,action),"GRAD_sa")
+            # print("-----")
+            self.theta += delta_theta
+        return delta_theta
 
     def save_job_lateness(self,policy_job):
         job_lateness = policy_job.finished - policy_job.started
@@ -135,7 +157,10 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
 
     def gradient(self,states,action):
         gradient_vector = np.zeros(self.number_of_users**2)
-        for i,state in enumerate(states):
+        for i,busy_time in enumerate(states):
+            gradient_vector[i+action*self.number_of_users] = states[action]
+        return gradient_vector
+
 
 
 
