@@ -3,8 +3,8 @@ from policies import *
 from collections import deque
 
 
-class MC(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, epsilon, gamma,
+class MCT(object):
+    def __init__(self, env, number_of_users, worker_variability, theta, epsilon, gamma,
                  alpha):
         """
 Initializes an LLQP policy.
@@ -14,7 +14,10 @@ Initializes an LLQP policy.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
         """
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        self.env = env
+        self.number_of_users = number_of_users
+        self.worker_variability = worker_variability
+
         self.name = "LLQP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.theta = theta
@@ -30,7 +33,6 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        super().request(user_task)
 
         average_processing_time = RANDOM_STATE.gamma(
             user_task.service_interval ** 2 / user_task.task_variability,
@@ -44,11 +46,9 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
 
-        self.save_status()
 
         self.evaluate(llqp_job)
 
-        self.save_status()
 
         return llqp_job
 
@@ -57,24 +57,21 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
 Release method for LLQP policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the released user's queue is not empty, it assigns the next policyjob to be worked.
         :param llqp_job: a policyjob object.
         """
-        super().release(llqp_job)
+        llqp_job.finished = self.env.now
         self.save_job_lateness(llqp_job)
         user_to_release_index = llqp_job.assigned_user
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
-        self.save_status()
 
         user_queue_to_free.popleft()
 
-        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
-        self.save_status()
 
     def evaluate(self, llqp_job):
         """
@@ -99,7 +96,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
                          key=lambda action: self.action_value_approximator(busy_times, action))
             action_t = "greedy"
 
-        print(action,action_t)
+        print(action_t)
         self.history.append((busy_times,action,action_t))
 
         llqp_queue = self.users_queues[action]
@@ -130,10 +127,10 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
     def update_theta(self):
         avg_lateness = np.average(self.jobs_lateness)
         delta_theta = np.zeros(self.number_of_users**2)
+        print(avg_lateness)
         for i,(states,action,action_t) in enumerate(reversed(self.history)):
             delta_theta = self.alpha*(self.gamma**i*-avg_lateness - self.action_value_approximator(states,action))*self.gradient(states,action)
             self.theta += delta_theta
-        return delta_theta
 
     def save_job_lateness(self,policy_job):
         job_lateness = policy_job.finished - policy_job.started
