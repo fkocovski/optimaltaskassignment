@@ -3,7 +3,7 @@ import simpy
 from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.k_batch_one import KBatchOne
+from policies.k_batchone import KBatchOne
 from simulations import *
 from solvers.esdmf_solver import esdmf
 
