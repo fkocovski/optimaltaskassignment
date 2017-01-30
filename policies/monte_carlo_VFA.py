@@ -19,10 +19,10 @@ Initializes an LLQP policy.
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.theta = theta
         self.epsilon = epsilon
-        self.history = []
-        self.jobs_lateness = []
         self.gamma = gamma
         self.alpha = alpha
+        self.history = []
+        self.jobs_lateness = []
 
     def request(self, user_task):
         """
@@ -44,11 +44,13 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
 
-        self.save_status()
+        if self.file_statistics is not None:
+            self.save_status()
 
         self.evaluate(llqp_job)
 
-        self.save_status()
+        if self.file_statistics is not None:
+            self.save_status()
 
         return llqp_job
 
@@ -63,18 +65,21 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
-        self.save_status()
+        if self.file_statistics is not None:
+            self.save_status()
 
         user_queue_to_free.popleft()
 
-        self.save_status()
+        if self.file_statistics is not None:
+            self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
-        self.save_status()
+        if self.file_statistics is not None:
+            self.save_status()
 
     def evaluate(self, llqp_job):
         """
@@ -99,8 +104,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
                          key=lambda action: self.action_value_approximator(busy_times, action))
             action_t = "greedy"
 
-        print(action,action_t)
-        self.history.append((busy_times,action,action_t))
+        self.history.append((busy_times, action, action_t))
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -120,27 +124,28 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
             current_status.append(len(self.users_queues[i]))
         return current_status
 
-
     def action_value_approximator(self, states, action):
         value = 0.0
         for i, busy_time in enumerate(states):
-            value += busy_time * self.theta[i+action*self.number_of_users]
+            value += busy_time * self.theta[i + action * self.number_of_users]
         return value
 
     def update_theta(self):
         avg_lateness = np.average(self.jobs_lateness)
-        delta_theta = np.zeros(self.number_of_users**2)
-        for i,(states,action,action_t) in enumerate(reversed(self.history)):
-            delta_theta = self.alpha*(self.gamma**i*-avg_lateness - self.action_value_approximator(states,action))*self.gradient(states,action)
+        delta_theta = np.zeros(self.number_of_users ** 2)
+        for i, (states, action, action_t) in enumerate(reversed(self.history)):
+            delta_theta = self.alpha * (
+            self.gamma ** i * -avg_lateness - self.action_value_approximator(states, action)) * self.gradient(states,
+                                                                                                              action)
             self.theta += delta_theta
         return delta_theta
 
-    def save_job_lateness(self,policy_job):
+    def save_job_lateness(self, policy_job):
         job_lateness = policy_job.finished - policy_job.started
         self.jobs_lateness.append(job_lateness)
 
-    def gradient(self,states,action):
-        gradient_vector = np.zeros(self.number_of_users**2)
-        for i,busy_time in enumerate(states):
-            gradient_vector[i+action*self.number_of_users] = busy_time
+    def gradient(self, states, action):
+        gradient_vector = np.zeros(self.number_of_users ** 2)
+        for i, busy_time in enumerate(states):
+            gradient_vector[i + action * self.number_of_users] = busy_time
         return gradient_vector

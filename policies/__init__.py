@@ -32,7 +32,8 @@ Parent class release method to manage and release finished policy job objects.
         :param policy_job: policy job object holding all relevant information to be released.
         """
         policy_job.finished = self.env.now
-        policy_job.save_info(self.file_policy)
+        if self.file_policy is not None:
+            policy_job.save_info(self.file_policy)
 
     def save_status(self):
         """

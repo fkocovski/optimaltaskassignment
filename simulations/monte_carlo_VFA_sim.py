@@ -4,25 +4,25 @@ from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
 from policies.monte_carlo_VFA import MC
-from policies.monte_carlo_VFA_training import MCT
 from simulations import *
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS**2)
 gamma = 1
-epochs = 1000
+epochs = 300
 initial_alpha = 1e-5
 
+# creates simulation environment
+env = simpy.Environment()
+
 for i in range(epochs):
-    # creates simulation environment
-    env = simpy.Environment()
 
     # decay parameters
     epsilon = 1/(i+1)
     alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
-    policy_train = MCT(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, theta, epsilon, gamma, alpha_disc)
+    policy_train = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY,None,None,theta, epsilon, gamma, alpha_disc)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -38,20 +38,15 @@ for i in range(epochs):
 
     # runs simulation
     env.run(until=SIM_TIME)
-    print(theta)
 
     # update theta
-    MCT.update_theta(policy_train)
+    MC.update_theta(policy_train)
 
+# set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
-
-# creates simulation environment
-env = simpy.Environment()
 
 # open file and write header
 file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("MC_VFA")
-
-print(theta,epsilon,gamma,initial_alpha)
 
 # initialize policy
 policy = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma, initial_alpha)
@@ -74,7 +69,7 @@ env.run(until=SIM_TIME)
 # close file
 file_policy.close()
 file_statistics.close()
-print(file_policy_name,file_statistics_name)
+
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
 evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
