@@ -7,7 +7,7 @@ from policies.monte_carlo_VFA import MC
 from simulations import *
 
 # init theta and reinforcement learning variables
-theta = np.zeros(NUMBER_OF_USERS**2)
+theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
 epochs = 300
 initial_alpha = 1e-5
@@ -16,13 +16,12 @@ initial_alpha = 1e-5
 env = simpy.Environment()
 
 for i in range(epochs):
-
     # decay parameters
-    epsilon = 1/(i+1)
+    epsilon = 1 / (i + 1)
     alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
-    policy_train = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY,None,None,theta, epsilon, gamma, alpha_disc)
+    policy_train = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -46,10 +45,11 @@ for i in range(epochs):
 epsilon = 0.0
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("MC_VFA")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("MC_VFA")
 
 # initialize policy
-policy = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma, initial_alpha)
+policy = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
+            initial_alpha)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
