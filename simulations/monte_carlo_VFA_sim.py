@@ -9,13 +9,13 @@ from simulations import *
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 300
+epochs = 5000
 initial_alpha = 1e-5
 
-# creates simulation environment
-env = simpy.Environment()
-
 for i in range(epochs):
+    # creates simulation environment
+    env = simpy.Environment()
+
     # decay parameters
     epsilon = 1 / (i + 1)
     alpha_disc = initial_alpha / (i + 1)
@@ -43,6 +43,9 @@ for i in range(epochs):
 
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
+
+# creates simulation environment
+env = simpy.Environment()
 
 # open file and write header
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("MC_VFA")
