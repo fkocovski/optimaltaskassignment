@@ -149,3 +149,10 @@ Evaluates the current state of the policy. Overrides parent method with LLQP spe
         for i, busy_time in enumerate(states):
             gradient_vector[i + action * self.number_of_users] = busy_time
         return gradient_vector
+
+    def value_function(self):
+        value_action = []
+        for i,(states,action,_) in enumerate(self.history):
+            qsa_value = self.action_value_approximator(states,action)
+            value_action.append((states,qsa_value,action))
+        return value_action

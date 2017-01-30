@@ -1,6 +1,7 @@
 import simpy
 import numpy as np
 from evaluation.plot import evolution
+from evaluation.trisurf_3d_plot import qsa_values
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
 from policies.monte_carlo_VFA import MC
@@ -9,7 +10,7 @@ from simulations import *
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 5000
+epochs = 500
 initial_alpha = 1e-5
 
 for i in range(epochs):
@@ -37,6 +38,10 @@ for i in range(epochs):
 
     # runs simulation
     env.run(until=SIM_TIME)
+
+    # value action for plot
+    # value_action = policy_train.value_function()
+    # qsa_values(value_action)
 
     # update theta
     MC.update_theta(policy_train)
@@ -69,6 +74,9 @@ env.process(start_event.generate_tokens())
 # runs simulation
 env.run(until=SIM_TIME)
 
+# value action for plot
+value_action = policy.value_function()
+
 # close file
 file_policy.close()
 file_statistics.close()
@@ -76,3 +84,4 @@ file_statistics.close()
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
 evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
+qsa_values(value_action)
