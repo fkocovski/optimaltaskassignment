@@ -29,12 +29,12 @@ def evolution(filename, outfile=None, delimiter=",", skiprows=1, title=None):
 
     # plot pending tasks
 #    F = np.hstack((True,np.diff(D[:,0],2)!=0.0,True)) # filter 'zero duration' points; assuming random event times
-    plt.fill_between(D[:,0], D[:,1], 0.0, linewidth=0.5, edgecolor="#5c3566", facecolor="#ad7fa8")
+    plt.fill_between(D[:,0], D[:,1], 0.0, linewidth=0.5, edgecolor="#400040", facecolor="#800080")
     plt.axhline(y=0.0, c="k", lw=0.8)
 
     # plot users
     for i in range(nusers):
-        plt.fill_between(D[:,0], D[:,i+2]+P[i+1], P[i+1], linewidth=0.5, edgecolor="#204a87", facecolor="#729fcf")
+        plt.fill_between(D[:,0], D[:,i+2]+P[i+1], P[i+1], linewidth=0.5, edgecolor="#998100", facecolor="#ffd700")
         plt.axhline(y=P[i+1], c="k", lw=0.8)
 
     # plot arrival events

@@ -6,20 +6,23 @@ from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
 from policies.monte_carlo_VFA import MC
 from simulations import *
+import time
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 500
-initial_alpha = 1e-5
+epochs = 250
+initial_alpha = 1e-10
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
     # decay parameters
-    epsilon = 1 / (i + 1)
-    alpha_disc = initial_alpha / (i + 1)
+    # epsilon = 1 / (i + 1)
+    epsilon = 0.1
+    alpha_disc = initial_alpha
+    # alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
     policy_train = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
@@ -33,15 +36,17 @@ for i in range(epochs):
     # connections
     connect(start_event, user_task)
 
+    # start of simulation
+    start = time.time()
+
     # calls generation tokens process
     env.process(start_event.generate_tokens())
 
     # runs simulation
     env.run(until=SIM_TIME)
 
-    # value action for plot
-    # value_action = policy_train.value_function()
-    # qsa_values(value_action)
+    # end of simulation
+    end = time.time()
 
     # update theta
     MC.update_theta(policy_train)

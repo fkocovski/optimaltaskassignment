@@ -36,6 +36,8 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
 
+        self.save_status()
+
         self.evaluate(llqp_job)
 
         self.save_status()
@@ -51,6 +53,8 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
         user_to_release_index = llqp_job.assigned_user
 
         user_queue_to_free = self.users_queues[user_to_release_index]
+
+        self.save_status()
 
         user_queue_to_free.popleft()
 
