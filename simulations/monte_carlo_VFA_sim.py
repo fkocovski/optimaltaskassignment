@@ -11,18 +11,20 @@ import time
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 250
+epochs = 500
 initial_alpha = 1e-10
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
+    # fixed parameters
+    # epsilon = 0.1
+    # alpha_disc = initial_alpha
+
     # decay parameters
-    # epsilon = 1 / (i + 1)
-    epsilon = 0.1
-    alpha_disc = initial_alpha
-    # alpha_disc = initial_alpha / (i + 1)
+    epsilon = 1 / (i + 1)
+    alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
     policy_train = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
