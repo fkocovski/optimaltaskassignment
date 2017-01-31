@@ -162,7 +162,7 @@ Evaluates and appends the job's lateness to a policy global queue.
 For each states-action pair calculates the gradient descent to be used in the theta update function.
         :param states: list of users busy time.
         :param action: chosen action corresponding to the states.
-        :return:
+        :return: gradient to be used for updating theta vector towards optimum.
         """
         gradient_vector = np.zeros(self.number_of_users ** 2)
         for i, busy_time in enumerate(states):
