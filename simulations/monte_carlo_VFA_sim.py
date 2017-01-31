@@ -11,7 +11,7 @@ import time
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 100
+epochs = 750
 initial_alpha = 1e-5
 
 for i in range(epochs):
