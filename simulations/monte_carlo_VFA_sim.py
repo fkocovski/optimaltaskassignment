@@ -11,8 +11,8 @@ import time
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 500
-initial_alpha = 1e-10
+epochs = 100
+initial_alpha = 1e-5
 
 for i in range(epochs):
     # creates simulation environment
@@ -81,9 +81,6 @@ env.process(start_event.generate_tokens())
 # runs simulation
 env.run(until=SIM_TIME)
 
-# value action for plot
-value_action = policy.value_function()
-
 # close file
 file_policy.close()
 file_statistics.close()
@@ -91,4 +88,8 @@ file_statistics.close()
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
 evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
-qsa_values(value_action)
+
+if NUMBER_OF_USERS == 2:
+    # value action for plot
+    value_action = policy.value_function()
+    qsa_values(value_action)
