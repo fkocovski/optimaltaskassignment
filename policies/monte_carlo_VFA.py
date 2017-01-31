@@ -102,13 +102,11 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
 
         if RANDOM_STATE.rand() < self.epsilon:
             action = RANDOM_STATE.randint(0, self.number_of_users)
-            action_t = "rand"
         else:
             action = max(range(self.number_of_users),
                          key=lambda action: self.action_value_approximator(busy_times, action))
-            action_t = "greedy"
 
-        self.history.append((busy_times, action, action_t))
+        self.history.append((busy_times, action))
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -145,7 +143,7 @@ Value function approximator. Uses the policy theta weight vector and returns for
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
         avg_lateness = np.average(self.jobs_lateness)
-        for i, (states, action, action_t) in enumerate(reversed(self.history)):
+        for i, (states, action) in enumerate(reversed(self.history)):
             self.theta += self.alpha * (
                 self.gamma ** i * -avg_lateness - self.action_value_approximator(states, action)) * self.gradient(
                 states,
@@ -177,7 +175,7 @@ Creates a list of approximated states-action values.
         :return: list of approximated states-action values to be used as input for trisurf plot.
         """
         value_action = []
-        for i, (states, action, _) in enumerate(self.history):
+        for i, (states, action) in enumerate(self.history):
             qsa_value = self.action_value_approximator(states, action)
             value_action.append((states, qsa_value, action))
         return value_action
