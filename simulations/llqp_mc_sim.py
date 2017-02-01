@@ -3,7 +3,7 @@ import numpy as np
 from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.monte_carlo import MC
+from policies.llqp_mc import MC
 from simulations import *
 
 # init q_table and reinforcement learning variables

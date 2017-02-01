@@ -4,7 +4,7 @@ from evaluation.plot import evolution
 from evaluation.trisurf_3d_plot import qsa_values
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.monte_carlo_VFA import MC
+from policies.llqp_mc_vfa import MC
 from simulations import *
 import time
 
