@@ -10,7 +10,7 @@ import time
 # init theta and reinforcement learning variables
 theta = np.zeros(2 * (NUMBER_OF_USERS ** 2))
 gamma = 1
-epochs = 1
+epochs = 1000
 initial_alpha = 1e-5
 
 for i in range(epochs):
@@ -52,7 +52,7 @@ for i in range(epochs):
 
     # update theta
     KBATCH_MC_VFA.update_theta(policy_train)
-
+    print("FINISH TRAIN RUN {}".format(i))
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
 

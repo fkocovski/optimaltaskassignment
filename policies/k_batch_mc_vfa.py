@@ -132,8 +132,11 @@ Value function approximator. Uses the policy theta weight vector and returns for
         :return: a single approximated value.
         """
         value = 0.0
+        print(states,action)
         for i, state_value in enumerate(states):
+            print(state_value * self.theta[i + action * self.number_of_users * 2],state_value,self.theta[i + action * self.number_of_users * 2])
             value += state_value * self.theta[i + action * self.number_of_users * 2]
+        print("=====")
         return value
 
     def update_theta(self):
@@ -166,7 +169,6 @@ For each states-action pair calculates the gradient descent to be used in the th
         gradient_vector = np.zeros(2 * (self.number_of_users ** 2))
         for i, state_value in enumerate(states):
             gradient_vector[i + action * self.number_of_users * 2] = state_value
-        print(gradient_vector)
         return gradient_vector
 
     def policy_status(self):
