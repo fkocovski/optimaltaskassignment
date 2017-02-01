@@ -3,7 +3,7 @@ import numpy as np
 from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.k_batch_mc_vfa import KBATCH_MC_VFA
+from policies.k_batch_mc_vfa import KBatchMcVfa
 from simulations import *
 import time
 
@@ -26,8 +26,8 @@ for i in range(epochs):
     alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
-    policy_train = KBATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, 1, None, None, theta, epsilon, gamma,
-                                 alpha_disc)
+    policy_train = KBatchMcVfa(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, 1, None, None, theta, epsilon, gamma,
+                               alpha_disc)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -51,7 +51,7 @@ for i in range(epochs):
     end = time.time()
 
     # update theta
-    KBATCH_MC_VFA.update_theta(policy_train)
+    KBatchMcVfa.update_theta(policy_train)
     print("FINISH TRAIN RUN {}".format(i))
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
@@ -63,8 +63,8 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("1BATCH_MC_VFA")
 
 # initialize policy
-policy = KBATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, 1, file_policy, file_statistics, theta, epsilon, gamma,
-                       initial_alpha)
+policy = KBatchMcVfa(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, 1, file_policy, file_statistics, theta, epsilon, gamma,
+                     initial_alpha)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)

@@ -3,7 +3,7 @@ from policies import *
 from collections import deque
 
 
-class KBATCH_MC_VFA(Policy):
+class KBatchMcVfa(Policy):
     def __init__(self, env, number_of_users, worker_variability, batch_size, file_policy, file_statistics, theta,
                  epsilon, gamma, alpha):
         """
@@ -132,9 +132,10 @@ Value function approximator. Uses the policy theta weight vector and returns for
         :return: a single approximated value.
         """
         value = 0.0
-        print(states,action)
+        print(states, action)
         for i, state_value in enumerate(states):
-            print(state_value * self.theta[i + action * self.number_of_users * 2],state_value,self.theta[i + action * self.number_of_users * 2])
+            print(state_value * self.theta[i + action * self.number_of_users * 2], state_value,
+                  self.theta[i + action * self.number_of_users * 2])
             value += state_value * self.theta[i + action * self.number_of_users * 2]
         print("=====")
         return value
