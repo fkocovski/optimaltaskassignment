@@ -3,7 +3,7 @@ import numpy as np
 from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.llqp_mc import MC
+from policies.llqp_mc import LLQP_MC
 from simulations import *
 
 # init q_table and reinforcement learning variables
@@ -20,7 +20,7 @@ for i in range(epochs):
     file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("run{}_mc".format(i))
 
     # initialize policy
-    policy = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics,q_table,epsilon,gamma)
+    policy = LLQP_MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, q_table, epsilon, gamma)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -38,7 +38,7 @@ for i in range(epochs):
     env.run(until=SIM_TIME)
 
     # update q_table
-    new_q_table = MC.update_q_table(policy)
+    new_q_table = LLQP_MC.update_q_table(policy)
     q_table = new_q_table
 
     # close file

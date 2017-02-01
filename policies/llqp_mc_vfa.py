@@ -3,7 +3,7 @@ from policies import *
 from collections import deque
 
 
-class MC(Policy):
+class LLQP_MC_VFA(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, epsilon, gamma,
                  alpha):
         """
@@ -48,13 +48,11 @@ Request method for MC policies. Creates a PolicyJob object and calls for the app
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
 
-        if self.file_statistics is not None:
-            self.save_status()
+        self.save_status()
 
         self.evaluate(llqp_job)
 
-        if self.file_statistics is not None:
-            self.save_status()
+        self.save_status()
 
         return llqp_job
 
@@ -69,21 +67,18 @@ Release method for MC policies. Uses the passed parameter, which is a policyjob 
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
-        if self.file_statistics is not None:
-            self.save_status()
+        self.save_status()
 
         user_queue_to_free.popleft()
 
-        if self.file_statistics is not None:
-            self.save_status()
+        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
-        if self.file_statistics is not None:
-            self.save_status()
+        self.save_status()
 
     def evaluate(self, llqp_job):
         """

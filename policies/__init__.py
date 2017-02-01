@@ -32,13 +32,15 @@ Parent class release method to manage and release finished policy job objects.
         :param policy_job: policy job object holding all relevant information to be released.
         """
         policy_job.finished = self.env.now
-        if self.file_policy is not None:
-            policy_job.save_info(self.file_policy)
+        policy_job.save_info(self.file_policy)
 
     def save_status(self):
         """
 Parent class method that saves information required to plot the policy evolution over time.
         """
+        if self.file_statistics is None:
+            return
+
         current_status = self.policy_status()
         self.file_statistics.write("{}".format(self.env.now))
         for val in current_status:
@@ -91,6 +93,9 @@ Method used to determine future finish time of a policy job object by adding its
 Method used to save information required to calculate key metrics.
         :param file: passed file object to write key metrics into.
         """
+        if file is None:
+            return
+
         file.write(
             "{},{},{},{},{}".format(id(self), self.arrival, self.started, self.finished, self.assigned_user + 1))
         for st in self.service_rate:

@@ -4,14 +4,14 @@ from evaluation.plot import evolution
 from evaluation.trisurf_3d_plot import qsa_values
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.llqp_mc_vfa import MC
+from policies.llqp_mc_vfa import LLQP_MC_VFA
 from simulations import *
 import time
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 750
+epochs = 2
 initial_alpha = 1e-5
 
 for i in range(epochs):
@@ -27,7 +27,7 @@ for i in range(epochs):
     alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
-    policy_train = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
+    policy_train = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -51,7 +51,7 @@ for i in range(epochs):
     end = time.time()
 
     # update theta
-    MC.update_theta(policy_train)
+    LLQP_MC_VFA.update_theta(policy_train)
 
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
@@ -63,8 +63,8 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("MC_VFA")
 
 # initialize policy
-policy = MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
-            initial_alpha)
+policy = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
+                     initial_alpha)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)

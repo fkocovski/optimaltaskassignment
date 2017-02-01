@@ -3,7 +3,7 @@ from policies import *
 from collections import deque
 
 
-class MC(Policy):
+class LLQP_MC(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, q_table, epsilon, gamma):
         """
 Initializes an LLQP policy.
