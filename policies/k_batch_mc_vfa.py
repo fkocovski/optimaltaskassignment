@@ -1,3 +1,4 @@
+import numpy as np
 from policies import *
 from collections import deque
 
@@ -11,13 +12,12 @@ Initializes a KBatch policy.
         :param number_of_users: the number of users present in the system.
         :param worker_variability: worker variability in absolute value.
         :param batch_size: the batch size of the global queue.
-        :param solver: the solver used for the optimal task assignment.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
         """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
-        self.name = "{}Batch_mc_vfa".format(self.batch_size)
         self.batch_size = batch_size
+        self.name = "{}Batch_mc_vfa".format(self.batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
         self.theta = theta
@@ -26,6 +26,7 @@ Initializes a KBatch policy.
         self.alpha = alpha
         self.history = []
         self.jobs_lateness = []
+        self.jobs_service_times = []
 
     def request(self, user_task):
         """
@@ -53,7 +54,7 @@ Request method for KBatch policies. Creates a PolicyJob object and calls for the
         self.save_status()
 
         if len(self.batch_queue) == self.batch_size:
-            self.evaluate()
+            self.evaluate(k_batch_job)
 
         self.save_status()
 
@@ -65,6 +66,8 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
         :param k_batch_job: a policyjob object.
         """
         super().release(k_batch_job)
+
+        self.save_rewards(k_batch_job)
 
         self.save_status()
 
@@ -81,16 +84,15 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
 
         self.save_status()
 
-    def evaluate(self):
+    def evaluate(self, k_batch_job):
         """
 Evaluate method for KBatch policies. Sets the required variables by the solver then calls the appropriate solver assigned and implements its returned solution.
         """
         # wj
         w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
 
-        # pij
-        p = [[self.batch_queue[j].service_rate[i] for j in range(len(self.batch_queue))] for i in
-             range(self.number_of_users)]
+        # pi
+        p = [k_batch_job.service_rate[i] for i in range(self.number_of_users)]
 
         # ai
         current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
@@ -103,19 +105,69 @@ Evaluate method for KBatch policies. Sets the required variables by the solver t
                 if current_user_element[user_index].is_busy(self.env.now):
                     a[user_index] -= self.env.now - current_user_element[user_index].started
 
-        assignment, _ = self.solver(a, p, w, len(self.batch_queue), self.number_of_users)
+        states = a + p
 
-        for job_index, user_index in enumerate(assignment):
-            job = self.batch_queue[job_index]
-            self.users_queues[user_index].append(job)
-            job.assigned_user = user_index
+        if RANDOM_STATE.rand() < self.epsilon:
+            action = RANDOM_STATE.randint(0, self.number_of_users)
+        else:
+            action = max(range(self.number_of_users),
+                         key=lambda action: self.action_value_approximator(states, action))
+
+        self.history.append((states, action))
+
+        self.users_queues[action].append(k_batch_job)
+        k_batch_job.assigned_user = action
         self.batch_queue.clear()
-        for user_index in range(self.number_of_users):
-            if len(self.users_queues[user_index]) > 0:
-                leftmost_llpq_element = self.users_queues[user_index][0]
-                if not leftmost_llpq_element.is_busy(self.env.now):
-                    leftmost_llpq_element.started = self.env.now
-                    leftmost_llpq_element.request_event.succeed(leftmost_llpq_element.service_rate[user_index])
+        if len(self.users_queues[action]) > 0:
+            leftmost_llpq_element = self.users_queues[action][0]
+            if not leftmost_llpq_element.is_busy(self.env.now):
+                leftmost_llpq_element.started = self.env.now
+                leftmost_llpq_element.request_event.succeed(leftmost_llpq_element.service_rate[action])
+
+    def action_value_approximator(self, states, action):
+        """
+Value function approximator. Uses the policy theta weight vector and returns for action and states vector an approximated value.
+        :param states: list of users busy time.
+        :param action: chosen action corresponding to the states.
+        :return: a single approximated value.
+        """
+        value = 0.0
+        for i, state_value in enumerate(states):
+            value += state_value * self.theta[i + action * self.number_of_users * 2]
+        return value
+
+    def update_theta(self):
+        """
+MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
+        """
+        reward = np.average(self.jobs_lateness)
+        for i, (states, action) in enumerate(reversed(self.history)):
+            self.theta += self.alpha * (
+                self.gamma ** i * -reward - self.action_value_approximator(states, action)) * self.gradient(
+                states,
+                action)
+
+    def save_rewards(self, policy_job):
+        """
+Evaluates and appends the job's lateness to a policy global queue.
+        :param policy_job: policyjob object passed in each release method.
+        """
+        job_lateness = policy_job.finished - policy_job.started
+        self.jobs_lateness.append(job_lateness)
+        self.jobs_service_times.append(policy_job.service_rate[policy_job.assigned_user])
+
+    def gradient(self, states, action):
+        """
+For each states-action pair calculates the gradient descent to be used in the theta update function.
+        :param states: list of users busy time.
+        :param action: chosen action corresponding to the states.
+        :return: gradient to be used for updating theta vector towards optimum.
+        """
+        gradient_vector = np.zeros(2 * (self.number_of_users ** 2))
+        for i, state_value in enumerate(states):
+            gradient_vector[i + action * self.number_of_users * 2] = state_value
+        print(gradient_vector)
+        return gradient_vector
 
     def policy_status(self):
         """
