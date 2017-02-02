@@ -11,20 +11,23 @@ import time
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 1
-epochs = 2
-initial_alpha = 1e-5
+epochs = 5000
+initial_alpha = 0.002
+
+# start of simulation
+start = time.time()
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
     # fixed parameters
-    # epsilon = 0.1
-    # alpha_disc = initial_alpha
+    epsilon = 0.1
+    alpha_disc = initial_alpha
 
     # decay parameters
-    epsilon = 1 / (i + 1)
-    alpha_disc = initial_alpha / (i + 1)
+    # epsilon = 1 / (i + 1)
+    # alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
     policy_train = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
@@ -53,6 +56,11 @@ for i in range(epochs):
     # update theta
     LLQP_MC_VFA.update_theta(policy_train)
 
+    if i % 1000 == 0:
+        # end of simulation
+        end = time.time()
+        print("FINISHED TRAINING SESSION {} in {}".format(i,end-start))
+
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
 
@@ -60,7 +68,7 @@ epsilon = 0.0
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("MC_VFA")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA")
 
 # initialize policy
 policy = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,

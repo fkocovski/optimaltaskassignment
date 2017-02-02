@@ -147,6 +147,15 @@ MC method to learn based on its followed trajectory. Evaluates the history list 
                     states,
                     action)
 
+    def update_theta_td(self):
+        """
+MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
+        """
+        for i, (states, action) in enumerate(self.history):
+            try:
+                self.theta += self.alpha * (-(self.rewards[i+1]+self.gamma*self.action_value_approximator(self.history[i+1][0],self.history[i+1][1])) - self.action_value_approximator(states, action)) * self.gradient(states, action)
+            except IndexError:
+                return
 
     def save_rewards(self, policy_job):
         """

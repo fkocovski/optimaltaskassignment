@@ -10,19 +10,22 @@ import time
 # init theta and reinforcement learning variables
 theta = np.zeros(2 * (NUMBER_OF_USERS ** 2))
 gamma = 1
-epochs = 1000
-initial_alpha = 1e-5
+epochs = 5000
+initial_alpha = 1e-2
+
+# start of simulation
+start = time.time()
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
     # fixed parameters
-    # epsilon = 0.1
+    epsilon = 0.1
     # alpha_disc = initial_alpha
 
     # decay parameters
-    epsilon = 1 / (i + 1)
+    # epsilon = 1 / (i + 1)
     alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
@@ -38,21 +41,20 @@ for i in range(epochs):
     # connections
     connect(start_event, user_task)
 
-    # start of simulation
-    start = time.time()
-
     # calls generation tokens process
     env.process(start_event.generate_tokens())
 
     # runs simulation
     env.run(until=SIM_TIME)
 
-    # end of simulation
-    end = time.time()
-
     # update theta
     KBatchMcVfa.update_theta(policy_train)
-    print("FINISH TRAIN RUN {}".format(i))
+
+    if i % 1000 == 0:
+        # end of simulation
+        end = time.time()
+        print("FINISHED TRAINING SESSION {} in {}".format(i,end-start))
+
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
 

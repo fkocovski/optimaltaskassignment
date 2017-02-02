@@ -27,6 +27,7 @@ Initializes a MC policy with VFA.
         self.alpha = alpha
         self.history = []
         self.jobs_lateness = []
+        self.users_busy_times = []
 
     def request(self, user_task):
         """
@@ -102,6 +103,7 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
                          key=lambda action: self.action_value_approximator(busy_times, action))
 
         self.history.append((busy_times, action))
+        self.users_busy_times.append(busy_times[action])
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -138,11 +140,11 @@ Value function approximator. Uses the policy theta weight vector and returns for
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
         avg_lateness = np.average(self.jobs_lateness)
-        for i, (states, action) in enumerate(reversed(self.history)):
-            self.theta += self.alpha * (
-                self.gamma ** i * -avg_lateness - self.action_value_approximator(states, action)) * self.gradient(
-                states,
-                action)
+        for i, (states, action) in enumerate(self.history):
+                self.theta += self.alpha * (
+                    self.gamma ** i * -self.users_busy_times[i] - self.action_value_approximator(states, action)) * self.gradient(
+                    states,
+                    action)
 
     def save_job_lateness(self, policy_job):
         """

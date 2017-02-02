@@ -32,7 +32,9 @@ Calculates statistics for passed file.
 
     df.to_csv("eval_{}".format(file.name), index=False)
 
-    df.plot(y=["lateness", "wait", "service"], kind="box")
+    df.plot(y=["lateness", "wait", "service"], kind="line")
+
+    plt.grid(True)
 
     if outfile is None:
         plt.show()
