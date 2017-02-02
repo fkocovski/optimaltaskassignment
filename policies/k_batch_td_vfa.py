@@ -116,6 +116,8 @@ Evaluate method for KBatch policies. Sets the required variables by the solver t
         self.history.append((states, action))
         self.rewards.append(a[action] + p[action])
 
+
+
         self.users_queues[action].append(k_batch_job)
         k_batch_job.assigned_user = action
         self.batch_queue.clear()
