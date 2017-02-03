@@ -1,6 +1,7 @@
-import numpy
+import numpy as np
 
-RANDOM_STATE = numpy.random.RandomState(1)
+RANDOM_STATE = np.random.RandomState(1)
+RANDOM_STATE_ACTIONS = np.random.RandomState(1)
 
 
 class Policy(object):

@@ -1,4 +1,6 @@
-from policies import RANDOM_STATE
+import numpy
+
+RANDOM_STATE = numpy.random.RandomState(1)
 
 
 class StartEvent(object):

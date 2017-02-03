@@ -1,7 +1,5 @@
-import numpy as np
 from policies import *
 from collections import deque
-
 
 class LLQP_TD_VFA(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, epsilon, gamma,
@@ -25,6 +23,7 @@ Initializes a MC policy with VFA.
         self.epsilon = epsilon
         self.gamma = gamma
         self.alpha = alpha
+        self.episode = 0
 
     def request(self, user_task):
         """
@@ -45,6 +44,7 @@ Request method for MC policies. Creates a PolicyJob object and calls for the app
         llqp_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
                                                     self.worker_variability / average_processing_time) for
                                  _ in range(self.number_of_users)]
+
 
         self.save_status()
 
@@ -84,8 +84,8 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
         """
         busy_times = self.get_busy_times()
 
-        if RANDOM_STATE.rand() < self.epsilon:
-            action = RANDOM_STATE.randint(0, self.number_of_users)
+        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
+            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
         else:
             action = max(range(self.number_of_users),
                          key=lambda action: self.action_value_approximator(busy_times, action))
@@ -103,16 +103,26 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
 
         busy_times_new = self.get_busy_times()
 
-        if RANDOM_STATE.rand() < self.epsilon:
-            action_new = RANDOM_STATE.randint(0, self.number_of_users)
+        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
+            action_new = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
         else:
             action_new = max(range(self.number_of_users),
                          key=lambda action_new: self.action_value_approximator(busy_times_new, action_new))
 
+        self.episode += 1
 
-        self.update_theta(busy_times,action,busy_times_new,action_new,reward)
+        if self.episode % 1000 == 0:
+            print("terminal state",self.episode)
+            self.update_theta(busy_times,action,busy_times_new,action_new,reward,True)
+        else:
+            self.update_theta(busy_times,action,busy_times_new,action_new,reward,True)
+
 
     def get_busy_times(self):
+        """
+Calculates current busy times for users which represent the current state space.
+        :return: list which indexes correspond to each user's busy time.
+        """
         busy_times = [None] * self.number_of_users
         for user_index, user_deq in enumerate(self.users_queues):
             if len(user_deq) > 0:
@@ -145,12 +155,14 @@ Value function approximator. Uses the policy theta weight vector and returns for
             value += busy_time * self.theta[i + action * self.number_of_users]
         return value
 
-    def update_theta(self,old_state,old_action,new_state,new_action,reward):
+    def update_theta(self,old_state,old_action,new_state,new_action,reward,terminal):
         """
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
-        self.theta += self.alpha * (-reward + self.gamma*self.action_value_approximator(new_state,new_action) - self.action_value_approximator(old_state, old_action)) * self.gradient(old_state,old_action)
-        print(self.theta)
+        if terminal:
+            self.theta += self.alpha * (-reward - self.action_value_approximator(old_state, old_action)) * self.gradient(old_state,old_action)
+        else:
+            self.theta += self.alpha * (-reward + self.gamma*self.action_value_approximator(new_state,new_action) - self.action_value_approximator(old_state, old_action)) * self.gradient(old_state,old_action)
 
     def gradient(self, states, action):
         """
