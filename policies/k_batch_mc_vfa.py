@@ -107,8 +107,8 @@ Evaluate method for KBatch policies. Sets the required variables by the solver t
 
         states = a + p
 
-        if RANDOM_STATE.rand() < self.epsilon:
-            action = RANDOM_STATE.randint(0, self.number_of_users)
+        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
+            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
         else:
             action = max(range(self.number_of_users),
                          key=lambda action: self.action_value_approximator(states, action))

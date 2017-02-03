@@ -96,8 +96,8 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             else:
                 busy_times[user_index] = 0
 
-        if RANDOM_STATE.rand() < self.epsilon:
-            action = RANDOM_STATE.randint(0, self.number_of_users)
+        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
+            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
         else:
             action = max(range(self.number_of_users),
                          key=lambda action: self.action_value_approximator(busy_times, action))
