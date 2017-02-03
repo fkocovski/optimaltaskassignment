@@ -115,7 +115,7 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             print("terminal state",self.episode)
             self.update_theta(busy_times,action,busy_times_new,action_new,reward,True)
         else:
-            self.update_theta(busy_times,action,busy_times_new,action_new,reward,True)
+            self.update_theta(busy_times,action,busy_times_new,action_new,reward,False)
 
 
     def get_busy_times(self):

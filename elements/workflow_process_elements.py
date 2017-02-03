@@ -1,6 +1,5 @@
 import numpy as np
 
-RANDOM_STATE_ARRIVAL = np.random.RandomState(1)
 
 
 class StartEvent(object):
@@ -8,13 +7,14 @@ class StartEvent(object):
         self.env = env
         self.generation_interval = generation_interval
         self.child = None
+        self.RANDOM_STATE_ARRIVAL = np.random.RandomState(1)
 
     def generate_tokens(self):
         """
 Generates infinitely many tokens (implicit objects) following an exponential rate.
         """
         while True:
-            exp_arrival = RANDOM_STATE_ARRIVAL.exponential(self.generation_interval)
+            exp_arrival = self.RANDOM_STATE_ARRIVAL.exponential(self.generation_interval)
             yield self.env.timeout(exp_arrival)
             if self.child is None:
                 print("Start event has no child assigned")
