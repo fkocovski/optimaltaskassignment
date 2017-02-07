@@ -5,8 +5,9 @@ import math
 RANDOM_STATE_PROBABILITIES = np.random.RandomState(1)
 
 
-class LLQP_MC_PG(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, gamma, alpha):
+class LLQP_MC_PG_WB(Policy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, w, theta, gamma, alpha,
+                 beta):
         """
 Initializes a MC policy with VFA.
         :param env: simpy environment.
@@ -21,9 +22,11 @@ Initializes a MC policy with VFA.
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.name = "LLQP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
+        self.w = w
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
+        self.beta = beta
         self.history = []
         self.jobs_lateness = []
 
@@ -150,13 +153,33 @@ Value function approximator. Uses the policy theta weight vector and returns for
             value += busy_time * self.theta[i + action * self.number_of_users]
         return value
 
-    def update_theta(self):
+    def state_value_approximator(self, states):
+        value = 0.0
+        for i,state in enumerate(states):
+            value += self.w[i]*state
+        return value
+
+    def state_gradient(self, states):
+        """
+For each states-action pair calculates the gradient descent to be used in the theta update function.
+        :param states: list of users busy time.
+        :param action: chosen action corresponding to the states.
+        :return: gradient to be used for updating theta vector towards optimum.
+        """
+        state_gradient = np.zeros(self.number_of_users)
+        for i,state in enumerate(states):
+            state_gradient[i] = state
+        return state_gradient
+
+    def learn(self):
         """
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
-
         for i, (states, action) in enumerate(self.history):
-            self.theta += self.alpha *self.gamma**i*-self.discount_rewards(i) * (self.features(states, action) - sum(
+            disc_reward = -self.discount_rewards(i)
+            delta = disc_reward - self.state_value_approximator(states)
+            self.w += self.beta * delta * self.state_gradient(states)
+            self.theta += self.alpha * self.gamma ** i * delta * (self.features(states, action) - sum(
                 self.policy_probabilities(states)[a] * self.features(states, a) for a in range(self.number_of_users)))
 
     def features(self, states, action):
