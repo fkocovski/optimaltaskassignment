@@ -5,9 +5,6 @@ from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
 from policies.llqp_mc_pg import LLQP_MC_PG
 from simulations import *
-import time
-
-start = time.time()
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
@@ -19,11 +16,8 @@ for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
-    # decay parameters
-    alpha_disc = alpha / (i + 1)
-
     # initialize policy
-    policy_train = LLQP_MC_PG(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha_disc)
+    policy_train = LLQP_MC_PG(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -75,7 +69,3 @@ file_statistics.close()
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
 evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
-
-end = time.time()
-
-print(end-start)
