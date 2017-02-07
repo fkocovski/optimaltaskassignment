@@ -1,17 +1,16 @@
 import simpy
 import numpy as np
 from evaluation.plot import evolution
-from evaluation.trisurf_3d_plot import qsa_values
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.statistics import calculate_statistics
-from policies.llqp_mc_vfa import LLQP_MC_VFA
+from policies.llqp_mc_pg import LLQP_MC_PG
 from simulations import *
 import time
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 0.9
-epochs = 3000
+epochs = 1000
 initial_alpha = 0.001
 
 # start of simulation
@@ -30,7 +29,7 @@ for i in range(epochs):
     # alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
-    policy_train = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
+    policy_train = LLQP_MC_PG(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -54,7 +53,7 @@ for i in range(epochs):
     end = time.time()
 
     # update theta
-    LLQP_MC_VFA.update_theta(policy_train)
+    LLQP_MC_PG.update_theta(policy_train)
 
     # if i % 50 == 0:
         # end of simulation
@@ -68,10 +67,10 @@ epsilon = 0.0
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_PG")
 
 # initialize policy
-policy = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
+policy = LLQP_MC_PG(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
                      initial_alpha)
 
 # start event
@@ -95,7 +94,7 @@ file_statistics.close()
 
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
+# evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
 
 # if NUMBER_OF_USERS == 2:
     # value action for plot

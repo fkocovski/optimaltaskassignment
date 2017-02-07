@@ -1,8 +1,11 @@
 from policies import *
 from collections import deque
+import math
+
+RANDOM_STATE_PROBABILITIES = np.random.RandomState(1)
 
 
-class LLQP_TD_VFA(Policy):
+class LLQP_MC_PG(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, epsilon, gamma,
                  alpha):
         """
@@ -24,7 +27,9 @@ Initializes a MC policy with VFA.
         self.epsilon = epsilon
         self.gamma = gamma
         self.alpha = alpha
-        self.episode = 0
+        self.history = []
+        self.jobs_lateness = []
+        self.users_busy_times = []
 
     def request(self, user_task):
         """
@@ -60,6 +65,7 @@ Release method for MC policies. Uses the passed parameter, which is a policyjob 
         :param llqp_job: a policyjob object.
         """
         super().release(llqp_job)
+        self.save_job_lateness(llqp_job)
         user_to_release_index = llqp_job.assigned_user
 
         user_queue_to_free = self.users_queues[user_to_release_index]
@@ -84,36 +90,20 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
         """
         busy_times = self.get_busy_times()
 
-        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
-            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
-        else:
-            action = max(range(self.number_of_users),
-                         key=lambda action: self.action_value_approximator(busy_times, action))
+        probabilities = self.policy_probabilities(busy_times)
 
-        reward = busy_times[action] + llqp_job.service_rate[action]
+        chosen_action = RANDOM_STATE_PROBABILITIES.choice(self.number_of_users, p=probabilities)
 
-        llqp_queue = self.users_queues[action]
-        llqp_job.assigned_user = action
+        self.history.append((busy_times, chosen_action))
+        self.jobs_lateness.append(busy_times[chosen_action] + llqp_job.service_rate[chosen_action])
+
+        llqp_queue = self.users_queues[chosen_action]
+        llqp_job.assigned_user = chosen_action
         llqp_queue.append(llqp_job)
         leftmost_llqp_queue_element = llqp_queue[0]
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now
-            llqp_job.request_event.succeed(llqp_job.service_rate[action])
-
-        busy_times_new = self.get_busy_times()
-
-        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
-            action_new = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
-        else:
-            action_new = max(range(self.number_of_users),
-                             key=lambda action_new: self.action_value_approximator(busy_times_new, action_new))
-
-        self.episode += 1
-
-        if self.episode % 1 == 0:
-            self.update_theta(busy_times, action, busy_times_new, action_new, reward, True)
-        else:
-            self.update_theta(busy_times, action, busy_times_new, action_new, reward, False)
+            llqp_job.request_event.succeed(llqp_job.service_rate[chosen_action])
 
     def get_busy_times(self):
         """
@@ -129,6 +119,18 @@ Calculates current busy times for users which represent the current state space.
             else:
                 busy_times[user_index] = 0
         return busy_times
+
+    def policy_probabilities(self, busy_times):
+        """
+Calculates probabilities vector.
+        :param busy_times: current state space.
+        :return: list containing probabilities for each state.
+        """
+        probabilities = [None] * self.number_of_users
+        for action in range(self.number_of_users):
+            probabilities[action] = math.exp(self.action_value_approximator(busy_times, action)) / sum(
+                math.exp(self.action_value_approximator(busy_times, a)) for a in range(self.number_of_users))
+        return probabilities
 
     def policy_status(self):
         """
@@ -152,17 +154,37 @@ Value function approximator. Uses the policy theta weight vector and returns for
             value += busy_time * self.theta[i + action * self.number_of_users]
         return value
 
-    def update_theta(self, old_state, old_action, new_state, new_action, reward, terminal):
+    def update_theta(self):
         """
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
-        if terminal:
-            self.theta += self.alpha * (
-            -reward - self.action_value_approximator(old_state, old_action)) * self.gradient(old_state, old_action)
-        else:
-            self.theta += self.alpha * (-reward + self.gamma * self.action_value_approximator(new_state,
-                                                                                              new_action) - self.action_value_approximator(
-                old_state, old_action)) * self.gradient(old_state, old_action)
+
+        for i, (states, action) in enumerate(self.history):
+            self.theta += self.alpha * -self.discount_rewards(i) * (self.features(states, action) - sum(
+                self.policy_probabilities(states)[a] * self.features(states, a) for a in range(self.number_of_users)))
+
+    def features(self, states, action):
+        features = np.zeros(self.number_of_users ** 2)
+        for act in range(self.number_of_users):
+            features[act + action * self.number_of_users] = states[act]
+        return features
+
+    def discount_rewards(self, time):
+        """
+Discount rewards for one MC episode.
+        """
+        g = 0.0
+        for t in range(time + 1):
+            g += (self.gamma ** t) * self.jobs_lateness[t]
+        return g
+
+    def save_job_lateness(self, policy_job):
+        """
+Evaluates and appends the job's lateness to a policy global queue.
+        :param policy_job: policyjob object passed in each release method.
+        """
+        job_lateness = policy_job.finished - policy_job.started
+        self.jobs_lateness.append(job_lateness)
 
     def gradient(self, states, action):
         """
@@ -175,3 +197,14 @@ For each states-action pair calculates the gradient descent to be used in the th
         for i, busy_time in enumerate(states):
             gradient_vector[i + action * self.number_of_users] = busy_time
         return gradient_vector
+
+    def value_function(self):
+        """
+Creates a list of approximated states-action values.
+        :return: list of approximated states-action values to be used as input for trisurf plot.
+        """
+        value_action = []
+        for i, (states, action) in enumerate(self.history):
+            qsa_value = self.action_value_approximator(states, action)
+            value_action.append((states, qsa_value, action))
+        return value_action

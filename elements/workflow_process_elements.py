@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 class StartEvent(object):
     def __init__(self, env, generation_interval):
         self.env = env

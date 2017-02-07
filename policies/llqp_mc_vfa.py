@@ -85,15 +85,7 @@ Release method for MC policies. Uses the passed parameter, which is a policyjob 
 Evaluate method for MC policies. Creates a continuous state space which corresponds to the users busy times and follows and epsilon greedy policy approach to optimally choose the best user.
         :param llqp_job: a policyjob object to be assigned.
         """
-        busy_times = [None] * self.number_of_users
-        for user_index, user_deq in enumerate(self.users_queues):
-            if len(user_deq) > 0:
-                leftmost_queue_element = user_deq[0]
-                busy_times[user_index] = sum(job.service_rate[user_index] for job in user_deq)
-                if leftmost_queue_element.is_busy(self.env.now):
-                    busy_times[user_index] -= self.env.now - leftmost_queue_element.started
-            else:
-                busy_times[user_index] = 0
+        busy_times = self.get_busy_times()
 
         if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
             action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
@@ -102,9 +94,7 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
                          key=lambda action: self.action_value_approximator(busy_times, action))
 
         self.history.append((busy_times, action))
-        self.jobs_lateness.append(busy_times[action]+llqp_job.service_rate[action])
-
-
+        self.jobs_lateness.append(busy_times[action] + llqp_job.service_rate[action])
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -113,6 +103,21 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now
             llqp_job.request_event.succeed(llqp_job.service_rate[action])
+
+    def get_busy_times(self):
+        """
+Calculates current busy times for users which represent the current state space.
+        :return: list which indexes correspond to each user's busy time.
+        """
+        busy_times = [None] * self.number_of_users
+        for user_index, user_deq in enumerate(self.users_queues):
+            if len(user_deq) > 0:
+                busy_times[user_index] = sum(job.service_rate[user_index] for job in user_deq)
+                if user_deq[0].is_busy(self.env.now):
+                    busy_times[user_index] -= self.env.now - user_deq[0].started
+            else:
+                busy_times[user_index] = 0
+        return busy_times
 
     def policy_status(self):
         """
@@ -142,16 +147,17 @@ MC method to learn based on its followed trajectory. Evaluates the history list 
         """
 
         for i, (states, action) in enumerate(self.history):
-                self.theta += self.alpha * (-self.discount_rewards(i) - self.action_value_approximator(states, action)) * self.gradient(
-                    states,
-                    action)
+            self.theta += self.alpha * (
+            -self.discount_rewards(i) - self.action_value_approximator(states, action)) * self.gradient(
+                states,
+                action)
 
-    def discount_rewards(self,time):
+    def discount_rewards(self, time):
         """
 Discount rewards for one MC episode.
         """
         g = 0.0
-        for t in range(time+1):
+        for t in range(time + 1):
             g += (self.gamma ** t) * self.jobs_lateness[t]
         return g
 
