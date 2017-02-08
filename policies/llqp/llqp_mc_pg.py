@@ -8,7 +8,7 @@ RANDOM_STATE_PROBABILITIES = np.random.RandomState(1)
 class LLQP_MC_PG(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, gamma, alpha):
         """
-Initializes a MC policy with VFA.
+Initializes an LLQP policy using a MC approach with VFA and PG.
         :param env: simpy environment.
         :param number_of_users: the number of users present in the system.
         :param worker_variability: worker variability in absolute value.
@@ -33,19 +33,7 @@ Request method for MC policies. Creates a PolicyJob object and calls for the app
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        super().request(user_task)
-
-        average_processing_time = RANDOM_STATE.gamma(
-            user_task.service_interval ** 2 / user_task.task_variability,
-            user_task.task_variability / user_task.service_interval)
-
-        llqp_job = PolicyJob(user_task)
-        llqp_job.request_event = self.env.event()
-        llqp_job.arrival = self.env.now
-
-        llqp_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
-                                                    self.worker_variability / average_processing_time) for
-                                 _ in range(self.number_of_users)]
+        llqp_job = super().request(user_task)
 
         self.save_status()
 
@@ -140,7 +128,7 @@ Evaluates the current state of the policy. Overrides parent method with MC speci
 
     def action_value_approximator(self, states, action):
         """
-Value function approximator. Uses the policy theta weight vector and returns for action and states vector an approximated value.
+Action value function approximator. Uses the policy theta weight vector and returns for action and states vector an approximated value.
         :param states: list of users busy time.
         :param action: chosen action corresponding to the states.
         :return: a single approximated value.
@@ -152,11 +140,11 @@ Value function approximator. Uses the policy theta weight vector and returns for
 
     def update_theta(self):
         """
-MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
+PG  method to learn based on its followed trajectory. Evaluates the history list and for each states-action pair updates its theta weight vector.
         """
-
         for i, (states, action) in enumerate(self.history):
-            self.theta += self.alpha *self.gamma**i*-self.discount_rewards(i) * (self.features(states, action) - sum(
+            self.theta += self.alpha * self.gamma ** i * -self.discount_rewards(i) * (
+            self.features(states, action) - sum(
                 self.policy_probabilities(states)[a] * self.features(states, a) for a in range(self.number_of_users)))
 
     def features(self, states, action):

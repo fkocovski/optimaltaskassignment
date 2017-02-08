@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 import simpy
 
@@ -12,26 +10,16 @@ from simulations import *
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 0.9
-epochs = 3000
-initial_alpha = 0.001
-
-# start of simulation
-start = time.time()
+epochs = 2000
+alpha = 0.01
+epsilon = 0.1
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
-    # fixed parameters
-    epsilon = 0.1
-    alpha_disc = initial_alpha
-
-    # decay parameters
-    # epsilon = 1 / (i + 1)
-    # alpha_disc = initial_alpha / (i + 1)
-
     # initialize policy
-    policy_train = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha_disc)
+    policy_train = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -51,16 +39,8 @@ for i in range(epochs):
     # runs simulation
     env.run(until=SIM_TIME)
 
-    # end of simulation
-    end = time.time()
-
     # update theta
     LLQP_MC_VFA.update_theta(policy_train)
-
-    # if i % 50 == 0:
-        # end of simulation
-        # end = time.time()
-        # print("FINISHED TRAINING SESSION {} in {}".format(i,end-start))
 
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
@@ -73,7 +53,7 @@ file_policy, file_statistics, file_policy_name, file_statistics_name = create_fi
 
 # initialize policy
 policy = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
-                     initial_alpha)
+                     alpha)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)
@@ -97,8 +77,3 @@ file_statistics.close()
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
 evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
-
-# if NUMBER_OF_USERS == 2:
-    # value action for plot
-    # value_action = policy.value_function()
-    # qsa_values(value_action)

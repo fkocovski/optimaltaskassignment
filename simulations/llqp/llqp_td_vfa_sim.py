@@ -9,7 +9,7 @@ from simulations import *
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 0.9
-alpha = 0.001
+alpha = 0.01
 epsilon = 0.1
 
 # creates simulation environment

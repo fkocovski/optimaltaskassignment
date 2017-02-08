@@ -10,7 +10,7 @@ from simulations import *
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 0.9
-epochs = 1000
+epochs = 2000
 alpha = 0.01
 
 for i in range(epochs):

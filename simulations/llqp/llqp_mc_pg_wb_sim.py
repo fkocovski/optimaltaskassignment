@@ -11,7 +11,7 @@ from simulations import *
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 w = np.zeros(NUMBER_OF_USERS)
 gamma = 0.9
-epochs = 1000
+epochs = 2000
 alpha = 0.01
 beta = 0.01
 

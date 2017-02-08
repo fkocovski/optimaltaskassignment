@@ -22,10 +22,23 @@ Parent class initialization for all policy objects.
 
     def request(self, user_task):
         """
-Parent class request method for user task objects to request an optimal solution.
+Parent class request method for user task objects to request an optimal solution. Initializes a policy job.
+        :return: initialized policy job object.
         :param user_task: user task object that requests optimal solution.
         """
-        pass
+        average_processing_time = RANDOM_STATE.gamma(
+            user_task.service_interval ** 2 / user_task.task_variability,
+            user_task.task_variability / user_task.service_interval)
+
+        policy_job = PolicyJob(user_task)
+        policy_job.request_event = self.env.event()
+        policy_job.arrival = self.env.now
+
+        policy_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
+                                                    self.worker_variability / average_processing_time) for
+                                 _ in range(self.number_of_users)]
+
+        return policy_job
 
     def release(self, policy_job):
         """

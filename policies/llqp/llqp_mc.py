@@ -1,4 +1,3 @@
-import numpy as np
 from policies import *
 from collections import deque
 
@@ -28,19 +27,7 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        super().request(user_task)
-
-        average_processing_time = RANDOM_STATE.gamma(
-            user_task.service_interval ** 2 / user_task.task_variability,
-            user_task.task_variability / user_task.service_interval)
-
-        llqp_job = PolicyJob(user_task)
-        llqp_job.request_event = self.env.event()
-        llqp_job.arrival = self.env.now
-
-        llqp_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
-                                                    self.worker_variability / average_processing_time) for
-                                 _ in range(self.number_of_users)]
+        llqp_job = super().request(user_task)
 
         self.evaluate(llqp_job)
 

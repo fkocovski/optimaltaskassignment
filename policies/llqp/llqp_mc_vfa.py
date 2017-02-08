@@ -34,19 +34,7 @@ Request method for MC policies. Creates a PolicyJob object and calls for the app
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        super().request(user_task)
-
-        average_processing_time = RANDOM_STATE.gamma(
-            user_task.service_interval ** 2 / user_task.task_variability,
-            user_task.task_variability / user_task.service_interval)
-
-        llqp_job = PolicyJob(user_task)
-        llqp_job.request_event = self.env.event()
-        llqp_job.arrival = self.env.now
-
-        llqp_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
-                                                    self.worker_variability / average_processing_time) for
-                                 _ in range(self.number_of_users)]
+        llqp_job = super().request(user_task)
 
         self.save_status()
 
@@ -62,7 +50,7 @@ Release method for MC policies. Uses the passed parameter, which is a policyjob 
         :param llqp_job: a policyjob object.
         """
         super().release(llqp_job)
-        self.save_job_lateness(llqp_job)
+
         user_to_release_index = llqp_job.assigned_user
 
         user_queue_to_free = self.users_queues[user_to_release_index]
@@ -161,14 +149,6 @@ Discount rewards for one MC episode.
             g += (self.gamma ** t) * self.jobs_lateness[t]
         return g
 
-    def save_job_lateness(self, policy_job):
-        """
-Evaluates and appends the job's lateness to a policy global queue.
-        :param policy_job: policyjob object passed in each release method.
-        """
-        job_lateness = policy_job.finished - policy_job.started
-        self.jobs_lateness.append(job_lateness)
-
     def gradient(self, states, action):
         """
 For each states-action pair calculates the gradient descent to be used in the theta update function.
@@ -180,14 +160,3 @@ For each states-action pair calculates the gradient descent to be used in the th
         for i, busy_time in enumerate(states):
             gradient_vector[i + action * self.number_of_users] = busy_time
         return gradient_vector
-
-    def value_function(self):
-        """
-Creates a list of approximated states-action values.
-        :return: list of approximated states-action values to be used as input for trisurf plot.
-        """
-        value_action = []
-        for i, (states, action) in enumerate(self.history):
-            qsa_value = self.action_value_approximator(states, action)
-            value_action.append((states, qsa_value, action))
-        return value_action
