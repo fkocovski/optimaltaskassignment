@@ -1,20 +1,20 @@
 import simpy
 
-from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.k_batchone import KBatchOne
+from policies.batch.k_batchone import KBatchOne
 from simulations import *
-from solvers.st_solver import st
+from solvers.dmf_solver import dmf
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batchone_st".format(BATCH_SIZE))
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batchone_dmf".format(BATCH_SIZE))
 
 # initialize policy
-policy = KBatchOne(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, st, file_policy, file_statistics)
+policy = KBatchOne(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, dmf, file_policy, file_statistics)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)

@@ -1,25 +1,24 @@
-import simpy
 import numpy as np
-from evaluation.plot import evolution
+import simpy
+
 from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.llqp_mc_pg_wb import LLQP_MC_PG_WB
+from policies.llqp.llqp_mc_pg import LLQP_MC_PG
 from simulations import *
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
-w = np.zeros(NUMBER_OF_USERS)
 gamma = 0.9
 epochs = 1000
 alpha = 0.01
-beta = 0.01
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
     # initialize policy
-    policy_train = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, w, theta, gamma, alpha, beta)
+    policy_train = LLQP_MC_PG(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -34,21 +33,19 @@ for i in range(epochs):
     env.process(start_event.generate_tokens())
 
     # runs simulation
-    print(theta)
     env.run(until=SIM_TIME)
 
     # update theta
-    LLQP_MC_PG_WB.learn(policy_train)
+    LLQP_MC_PG.update_theta(policy_train)
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_PG_WB")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_PG")
 
 # initialize policy
-policy = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, w, theta, gamma, alpha,
-                       beta)
+policy = LLQP_MC_PG(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, gamma, alpha)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)

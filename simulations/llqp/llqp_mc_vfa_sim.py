@@ -1,12 +1,13 @@
-import simpy
-import numpy as np
-from evaluation.plot import evolution
-from evaluation.trisurf_3d_plot import qsa_values
-from elements.workflow_process_elements import StartEvent, UserTask, connect
-from evaluation.statistics import calculate_statistics
-from policies.llqp_mc_vfa import LLQP_MC_VFA
-from simulations import *
 import time
+
+import numpy as np
+import simpy
+
+from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.plot import evolution
+from evaluation.statistics import calculate_statistics
+from policies.llqp.llqp_mc_vfa import LLQP_MC_VFA
+from simulations import *
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)

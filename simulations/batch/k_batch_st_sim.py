@@ -1,9 +1,9 @@
 import simpy
 
-from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.k_batch import KBatch
+from policies.batch.k_batch import KBatch
 from simulations import *
 from solvers.st_solver import st
 

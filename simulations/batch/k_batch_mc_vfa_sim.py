@@ -1,11 +1,13 @@
-import simpy
-import numpy as np
-from evaluation.plot import evolution
-from elements.workflow_process_elements import StartEvent, UserTask, connect
-from evaluation.statistics import calculate_statistics
-from policies.k_batch_mc_vfa import KBatchMcVfa
-from simulations import *
 import time
+
+import numpy as np
+import simpy
+
+from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.plot import evolution
+from evaluation.statistics import calculate_statistics
+from policies.batch.k_batch_mc_vfa import KBatchMcVfa
+from simulations import *
 
 # init theta and reinforcement learning variables
 theta = np.zeros(2 * (NUMBER_OF_USERS ** 2))

@@ -1,19 +1,20 @@
 import simpy
 
-from evaluation.plot import evolution
 from elements.workflow_process_elements import StartEvent, UserTask, connect
+from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.mmone import MMONE
+from policies.batch.k_batch import KBatch
 from simulations import *
+from solvers.sdmf_solver import sdmf
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("mmone")
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batch_sdmf".format(BATCH_SIZE))
 
 # initialize policy
-policy = MMONE(env, 1, WORKER_VARAIBILITY, file_policy, file_statistics)
+policy = KBatch(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, sdmf, file_policy, file_statistics)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
