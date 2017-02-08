@@ -11,8 +11,11 @@ Included policies:
 5. KBatch
 6. KBatch1
 
-For solving the optimization problem present in the batching policies, the [Gurobi Optimization](http://www.gurobi.com) suite was used
+For solving the optimization problem present in the batching policies, the [Gurobi Optimization](http://www.gurobi.com) suite was used.
+
+For the reinforcement learning environment all algorithms are based on Sutton's and Barto's book.
 
 # References
 
 - Zeng, Daniel D., and J. Leon Zhao. "Effective role resolution in workflow management." INFORMS journal on computing 17.3 (2005): 374-387.
+- Sutton, Richard S., and Andrew G. Barto. Reinforcement learning: An introduction. Vol. 1. No. 1. Cambridge: MIT press, 1998.
