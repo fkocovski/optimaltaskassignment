@@ -23,8 +23,8 @@ Parent class initialization for all policy objects.
     def request(self, user_task):
         """
 Parent class request method for user task objects to request an optimal solution. Initializes a policy job.
-        :return: initialized policy job object.
         :param user_task: user task object that requests optimal solution.
+        :return: initialized policy job object.
         """
         average_processing_time = RANDOM_STATE.gamma(
             user_task.service_interval ** 2 / user_task.task_variability,

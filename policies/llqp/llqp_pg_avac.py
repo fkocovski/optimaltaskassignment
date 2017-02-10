@@ -71,7 +71,6 @@ class LLQP_PG_AVAC(Policy):
 
         chosen_action_new = RANDOM_STATE_PROBABILITIES.choice(self.number_of_users, p=probabilities_new)
 
-        print(self.theta)
         self.learn(busy_times, chosen_action, busy_times_new, chosen_action_new, reward)
 
     def get_busy_times(self):

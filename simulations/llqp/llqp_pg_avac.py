@@ -11,8 +11,8 @@ from simulations import *
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 w = np.zeros(NUMBER_OF_USERS**2)
 gamma = 0.9
-alpha = 0.0001
-beta = 0.0001
+alpha = 0.000001
+beta = 0.000001
 
 # creates simulation environment
 env = simpy.Environment()
