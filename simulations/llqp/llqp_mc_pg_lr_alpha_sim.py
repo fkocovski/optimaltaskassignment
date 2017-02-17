@@ -18,14 +18,14 @@ eta = 0.0
 etas = []
 list_of_rewards = []
 
-while eta < 10:
+while eta < 5:
     theta[0] = -eta
     theta[1] = eta
     theta[2] = eta
     theta[3] = -eta
 
     rewards = []
-    for j in range(50):
+    for j in range(100000):
         # creates simulation environment
         env = simpy.Environment()
 
@@ -65,4 +65,4 @@ while eta < 10:
 
     eta += 0.5
 
-eta_plot(etas,list_of_rewards)
+eta_plot(etas,list_of_rewards,"eta_plot.pdf")

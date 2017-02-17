@@ -16,6 +16,7 @@ class LLQP_PG_AVAC(Policy):
         self.gamma = gamma
         self.alpha = alpha
         self.beta = beta
+        self.rewards = []
 
     def request(self, user_task):
         llqp_job = super().request(user_task)
@@ -56,6 +57,7 @@ class LLQP_PG_AVAC(Policy):
         chosen_action = RANDOM_STATE_PROBABILITIES.choice(self.number_of_users, p=probabilities)
 
         reward = busy_times[chosen_action] + llqp_job.service_rate[chosen_action]
+        self.rewards.append(reward)
 
         llqp_queue = self.users_queues[chosen_action]
         llqp_job.assigned_user = chosen_action

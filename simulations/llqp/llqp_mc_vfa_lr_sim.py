@@ -4,13 +4,13 @@ import simpy
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_mc_vfa import LLQP_MC_VFA
+from policies.llqp.llqp_mc_vfa_lr import LLQP_MC_VFA_LR
 from simulations import *
 
 # init theta and reinforcement learning variables
-theta = np.zeros(NUMBER_OF_USERS ** 2)
+theta = np.ones(NUMBER_OF_USERS ** 2)
 gamma = 0.9
-epochs = 100
+epochs = 3000
 alpha = 0.001
 epsilon = 0.1
 
@@ -19,7 +19,10 @@ for i in range(epochs):
     env = simpy.Environment()
 
     # initialize policy
-    policy_train = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha)
+    # FIXME: normalization as method
+    theta[0] = 0.0
+    theta[1] = 0.0
+    policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta/np.linalg.norm(theta), epsilon, gamma, alpha)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -40,7 +43,7 @@ for i in range(epochs):
     env.run(until=SIM_TIME)
 
     # update theta
-    LLQP_MC_VFA.update_theta(policy_train)
+    LLQP_MC_VFA_LR.update_theta(policy_train)
 
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
@@ -49,10 +52,10 @@ epsilon = 0.0
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA_LR")
 
 # initialize policy
-policy = LLQP_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
+policy = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
                      alpha)
 
 # start event

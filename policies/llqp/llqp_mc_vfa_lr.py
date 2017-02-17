@@ -2,7 +2,7 @@ from policies import *
 from collections import deque
 
 
-class LLQP_MC_VFA(Policy):
+class LLQP_MC_VFA_LR(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, epsilon, gamma,
                  alpha):
         """
@@ -18,14 +18,14 @@ Initializes a MC policy with VFA.
         :param alpha: step size parameter for the gradient descent method.
         """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
-        self.name = "LLQP_MC_VFA"
+        self.name = "LLQP_MC_VFA_LR"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.theta = theta
         self.epsilon = epsilon
         self.gamma = gamma
         self.alpha = alpha
         self.history = []
-        self.jobs_lateness = []
+        self.rewards = []
 
     def request(self, user_task):
         """
@@ -81,7 +81,7 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
                          key=lambda action: self.q(busy_times, action))
 
         self.history.append((busy_times, action))
-        self.jobs_lateness.append(busy_times[action] + llqp_job.service_rate[action])
+        self.rewards.append(busy_times[action] + llqp_job.service_rate[action])
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
@@ -130,12 +130,11 @@ Value function approximator. Uses the policy theta weight vector and returns for
         """
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
-
         for i, (states, action) in enumerate(self.history):
-            self.theta += self.alpha * (
-            -self.discount_rewards(i) - self.q(states, action)) * self.gradient(
-                states,
-                action)
+            if action > 0:
+                self.theta += self.alpha * (-self.discount_rewards(i) - self.q(states, action)) * self.features(states,action)
+                self.theta = self.normalize_theta()
+        print(self.theta)
 
     def discount_rewards(self, time):
         """
@@ -143,20 +142,8 @@ Discount rewards for one MC episode.
         """
         g = 0.0
         for t in range(time + 1):
-            g += (self.gamma ** t) * self.jobs_lateness[t]
+            g += (self.gamma ** t) * self.rewards[t]
         return g
-
-    def gradient(self, states, action):
-        """
-For each states-action pair calculates the gradient descent to be used in the theta update function.
-        :param states: list of users busy time.
-        :param action: chosen action corresponding to the states.
-        :return: gradient to be used for updating theta vector towards optimum.
-        """
-        gradient_vector = np.zeros(self.number_of_users ** 2)
-        for i, busy_time in enumerate(states):
-            gradient_vector[i + action * self.number_of_users] = busy_time
-        return gradient_vector
 
     def features(self, states, action):
         """
@@ -169,3 +156,10 @@ Creates features vector for theta update function. For each action it creates a 
         for act in range(self.number_of_users):
             features[act + action * self.number_of_users] = states[act]
         return features
+
+    def normalize_theta(self):
+        """
+Normalizes theta vector.
+        :return: normalized theta vector.
+        """
+        return self.theta/np.linalg.norm(self.theta)
