@@ -4,13 +4,13 @@ import simpy
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_mc_vfa_lr import LLQP_MC_VFA_LR
+from policies.llqp.llqp_mc_vfa_fs import LLQP_MC_VFA_FS
 from simulations import *
 
 # init theta and reinforcement learning variables
-theta = np.ones(NUMBER_OF_USERS ** 2)
+theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 0.9
-epochs = 1000
+epochs = 100
 alpha = 0.0001
 epsilon = 0.1
 
@@ -19,10 +19,7 @@ for i in range(epochs):
     env = simpy.Environment()
 
     # initialize policy
-    # FIXME: normalization as method
-    # theta[0] = 0.0
-    # theta[1] = 0.0
-    policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta/np.linalg.norm(theta), epsilon, gamma, alpha)
+    policy_train = LLQP_MC_VFA_FS(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, epsilon, gamma, alpha)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -43,8 +40,9 @@ for i in range(epochs):
     env.run(until=SIM_TIME)
 
     # update theta
-    LLQP_MC_VFA_LR.update_theta(policy_train)
-    print(policy_train.theta)
+    LLQP_MC_VFA_FS.update_theta(policy_train)
+    if i % 500 == 0:
+        print("Finished {}th train run".format(i))
 
 # set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
@@ -53,10 +51,10 @@ epsilon = 0.0
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA_LR")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA_FS")
 
 # initialize policy
-policy = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
+policy = LLQP_MC_VFA_FS(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
                      alpha)
 
 # start event
@@ -73,6 +71,8 @@ env.process(start_event_test.generate_tokens())
 
 # runs simulation
 env.run(until=SIM_TIME)
+
+print(policy.compose_history())
 
 # close file
 file_policy.close()

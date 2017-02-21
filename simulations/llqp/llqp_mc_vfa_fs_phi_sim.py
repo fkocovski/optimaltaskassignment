@@ -4,7 +4,7 @@ import simpy
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_mc_vfa_lr import LLQP_MC_VFA_LR
+from policies.llqp.llqp_mc_vfa_fs import LLQP_MC_VFA_FS
 from simulations import *
 from evaluation.phi_plot import phi_plot
 
@@ -17,7 +17,7 @@ epsilon = 0.0
 phis = []
 list_of_rewards = []
 
-for phi in np.linspace(3/2*np.pi+1e-6, 2*np.pi, 32):
+for phi in np.linspace(4.5, 2*np.pi, 16):
     rewards = []
     for i in range(epochs):
         # creates simulation environment
@@ -30,7 +30,7 @@ for phi in np.linspace(3/2*np.pi+1e-6, 2*np.pi, 32):
         theta[2] = np.cos(phi)
         theta[3] = np.sin(phi)
 
-        policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta/np.linalg.norm(theta), epsilon, gamma, alpha)
+        policy_train = LLQP_MC_VFA_FS(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta/np.linalg.norm(theta), epsilon, gamma, alpha)
 
         # start event
         start_event = StartEvent(env, GENERATION_INTERVAL)

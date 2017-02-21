@@ -2,7 +2,7 @@ from policies import *
 from collections import deque
 
 
-class LLQP_MC_VFA_LR(Policy):
+class LLQP_MC_VFA_FS(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, epsilon, gamma,
                  alpha):
         """
@@ -18,7 +18,7 @@ Initializes a MC policy with VFA.
         :param alpha: step size parameter for the gradient descent method.
         """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
-        self.name = "LLQP_MC_VFA_LR"
+        self.name = "LLQP_MC_VFA_FS"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.theta = theta
         self.epsilon = epsilon
@@ -33,7 +33,13 @@ Request method for MC policies. Creates a PolicyJob object and calls for the app
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        llqp_job = super().request(user_task)
+        # super().request(user_task)
+
+        llqp_job = PolicyJob(user_task)
+        llqp_job.request_event = self.env.event()
+        llqp_job.arrival = self.env.now
+
+        llqp_job.service_rate = [user_task.service_interval for _ in range(self.number_of_users)]
 
         self.save_status()
 
@@ -73,13 +79,11 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
         :param llqp_job: a policyjob object to be assigned.
         """
         busy_times = self.get_busy_times()
-
         if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
             action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
         else:
             action = max(range(self.number_of_users),
                          key=lambda action: self.q(busy_times, action))
-
 
         self.history.append((busy_times, action))
         self.rewards.append(busy_times[action] + llqp_job.service_rate[action])
@@ -132,18 +136,17 @@ Value function approximator. Uses the policy theta weight vector and returns for
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
         for i, (states, action) in enumerate(self.history):
-            # if action > 0:
-                self.theta += self.alpha * (-self.discount_rewards(i) - self.q(states, action)) * self.features(states,action)
-                self.theta = self.normalize_theta()
+            self.theta += self.alpha * (self.discount_rewards(i) - self.q(states, action)) * self.features(states,action)
 
     def discount_rewards(self, time):
         """
 Discount rewards for one MC episode.
         """
         g = 0.0
-        for t in range(time + 1):
-            g += (self.gamma ** t) * self.rewards[t]
-        return g
+        tmp_rewards = self.rewards[time:]
+        for t,rwd in enumerate(tmp_rewards):
+            g += (self.gamma ** t) * rwd
+        return -g
 
     def features(self, states, action):
         """
@@ -162,4 +165,10 @@ Creates features vector for theta update function. For each action it creates a 
 Normalizes theta vector.
         :return: normalized theta vector.
         """
-        return self.theta/np.linalg.norm(self.theta)
+        self.theta /= np.linalg.norm(self.theta)
+
+    def compose_history(self):
+        composed_history = []
+        for i, (states, action) in enumerate(self.history):
+            composed_history.append((states,action,self.discount_rewards(i)))
+        return composed_history
