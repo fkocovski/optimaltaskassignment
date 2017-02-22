@@ -85,6 +85,8 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             action = max(range(self.number_of_users),
                          key=lambda action: self.q(busy_times, action))
 
+        # print(busy_times,action,self.theta)
+
         self.history.append((busy_times, action))
         self.rewards.append(busy_times[action] + llqp_job.service_rate[action])
 
@@ -172,3 +174,32 @@ Normalizes theta vector.
         for i, (states, action) in enumerate(self.history):
             composed_history.append((states,action,self.discount_rewards(i)))
         return composed_history
+
+    def regression_fit(self):
+        s = []
+        g = []
+        for i,(states,action) in enumerate(self.history):
+            s.append((states,action))
+            g.append((self.discount_rewards(i),action))
+        s_one = [s1[0] for s1 in s if s1[1] == 0]
+        s_two = [s2[0] for s2 in s if s2[1] == 1]
+        g_one = [g1[0] for g1 in g if g1[1] == 0]
+        g_two = [g2[0] for g2 in g if g2[1] == 1]
+
+        dependent_one = np.dot(np.array(s_one).T,np.array(g_one))
+        dependent_two = np.dot(np.array(s_two).T,np.array(g_two))
+        coefficient_one = np.dot(np.array(s_one).T,np.array(s_one))
+        coefficient_two = np.dot(np.array(s_two).T,np.array(s_two))
+
+        # print(dependent_two)
+        # print(coefficient_two)
+
+        theta_one = np.linalg.solve(coefficient_one,dependent_one)
+        theta_two = np.linalg.solve(coefficient_two,dependent_two)
+        arr = np.concatenate((theta_one,theta_two))
+
+        self.theta[:] = arr
+        print(arr)
+        print(np.linalg.cond(coefficient_one),np.linalg.cond(coefficient_two))
+
+
