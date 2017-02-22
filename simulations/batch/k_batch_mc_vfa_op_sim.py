@@ -5,13 +5,13 @@ from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
 from evaluation.composed_history import composed_history
-from policies.llqp.llqp_mc_vfa_fs_op import LLQP_MC_VFA_FS_OP
+from policies.batch.k_batch_mc_vfa_op import K_BATCH_MC_VFA_OP
 from simulations import *
 
 # init theta and reinforcement learning variables
-theta = np.zeros(NUMBER_OF_USERS ** 2)
+theta = np.zeros(2*(NUMBER_OF_USERS ** 2))
 gamma = 0.5
-epochs = 1000
+epochs = 100
 alpha = 0.0001
 
 for i in range(epochs):
@@ -19,7 +19,7 @@ for i in range(epochs):
     env = simpy.Environment()
 
     # initialize policy
-    policy_train = LLQP_MC_VFA_FS_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha,False)
+    policy_train = K_BATCH_MC_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None,1, theta, gamma, alpha,False)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -42,16 +42,16 @@ for i in range(epochs):
     # print train episode
     if i % 10 == 0:
         print("Finished {}th train run".format(i))
-        print(policy_train.theta)
+        # print(policy_train.theta)
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA_FS_OP")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("K_BATCH_MC_VFA_OP")
 
 # initialize policy
-policy = LLQP_MC_VFA_FS_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, gamma, alpha,True)
+policy = K_BATCH_MC_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics,1, theta, gamma, alpha,True)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)

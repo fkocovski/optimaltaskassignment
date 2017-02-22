@@ -59,8 +59,6 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
         """
         super().release(k_batch_job)
 
-        self.save_rewards(k_batch_job)
-
         self.save_status()
 
         user_to_release_index = k_batch_job.assigned_user

@@ -2,8 +2,8 @@ from policies import *
 from collections import deque
 
 
-class LLQP_MC_VFA_FS_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, gamma,alpha,greedy):
+class K_BATCH_MC_VFA_OP(Policy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, batch_size, theta, gamma,alpha,greedy):
         """
 Initializes a MC policy with VFA.
         :param env: simpy environment.
@@ -11,16 +11,21 @@ Initializes a MC policy with VFA.
         :param worker_variability: worker variability in absolute value.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
+        :param batch_size: batch size of global queue.
         :param theta: weight vector for VFA.
         :param gamma: discounting factor for rewards.
+        :param alpha: step size parameter for the gradient descent method.
+        :param greedy: boolean indicating whether the policy should use a greedy approach.
         """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
-        self.name = "LLQP_MC_VFA_FS_OP"
-        self.users_queues = [deque() for _ in range(self.number_of_users)]
+        self.batch_size = batch_size
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
+        self.name = "{}_BATCH_MC_VFA_OP".format(batch_size)
+        self.users_queues = [deque() for _ in range(self.number_of_users)]
+        self.batch_queue = []
         self.history = []
         self.rewards = []
 
@@ -30,24 +35,29 @@ Request method for MC policies. Creates a PolicyJob object and calls for the app
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        llqp_job = super().request(user_task)
+        k_batch_job = super().request(user_task)
 
         self.save_status()
 
-        self.evaluate(llqp_job)
+        self.batch_queue.append(k_batch_job)
 
         self.save_status()
 
-        return llqp_job
+        if len(self.batch_queue) == self.batch_size:
+            self.evaluate(k_batch_job)
 
-    def release(self, llqp_job):
+        self.save_status()
+
+        return k_batch_job
+
+    def release(self, k_batch_job):
         """
 Release method for MC policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the released user's queue is not empty, it assigns the next policyjob to be worked.
         :param llqp_job: a policyjob object.
         """
-        super().release(llqp_job)
+        super().release(k_batch_job)
 
-        user_to_release_index = llqp_job.assigned_user
+        user_to_release_index = k_batch_job.assigned_user
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
@@ -58,57 +68,70 @@ Release method for MC policies. Uses the passed parameter, which is a policyjob 
         self.save_status()
 
         if len(user_queue_to_free) > 0:
-            next_llqp_job = user_queue_to_free[0]
-            next_llqp_job.started = self.env.now
-            next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
+            next_k_batch_job = user_queue_to_free[0]
+            next_k_batch_job.started = self.env.now
+            next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
         self.save_status()
 
-    def evaluate(self, llqp_job):
+    def evaluate(self, k_batch_job):
         """
 Evaluate method for MC policies. Creates a continuous state space which corresponds to the users busy times and follows and epsilon greedy policy approach to optimally choose the best user.
         :param llqp_job: a policyjob object to be assigned.
         """
-        busy_times = self.get_busy_times()
+        state_space = self.state_space(k_batch_job)
+        print(state_space)
 
         if self.greedy:
             action = max(range(self.number_of_users),
-                         key=lambda action: self.q(busy_times, action))
+                         key=lambda action: self.q(state_space, action))
         else:
             action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
 
-        self.history.append((busy_times, action))
-        self.rewards.append(busy_times[action] + llqp_job.service_rate[action])
+        self.history.append((state_space, action))
+        self.rewards.append(state_space[action] + k_batch_job.service_rate[action])
 
-        llqp_queue = self.users_queues[action]
-        llqp_job.assigned_user = action
-        llqp_queue.append(llqp_job)
-        leftmost_llqp_queue_element = llqp_queue[0]
-        if not leftmost_llqp_queue_element.is_busy(self.env.now):
-            llqp_job.started = self.env.now
-            llqp_job.request_event.succeed(llqp_job.service_rate[action])
+        user_queue = self.users_queues[action]
+        k_batch_job.assigned_user = action
+        user_queue.append(k_batch_job)
+        # TODO: extend clear method of batch queue for bigger batch queue size
+        self.batch_queue.clear()
+        if len(self.users_queues[action]) > 0:
+            leftmost_k_batch_element = user_queue[0]
+            if not leftmost_k_batch_element.is_busy(self.env.now):
+                k_batch_job.started = self.env.now
+                k_batch_job.request_event.succeed(k_batch_job.service_rate[action])
 
-    def get_busy_times(self):
+    def state_space(self, k_batch_job):
         """
 Calculates current busy times for users which represent the current state space.
         :return: list which indexes correspond to each user's busy time.
         """
-        busy_times = [None] * self.number_of_users
-        for user_index, user_deq in enumerate(self.users_queues):
-            if len(user_deq) > 0:
-                busy_times[user_index] = sum(job.service_rate[user_index] for job in user_deq)
-                if user_deq[0].is_busy(self.env.now):
-                    busy_times[user_index] -= self.env.now - user_deq[0].started
-            else:
-                busy_times[user_index] = 0
-        return busy_times
+        # wj
+        w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
+
+        # pi
+        p = [k_batch_job.service_rate[i] for i in range(self.number_of_users)]
+
+        # ai
+        current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
+        a = [
+            0 if current_user_element[i] is None else sum(job.service_rate[i] for job in self.users_queues[i]) for i
+            in range(self.number_of_users)]
+
+        for user_index, queue in enumerate(self.users_queues):
+            if len(queue) > 0:
+                if current_user_element[user_index].is_busy(self.env.now):
+                    a[user_index] -= self.env.now - current_user_element[user_index].started
+
+        return a+p
 
     def policy_status(self):
         """
 Evaluates the current state of the policy. Overrides parent method with MC specific logic.
         :return: returns a list where the first item is the global queue length (in MC always zero) and all subsequent elements are the respective user queues length.
         """
-        current_status = [0]
+        current_status = [len(self.batch_queue)]
         for i in range(self.number_of_users):
             current_status.append(len(self.users_queues[i]))
         return current_status
@@ -138,9 +161,9 @@ Creates features vector for theta update function. For each action it creates a 
         :param action: chosen action.
         :return: vector full of zeroes except for action where the busy times are reported.
         """
-        features = np.zeros(self.number_of_users ** 2)
+        features = np.zeros(2*(self.number_of_users ** 2))
         for act in range(self.number_of_users):
-            features[act + action * self.number_of_users] = states[act]
+            features[act + action * self.number_of_users*2] = states[act]
         return features
 
     def compose_history(self):

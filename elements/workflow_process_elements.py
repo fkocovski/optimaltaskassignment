@@ -3,6 +3,11 @@ import numpy as np
 
 class StartEvent(object):
     def __init__(self, env, generation_interval):
+        """
+Initializes a start event object.
+        :param env: simpy environment.
+        :param generation_interval: mean of generation interval to be sampled.
+        """
         self.env = env
         self.generation_interval = generation_interval
         self.child = None
@@ -28,6 +33,14 @@ Generates infinitely many tokens (implicit objects) following an exponential rat
 
 class UserTask(object):
     def __init__(self, env, policy, name, service_interval, task_variability):
+        """
+Initializes a user task object.
+        :param env: simpy environment.
+        :param policy: assigned policy to be used by the user task.
+        :param name: descriptive name.
+        :param service_interval: mean of service interval to be sampled.
+        :param task_variability: per user task variability to be used for sampling user specific service times.
+        """
         self.env = env
         self.policy = policy
         self.name = name
