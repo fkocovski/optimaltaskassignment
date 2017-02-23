@@ -2,9 +2,8 @@ from policies import *
 from collections import deque
 
 
-class K_BATCH_MC_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, batch_size, theta, gamma,
-                 alpha, greedy):
+class K_BATCH_MC_VFA_OPEP(Policy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, batch_size, theta, gamma,alpha,greedy,epsilon):
         """
 Initializes a MC policy with VFA.
         :param env: simpy environment.
@@ -17,6 +16,7 @@ Initializes a MC policy with VFA.
         :param gamma: discounting factor for rewards.
         :param alpha: step size parameter for the gradient descent method.
         :param greedy: boolean indicating whether the policy should use a greedy approach.
+        :param epsilon: parameter for the epsilon greedy approach.
         """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.batch_size = batch_size
@@ -24,7 +24,8 @@ Initializes a MC policy with VFA.
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
-        self.name = "{}_BATCH_MC_VFA_OP".format(batch_size)
+        self.epsilon = epsilon
+        self.name = "{}_BATCH_MC_VFA_OPEP".format(batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
         self.history = []
@@ -86,7 +87,14 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             action = max(range(self.number_of_users),
                          key=lambda action: self.q(state_space, action))
         else:
-            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
+            rnd = np.random.rand()
+            if rnd < self.epsilon:
+                action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
+            else:
+                print("ENTERING")
+                action = max(range(self.number_of_users),
+                             key=lambda action: self.q(state_space, action))
+                print("EXITING")
 
         self.history.append((state_space, action))
         self.rewards.append(state_space[action][action] + k_batch_job.service_rate[action])
@@ -124,10 +132,11 @@ Calculates current busy times for users which represent the current state space.
                 if current_user_element[user_index].is_busy(self.env.now):
                     a[user_index] -= self.env.now - current_user_element[user_index].started
 
-        state_space = np.zeros((self.number_of_users, self.number_of_users + 1))
+        state_space = np.zeros((self.number_of_users,self.number_of_users+1))
+
 
         for i in range(self.number_of_users):
-            state_space[i] = a + [p[i]]
+            state_space[i] = a+[p[i]]
 
         return state_space
 
@@ -157,9 +166,8 @@ Value function approximator. Uses the policy theta weight vector and returns for
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
         for i, (states, action) in enumerate(self.history):
-            delta = -self.rewards[i] + self.gamma * (
-            max(self.q(states, a) for a in range(self.number_of_users))) - self.q(states, action)
-            self.theta += self.alpha * delta * self.features(states, action)
+            delta = -self.rewards[i] + self.gamma*(max(self.q(states,a) for a in range(self.number_of_users))) - self.q(states,action)
+            self.theta += self.alpha * delta*self.features(states,action)
 
     def features(self, states, action):
         """
@@ -168,7 +176,7 @@ Creates features vector for theta update function. For each action it creates a 
         :param action: chosen action.
         :return: vector full of zeroes except for action where the busy times are reported.
         """
-        features = np.zeros((self.number_of_users, self.number_of_users + 1))
+        features = np.zeros((self.number_of_users,self.number_of_users+1))
         features[action] = states[action]
         return features
 

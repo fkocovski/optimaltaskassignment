@@ -27,18 +27,7 @@ Request method for KBatch policies. Creates a PolicyJob object and calls for the
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        super().request(user_task)
-
-        average_processing_time = RANDOM_STATE.gamma(
-            user_task.service_interval ** 2 / user_task.task_variability,
-            user_task.task_variability / user_task.service_interval)
-
-        k_batch_job = PolicyJob(user_task)
-        k_batch_job.request_event = self.env.event()
-        k_batch_job.arrival = self.env.now
-        k_batch_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2/ self.worker_variability,
-                               self.worker_variability / average_processing_time) for
-            _ in range(self.number_of_users)]
+        k_batch_job = super().request(user_task)
 
         self.save_status()
 
@@ -60,10 +49,10 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
         """
         super().release(k_batch_job)
 
-        self.save_status()
-
         user_to_release_index = k_batch_job.assigned_user
         queue_to_pop = self.users_queues[user_to_release_index]
+
+        self.save_status()
         queue_to_pop.popleft()
         self.save_status()
 
