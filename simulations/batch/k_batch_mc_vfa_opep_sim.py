@@ -8,18 +8,19 @@ from policies.batch.k_batch_mc_vfa_opep import K_BATCH_MC_VFA_OPEP
 from simulations import *
 
 # init theta and reinforcement learning variables
-theta = np.zeros((NUMBER_OF_USERS,NUMBER_OF_USERS+1))
+theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS + 1))
 gamma = 0.5
 epochs = 100
 alpha = 0.0001
-epsilon = 0.5
+epsilon = 0.9
 
 for i in range(epochs):
     # creates simulation environment
     env = simpy.Environment()
 
     # initialize policy
-    policy_train = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None,1, theta, gamma, alpha,False,epsilon)
+    policy_train = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, 1, theta, gamma, alpha,
+                                       False, epsilon)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -51,7 +52,8 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("K_BATCH_MC_VFA_OPEP")
 
 # initialize policy
-policy = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics,1, theta, gamma, alpha,True,None)
+policy = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, 1, theta, gamma,
+                             alpha, True, None)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)

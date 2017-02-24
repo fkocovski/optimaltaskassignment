@@ -2,25 +2,25 @@ from policies import *
 from collections import deque
 
 
-class KBatchMcVfa(Policy):
+class K_BATCH_MC_VFA(Policy):
     def __init__(self, env, number_of_users, worker_variability, batch_size, file_policy, file_statistics, theta,
                  epsilon, gamma, alpha):
         """
 Initializes a KBatch policy.
-        :param theta:
-        :param epsilon:
-        :param gamma:
-        :param alpha:
         :param env: simpy environment.
         :param number_of_users: the number of users present in the system.
         :param worker_variability: worker variability in absolute value.
-        :param batch_size: the batch size of the global queue.
+        :param batch_size: batch size of global queue.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
+        :param theta: weight vector for VFA.
+        :param epsilon: parameter for the epsilon greedy approach.
+        :param gamma: discounting factor for rewards.
+        :param alpha: step size parameter for the gradient descent method.
         """
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.batch_size = batch_size
-        self.name = "{}Batch_mc_vfa".format(self.batch_size)
+        self.name = "{}_BATCH_MC_VFA".format(self.batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
         self.theta = theta
@@ -28,7 +28,6 @@ Initializes a KBatch policy.
         self.gamma = gamma
         self.alpha = alpha
         self.history = []
-        self.jobs_lateness = []
         self.rewards = []
 
     def request(self, user_task):
@@ -131,20 +130,11 @@ Value function approximator. Uses the policy theta weight vector and returns for
         """
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
-        reward = np.average(self.jobs_lateness)
         for i, (states, action) in enumerate(self.history):
                 self.theta += self.alpha * (self.gamma ** i * -self.rewards[i] - self.action_value_approximator(states, action)) * self.gradient(
                     states,
                     action)
 
-
-    def save_rewards(self, policy_job):
-        """
-Evaluates and appends the job's lateness to a policy global queue.
-        :param policy_job: policyjob object passed in each release method.
-        """
-        job_lateness = policy_job.finished - policy_job.started
-        self.jobs_lateness.append(job_lateness)
 
     def gradient(self, states, action):
         """

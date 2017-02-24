@@ -2,7 +2,7 @@ from policies import *
 from collections import deque
 
 
-class KBatch(Policy):
+class K_BATCH(Policy):
     def __init__(self, env, number_of_users, worker_variability, batch_size, solver, file_policy, file_statistics):
         """
 Initializes a KBatch policy.
@@ -17,7 +17,7 @@ Initializes a KBatch policy.
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.batch_size = batch_size
         self.solver = solver
-        self.name = "{}Batch".format(self.batch_size)
+        self.name = "{}_BATCH".format(self.batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
 

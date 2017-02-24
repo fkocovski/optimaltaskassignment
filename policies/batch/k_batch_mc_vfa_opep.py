@@ -91,10 +91,8 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             if rnd < self.epsilon:
                 action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
             else:
-                print("ENTERING")
                 action = max(range(self.number_of_users),
                              key=lambda action: self.q(state_space, action))
-                print("EXITING")
 
         self.history.append((state_space, action))
         self.rewards.append(state_space[action][action] + k_batch_job.service_rate[action])

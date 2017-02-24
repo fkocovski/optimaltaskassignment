@@ -2,7 +2,7 @@ from policies import *
 from collections import deque
 
 
-class K_BATCH_MC_VFA_OP(Policy):
+class K_BATCH_TD_VFA_OP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, batch_size, theta, gamma,
                  alpha, greedy):
         """
@@ -24,11 +24,10 @@ Initializes a MC policy with VFA.
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
-        self.name = "{}_BATCH_MC_VFA_OP".format(batch_size)
+        self.name = "{}_BATCH_TD_VFA_OP".format(batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
         self.history = []
-        self.rewards = []
 
     def request(self, user_task):
         """
@@ -88,8 +87,9 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
         else:
             action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
 
-        self.history.append((state_space, action))
-        self.rewards.append(state_space[action][action] + k_batch_job.service_rate[action])
+        reward = state_space[action][action] + k_batch_job.service_rate[action]
+
+        self.history.append((state_space,action,reward))
 
         user_queue = self.users_queues[action]
         k_batch_job.assigned_user = action
@@ -101,6 +101,10 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             if not leftmost_k_batch_element.is_busy(self.env.now):
                 k_batch_job.started = self.env.now
                 k_batch_job.request_event.succeed(k_batch_job.service_rate[action])
+
+        if not self.greedy:
+            if len(self.history) == 2:
+                self.update_theta()
 
     def state_space(self, k_batch_job):
         """
@@ -156,21 +160,13 @@ Value function approximator. Uses the policy theta weight vector and returns for
         """
 MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
         """
-        for i, (states, action) in enumerate(self.history):
-            delta = -self.rewards[i] + self.gamma * (
-            max(self.q(states, a) for a in range(self.number_of_users))) - self.q(states, action)
-            self.theta += self.alpha * delta * self.features(states, action)
-
-    def update_theta_episodic(self):
-        """
-MC method to learn based on its followed trajectory. Evaluates the history list in reverse and for each states-action pair updates its internal theta vector.
-        """
-        for i, (states, action) in enumerate(self.history):
-            if i+1 < len(self.history):
-                delta = -self.rewards[i] + self.gamma * (max(self.q(self.history[i+1][0], a) for a in range(self.number_of_users))) - self.q(states, action)
-            else:
-                delta = -self.rewards[i] + 0 - self.q(states,action)
-            self.theta += self.alpha * delta * self.features(states, action)
+        state = self.history[0][0]
+        action = self.history[0][1]
+        reward = self.history[0][2]
+        future_state = self.history[1][0]
+        delta = -reward + self.gamma * (max(self.q(future_state, a) for a in range(self.number_of_users))) - self.q(state,action)
+        self.theta += self.alpha * delta * self.features(state,action)
+        self.history.clear()
 
     def features(self, states, action):
         """
