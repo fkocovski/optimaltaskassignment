@@ -1,7 +1,7 @@
 from policies import *
 
 
-class KBatchOne(Policy):
+class K_BATCHONE(Policy):
     def __init__(self, env, number_of_users, worker_variability, batch_size, solver, file_policy, file_statistics):
         """
 Initializes a KBatchOne policy.
@@ -16,7 +16,7 @@ Initializes a KBatchOne policy.
         super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
         self.batch_size = batch_size
         self.solver = solver
-        self.name = "{}Batch".format(self.batch_size)
+        self.name = "{}BATCH_ONE".format(self.batch_size)
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
 
@@ -26,19 +26,7 @@ Request method for KBatchOne policies. Creates a PolicyJob object and calls for 
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        super().request(user_task)
-
-        average_processing_time = RANDOM_STATE.gamma(
-            user_task.service_interval ** 2 / user_task.task_variability,
-            user_task.task_variability / user_task.service_interval)
-
-        k_batch_one_job = PolicyJob(user_task)
-        k_batch_one_job.request_event = self.env.event()
-        k_batch_one_job.arrival = self.env.now
-        k_batch_one_job.service_rate = [
-            RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
-                               self.worker_variability / average_processing_time) for
-            _ in range(self.number_of_users)]
+        k_batch_one_job = super().request(user_task)
 
         self.save_status()
 
@@ -82,9 +70,9 @@ Evaluate method for KBatchOne policies. Sets the required variables by the solve
         # pij
         p = [[self.batch_queue[j].service_rate[i] for j in range(len(self.batch_queue))] for i in
              range(self.number_of_users)]
-        current_user_element = [self.assigned_job_to_user[i] for i in range(self.number_of_users)]
 
         # ai
+        current_user_element = [self.assigned_job_to_user[i] for i in range(self.number_of_users)]
         a = [0 if current_user_element[i] is None else current_user_element[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 

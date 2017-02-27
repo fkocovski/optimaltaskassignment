@@ -3,7 +3,7 @@ import simpy
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.batch.k_batchone import KBatchOne
+from policies.batch.k_batchone import K_BATCHONE
 from simulations import *
 from solvers.sdmf_solver import sdmf
 
@@ -14,7 +14,7 @@ env = simpy.Environment()
 file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batchone_sdmf".format(BATCH_SIZE))
 
 # initialize policy
-policy = KBatchOne(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, sdmf, file_policy, file_statistics)
+policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, sdmf, file_policy, file_statistics)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
