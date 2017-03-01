@@ -4,12 +4,12 @@ import simpy
 from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
-from policies.others.wz_td_vfa_op import WZ_TD_VFA_OP
+from policies.others.wz_one_td_vfa_op import WZ_ONE_TD_VFA_OP
 from simulations import *
 
 # init theta and reinforcement learning variables
 wait_size = 2
-theta = np.zeros((NUMBER_OF_USERS**wait_size,NUMBER_OF_USERS+wait_size))
+theta = np.zeros((NUMBER_OF_USERS**wait_size,NUMBER_OF_USERS+2*wait_size))
 gamma = 0.5
 alpha = 0.0001
 
@@ -17,7 +17,7 @@ alpha = 0.0001
 env = simpy.Environment()
 
 # initialize policy
-policy_train = WZ_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha,False,wait_size)
+policy_train = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha,False,wait_size)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -32,16 +32,16 @@ connect(start_event, user_task)
 env.process(start_event.generate_tokens())
 
 # runs simulation
-env.run(until=10000)
+env.run(until=100000)
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("WZ_TD_VFA_OP")
+file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("WZ_ONE_TD_VFA_OP")
 
 # initialize policy
-policy = WZ_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, gamma, alpha,True,wait_size)
+policy = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, gamma, alpha,True,wait_size)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)
