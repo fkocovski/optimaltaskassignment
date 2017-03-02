@@ -73,7 +73,7 @@ Evaluate method for KBatchOne policies. Sets the required variables by the solve
 
         # ai
         current_user_element = [self.assigned_job_to_user[i] for i in range(self.number_of_users)]
-        a = [0 if current_user_element[i] is None else current_user_element[i].will_finish() - self.env.now for i
+        a = [0 if self.assigned_job_to_user[i] is None else self.assigned_job_to_user[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 
         assignment, _ = self.solver(a, p, w, len(self.batch_queue), self.number_of_users)

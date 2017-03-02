@@ -1,5 +1,4 @@
 from policies import *
-from collections import deque
 import itertools
 
 
@@ -110,15 +109,14 @@ class WZ_ONE_TD_VFA_OP(Policy):
 
     def update_theta(self, new_state_space):
         old_state_space, old_action, old_combinations = self.history
-        delta = -self.reward(old_state_space, old_action, old_combinations) + self.gamma * (max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(old_state_space, old_action)
+        reward = self.reward(old_state_space, old_action, old_combinations)
+        delta = -reward + self.gamma * (max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(old_state_space, old_action)
         self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
-        print(self.theta,len(self.batch_queue))
 
     def reward(self, state_space, action, combinations):
         reward = 0.0
-        # busy_times = [state_space[action][self.wait_size+i] for i in range(self.number_of_users)]
+        busy_times = [state_space[action][self.wait_size + i] for i in range(self.number_of_users)]
         for job_index, user_index in enumerate(combinations[action]):
-            if not self.user_slot[user_index] in self.batch_queue:
-                reward += state_space[action][job_index] + state_space[action][self.wait_size+user_index] + state_space[action][2*self.wait_size + job_index]
-            # busy_times[user_index] += state_space[action][2*self.wait_size+job_index]
+            reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][2*self.wait_size + job_index]
+            busy_times[user_index] += state_space[action][2 * self.wait_size + job_index]
         return reward
