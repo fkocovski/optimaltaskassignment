@@ -19,16 +19,16 @@ class WZ_ONE_TD_VFA_OP(Policy):
     def request(self, user_task):
         wz_one_job = super().request(user_task)
 
-        self.save_status()
+        self.save_status(wz_one_job)
 
         self.batch_queue.append(wz_one_job)
 
-        self.save_status()
+        self.save_status(wz_one_job)
 
         if len(self.batch_queue) >= self.wait_size:
             self.evaluate()
 
-        self.save_status()
+        self.save_status(wz_one_job)
 
         return wz_one_job
 
@@ -37,16 +37,16 @@ class WZ_ONE_TD_VFA_OP(Policy):
 
         user_to_release_index = wz_one_job.assigned_user
 
-        self.save_status()
+        self.save_status(wz_one_job)
 
         self.user_slot[user_to_release_index] = None
 
-        self.save_status()
+        self.save_status(wz_one_job)
 
         if len(self.batch_queue) >= self.wait_size:
             self.evaluate()
 
-        self.save_status()
+        self.save_status(wz_one_job)
 
     def evaluate(self):
         state_space, combinations = self.state_space()

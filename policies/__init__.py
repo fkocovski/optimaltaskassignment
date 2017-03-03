@@ -48,7 +48,7 @@ Parent class release method to manage and release finished policy job objects.
         policy_job.finished = self.env.now
         policy_job.save_info(self.file_policy)
 
-    def save_status(self):
+    def save_status(self,policy_job):
         """
 Parent class method that saves information required to plot the policy evolution over time.
         """
@@ -56,9 +56,11 @@ Parent class method that saves information required to plot the policy evolution
             return
 
         current_status = self.policy_status()
+        task_id = hex(id(policy_job.user_task))
         self.file_statistics.write("{}".format(self.env.now))
         for val in current_status:
             self.file_statistics.write(",{}".format(val))
+        self.file_statistics.write(",{}".format(task_id))
         self.file_statistics.write("\n")
 
     def policy_status(self):
