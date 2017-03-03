@@ -30,9 +30,9 @@ Calculates statistics for passed file.
 
     fig = plt.figure(figsize=plt.figaspect(0.5))
     ax = fig.add_subplot(111)
-    text = "Lateness = {:.4f}\nWait = {:.4f}\nService = {:.4f}\nJobs = {}".format(avg_lateness,avg_wait,avg_service,n_of_jobs)
-    props = dict(boxstyle='roundtooth', facecolor='darkorange', alpha=0.75)
-    ax.boxplot([df["lateness"],df["wait"],df["service"]],labels=["Lateness","Wait","Service"],showmeans=True)
+    text = "Lateness: {:.4f}\nWait: {:.4f}\nService: {:.4f}\nJobs: {}".format(avg_lateness,avg_wait,avg_service,n_of_jobs)
+    props = dict(boxstyle='square', facecolor='darkorange', alpha=0.75)
+    ax.boxplot([df["lateness"],df["wait"],df["service"]],labels=["Lateness","Wait","Service"],showmeans=True,meanline=True,sym="")
     ax.text(0.8,0.8,text,transform=ax.transAxes,bbox=props)
     ax.set_title(file.name)
     ax.grid(True)

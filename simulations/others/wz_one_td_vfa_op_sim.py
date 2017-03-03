@@ -1,7 +1,6 @@
 import numpy as np
 import simpy
 
-from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
 from policies.others.wz_one_td_vfa_op import WZ_ONE_TD_VFA_OP
@@ -19,14 +18,17 @@ env = simpy.Environment()
 # initialize policy
 policy_train = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha,False,wait_size)
 
+# initialize process
+start_event = initialize_process(env,policy_train)
+
 # start event
-start_event = StartEvent(env, GENERATION_INTERVAL)
+# start_event = StartEvent(env, GENERATION_INTERVAL)
 
 # user tasks
-user_task = UserTask(env, policy_train, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
+# user_task = UserTask(env, policy_train, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
 
 # connections
-connect(start_event, user_task)
+# connect(start_event, user_task)
 
 # calls generation tokens process
 env.process(start_event.generate_tokens())
@@ -43,17 +45,20 @@ file_policy, file_statistics, file_policy_name, file_statistics_name = create_fi
 # initialize policy
 policy = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, gamma, alpha,True,wait_size)
 
+# initialize process
+start_event = initialize_process(env,policy)
+
 # start event
-start_event_test = StartEvent(env, GENERATION_INTERVAL)
+# start_event_test = StartEvent(env, GENERATION_INTERVAL)
 
 # user tasks
-user_task_test = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
+# user_task_test = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
 
 # connections
-connect(start_event_test, user_task_test)
+# connect(start_event_test, user_task_test)
 
 # calls generation tokens process
-env.process(start_event_test.generate_tokens())
+env.process(start_event.generate_tokens())
 
 # runs simulation
 env.run(until=SIM_TIME)

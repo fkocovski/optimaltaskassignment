@@ -1,3 +1,5 @@
+from elements.workflow_process_elements import StartEvent, UserTask, connect
+
 # "global" variables
 AVG_SYS_LOAD = 0.5
 NUMBER_OF_USERS = 2
@@ -29,3 +31,17 @@ Uses the passed string name to initialize the required files for the analysis. R
     file_statistics.write("\n")
 
     return file_policy, file_statistics, file_policy_name, file_statistics_name
+
+def initialize_process(env,policy):
+    # start event
+    start_event = StartEvent(env, GENERATION_INTERVAL)
+
+    # user tasks
+    user_task = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
+    user_task_two = UserTask(env, policy, "User task 2", SERVICE_INTERVAL, TASK_VARIABILITY)
+
+    # connections
+    connect(start_event, user_task)
+    connect(user_task,user_task_two)
+
+    return start_event

@@ -11,7 +11,7 @@ from solvers.st_solver import st
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batchone_st".format(BATCH_SIZE))
+file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}BATCHONE_ST".format(BATCH_SIZE))
 
 # initialize policy
 policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, st, file_policy, file_statistics)
