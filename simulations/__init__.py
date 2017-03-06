@@ -1,4 +1,4 @@
-from elements.workflow_process_elements import StartEvent, UserTask, XOR, connect
+from elements.workflow_process_elements import StartEvent, UserTask, XOR,DOR,COR, connect
 
 # "global" variables
 AVG_SYS_LOAD = 0.1
@@ -6,7 +6,7 @@ NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
 LAMBDA_ARR = AVG_SYS_LOAD * NUMBER_OF_USERS / SERVICE_INTERVAL
 GENERATION_INTERVAL = 1 / LAMBDA_ARR
-SIM_TIME = 1000
+SIM_TIME = 100
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARAIBILITY = 0.2 * SERVICE_INTERVAL
@@ -22,7 +22,7 @@ Uses the passed string name to initialize the required files for the analysis. R
     file_statistics_name = "{}_evolution.csv".format(name)
     file_policy = open(file_policy_name, "w")
     file_statistics = open(file_statistics_name, "w")
-    file_policy.write("job,arrival,started,finished,user")
+    file_policy.write("job,arrival,started,finished,user,task")
     file_statistics.write("now,global")
     for i in range(NUMBER_OF_USERS):
         file_policy.write(",user_{}_st".format(i + 1))
@@ -34,8 +34,10 @@ Uses the passed string name to initialize the required files for the analysis. R
     return file_policy, file_statistics, file_policy_name, file_statistics_name
 
 def initialize_process(env,policy):
+    actions_pool = [[1,0,0],[0,1,0,0]]
+
     # start event
-    se = StartEvent(env, 5)
+    se = StartEvent(env, 2.5)
 
     # user tasks
     ut = UserTask(env, policy, "Setup Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY)
@@ -52,11 +54,11 @@ def initialize_process(env,policy):
     xor = XOR(env,"xor")
     xor_a = XOR(env,"xor_a")
     xor_b = XOR(env,"xor_b")
-    xor_c = XOR(env,"xor_c")
+    cor_g = COR(env,"cor_g")
+    dor_c = DOR(env,"dor_c",cor_g)
     xor_d = XOR(env,"xor_d")
     xor_e = XOR(env,"xor_e")
     xor_f = XOR(env,"xor_f")
-    xor_g = XOR(env,"xor_g")
     xor_h = XOR(env,"xor_h")
     xor_i = XOR(env,"xor_i")
 
@@ -67,15 +69,15 @@ def initialize_process(env,policy):
     connect(ut_a,xor_a)
     xor_a.assign_children((ut_b,xor_b))
     xor_b.children.append(xor_h)
-    connect(ut_b,xor_c)
-    xor_c.assign_children((ut_c,xor_f,xor_g))
+    connect(ut_b,dor_c)
+    dor_c.children.extend((cor_g,ut_c,xor_f))
     connect(ut_c,xor_d)
-    xor_d.assign_children((ut_d,xor_g))
+    xor_d.assign_children((ut_d,cor_g))
     connect(ut_d,xor_e)
-    xor_e.assign_children((xor_g,xor_f))
+    xor_e.assign_children((cor_g,xor_f))
     xor_f.children.append(ut_e)
-    connect(ut_e,xor_g)
-    xor_g.assign_children((ut_f,xor_i,xor_h))
+    connect(ut_e,cor_g)
+    cor_g.children.extend((ut_f,xor_i,xor_h))
     connect(ut_f,xor_i)
     xor_i.children.append(ut_g)
     xor_h.children.append(ut_h)

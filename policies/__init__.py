@@ -113,7 +113,7 @@ Method used to save information required to calculate key metrics.
             return
 
         file.write(
-            "{},{},{},{},{}".format(id(self), self.arrival, self.started, self.finished, self.assigned_user + 1))
+            "{},{},{},{},{},{}".format(id(self), self.arrival, self.started, self.finished, self.assigned_user + 1,hex(id(self.user_task))))
         for st in self.service_rate:
             file.write(",{}".format(st))
         file.write("\n")

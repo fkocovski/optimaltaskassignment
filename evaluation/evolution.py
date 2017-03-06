@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
 
 def _filter_arrivals(D):
     n = D.shape[0]
@@ -25,21 +26,24 @@ def evolution(filename, outfile=None, delimiter=",", skiprows=1, title=None):
     plt.figure(figsize=((np.max(D[:,0])-np.min(D[0,:]))/2.0, (H[0]-P[-1]+1.0)/2.0))
 
     unique_tasks = np.unique(D[:,-1])
-    task_colors = plt.cm.Accent(np.linspace(0, 1, len(unique_tasks)))
-    job_to_colors = np.concatenate([task_colors[np.where(unique_tasks==job)] for job in D[:,-1]])
-
+    task_colors = plt.cm.prism(np.linspace(0, 1, len(unique_tasks)))
 
     # plot pending tasks
 #    F = np.hstack((True,np.diff(D[:,0],2)!=0.0,True)) # filter 'zero duration' points; assuming random event times
-    plt.fill_between(D[:,0], D[:,1], 0.0, linewidth=0.5, facecolor="darkorange",edgecolor="black")
+    plt.fill_between(D[:,0], D[:,1], 0.0, linewidth=0.5, facecolor="grey",edgecolor="grey")
     plt.axhline(y=0.0, c="k", lw=0.8)
 
     # plot users
+    # for i,t in enumerate(unique_tasks):
+    #     for j in range(nusers):
+    #         plt.fill_between(D[:, 0], D[:, j + 2] + P[j + 1], P[j + 1],where=D[:,-1]==t, linewidth=0.5, facecolor=task_colors[i], edgecolor=task_colors[i],interpolate=True)
+    #         plt.axhline(y=P[j+1], c="k", lw=0.8)
+
+    # plot users
     for i in range(nusers):
-        for j in range(D.shape[0]):
-            print(job_to_colors[j])
-            plt.fill_between(D[j,0], D[j,i+2]+P[i+1], P[i+1], linewidth=0.5, facecolor=job_to_colors[j],edgecolor="black")
-        plt.axhline(y=P[i+1], c="k", lw=0.8)
+        plt.fill_between(D[:, 0], D[:, i + 2] + P[i + 1], P[i + 1], linewidth=0.5, facecolor="green",
+                         edgecolor="black")
+        plt.axhline(y=P[i + 1], c="k", lw=0.8)
 
     # plot arrival events
     for t in _filter_arrivals(D):
