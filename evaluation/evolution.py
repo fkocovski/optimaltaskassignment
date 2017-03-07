@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import itertools
 
 def _filter_arrivals(D):
     n = D.shape[0]
@@ -17,7 +16,6 @@ def evolution(filename, outfile=None, delimiter=",", skiprows=1, title=None):
 
     # load data
     D = np.loadtxt(filename, delimiter=delimiter, skiprows=skiprows)
-    #D = np.genfromtxt(filename, dtype=float, delimiter=delimiter, names=True)
 
     # basic figure setup
     nusers = D.shape[1]-3

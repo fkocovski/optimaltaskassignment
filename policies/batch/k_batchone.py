@@ -28,16 +28,16 @@ Request method for KBatchOne policies. Creates a PolicyJob object and calls for 
         """
         k_batch_one_job = super().request(user_task)
 
-        self.save_status()
+        self.save_status(k_batch_one_job)
 
         self.batch_queue.append(k_batch_one_job)
 
-        self.save_status()
+        self.save_status(k_batch_one_job)
 
         if len(self.batch_queue) >= self.batch_size:
             self.evaluate()
 
-        self.save_status()
+        self.save_status(k_batch_one_job)
 
         return k_batch_one_job
 
@@ -48,17 +48,17 @@ Release method for KBatchOne policies. Uses the passed parameter, which is a pol
         """
         super().release(k_batch_one_job)
 
-        self.save_status()
+        self.save_status(k_batch_one_job)
 
         user_to_release_index = k_batch_one_job.assigned_user
         self.assigned_job_to_user[user_to_release_index] = None
 
-        self.save_status()
+        self.save_status(k_batch_one_job)
 
         if len(self.batch_queue) >= self.batch_size:
             self.evaluate()
 
-        self.save_status()
+        self.save_status(k_batch_one_job)
 
     def evaluate(self):
         """

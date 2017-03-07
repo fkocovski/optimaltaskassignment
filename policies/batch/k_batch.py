@@ -29,16 +29,16 @@ Request method for KBatch policies. Creates a PolicyJob object and calls for the
         """
         k_batch_job = super().request(user_task)
 
-        self.save_status()
+        self.save_status(k_batch_job)
 
         self.batch_queue.append(k_batch_job)
 
-        self.save_status()
+        self.save_status(k_batch_job)
 
         if len(self.batch_queue) == self.batch_size:
             self.evaluate()
 
-        self.save_status()
+        self.save_status(k_batch_job)
 
         return k_batch_job
 
@@ -52,16 +52,16 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
         user_to_release_index = k_batch_job.assigned_user
         queue_to_pop = self.users_queues[user_to_release_index]
 
-        self.save_status()
+        self.save_status(k_batch_job)
         queue_to_pop.popleft()
-        self.save_status()
+        self.save_status(k_batch_job)
 
         if len(queue_to_pop) > 0:
             next_k_batch_job = queue_to_pop[0]
             next_k_batch_job.started = self.env.now
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
-        self.save_status()
+        self.save_status(k_batch_job)
 
     def evaluate(self):
         """

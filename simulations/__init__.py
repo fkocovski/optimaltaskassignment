@@ -6,7 +6,7 @@ NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
 LAMBDA_ARR = AVG_SYS_LOAD * NUMBER_OF_USERS / SERVICE_INTERVAL
 GENERATION_INTERVAL = 1 / LAMBDA_ARR
-SIM_TIME = 1000
+SIM_TIME = 50
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARAIBILITY = 0.2 * SERVICE_INTERVAL
@@ -82,7 +82,7 @@ def initialize_process(env,policy):
     weights = [0.1, 0.9]
 
     # start event
-    se = StartEvent(env, 5,actions_pool,weights)
+    se = StartEvent(env, 10,actions_pool,weights)
     connect(se, ut)
 
     return se

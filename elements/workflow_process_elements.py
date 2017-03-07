@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 
 class StartEvent(object):
@@ -34,6 +35,7 @@ Generates infinitely many tokens (implicit objects) following an exponential rat
 
 
 class UserTask(object):
+    id_count = itertools.count()
     def __init__(self, env, policy, name, service_interval, task_variability, terminal=False):
         """
 Initializes a user task object.
@@ -50,6 +52,7 @@ Initializes a user task object.
         self.task_variability = task_variability
         self.child = None
         self.terminal = terminal
+        self.task_id = next(UserTask.id_count)
 
     def claim_token(self, token):
         """
