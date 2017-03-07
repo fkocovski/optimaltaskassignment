@@ -25,7 +25,7 @@ start_event = initialize_process(env,policy_train)
 env.process(start_event.generate_tokens())
 
 # runs simulation
-env.run(until=100)
+env.run(until=10000)
 
 # creates simulation environment
 env = simpy.Environment()

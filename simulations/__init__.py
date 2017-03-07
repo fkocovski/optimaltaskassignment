@@ -6,7 +6,7 @@ NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
 LAMBDA_ARR = AVG_SYS_LOAD * NUMBER_OF_USERS / SERVICE_INTERVAL
 GENERATION_INTERVAL = 1 / LAMBDA_ARR
-SIM_TIME = 100
+SIM_TIME = 1000
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARAIBILITY = 0.2 * SERVICE_INTERVAL
@@ -34,18 +34,13 @@ Uses the passed string name to initialize the required files for the analysis. R
     return file_policy, file_statistics, file_policy_name, file_statistics_name
 
 def initialize_process(env,policy):
-    actions_pool = [[1,0,0],[0,1,0,0]]
-
-    # start event
-    se = StartEvent(env, 2.5)
-
     # user tasks
     ut = UserTask(env, policy, "Setup Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_a = UserTask(env, policy, "Quick Check", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_b = UserTask(env, policy, "Relevance Test", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_c = UserTask(env, policy, "Acquisition SCORING", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_d = UserTask(env, policy, "Relevance Test 2", SERVICE_INTERVAL, TASK_VARIABILITY)
-    ut_e = UserTask(env, policy, "Acquisition Business Plan", SERVICE_INTERVAL, TASK_VARIABILITY)
+    ut_e = UserTask(env, policy, "Acquisition Business Plan", 5*SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_f = UserTask(env, policy, "Review", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_g = UserTask(env, policy, "Assign Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY,terminal=True)
     ut_h = UserTask(env, policy, "Rejection Letter to Broker", SERVICE_INTERVAL, TASK_VARIABILITY,terminal=True)
@@ -62,8 +57,8 @@ def initialize_process(env,policy):
     xor_h = XOR(env,"xor_h")
     xor_i = XOR(env,"xor_i")
 
+
     # connections
-    connect(se, ut)
     connect(ut,xor)
     xor.assign_children((ut_a,xor_b))
     connect(ut_a,xor_a)
@@ -82,5 +77,12 @@ def initialize_process(env,policy):
     xor_i.children.append(ut_g)
     xor_h.children.append(ut_h)
 
+    # actions
+    actions_pool = [{xor.name:1,xor_b.name:0,xor_h.name:0},{xor.name:0,xor_a.name:0,dor_c.name:(1,2),xor_d.name:1,xor_f.name:0,cor_g.name:2,xor_h.name:0}]
+    weights = [0.1, 0.9]
+
+    # start event
+    se = StartEvent(env, 5,actions_pool,weights)
+    connect(se, ut)
 
     return se
