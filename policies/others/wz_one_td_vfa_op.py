@@ -63,6 +63,7 @@ class WZ_ONE_TD_VFA_OP(Policy):
                 self.batch_queue[job_index] = None
                 self.user_slot[user_index] = wz_one_job
                 wz_one_job.assigned_user = user_index
+                wz_one_job.assigned = self.env.now
                 wz_one_job.started = self.env.now
                 wz_one_job.request_event.succeed(wz_one_job.service_rate[user_index])
         self.batch_queue = [job for job in self.batch_queue if job is not None]

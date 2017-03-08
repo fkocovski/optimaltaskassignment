@@ -1,74 +1,76 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-filename = "WZ_ONE_TD_VFA_OP.csv"
-delimiter = ","
-skiprows = 1
 
-data = np.loadtxt(filename, delimiter=delimiter, skiprows=skiprows)
-users = data.shape[1] - 9
-unique_tasks = np.unique(data[:, 5])
-task_colors = plt.cm.prism(np.linspace(0, 1, len(unique_tasks)))
+def fill_array(data, start_index, finish_index, task_id):
+    array = np.zeros((4 * len(data[:, 5]), 3))
+    for i, t in enumerate(data):
+        array[4 * i + 0, 0] = t[start_index]
+        array[4 * i + 1, 0] = t[start_index]
+        array[4 * i + 2, 0] = t[finish_index]
+        array[4 * i + 3, 0] = t[finish_index]
+        if t[6] == task_id:
+            array[4 * i + 0, 1] = 0
+            array[4 * i + 1, 1] = 1
+            array[4 * i + 2, 1] = 0
+            array[4 * i + 3, 1] = -1
 
-a = np.zeros((4 * len(data[:, 5]), 3))
+    sorted_index = np.argsort(array[:, 0], kind="mergesort")
+    values = np.cumsum(array[sorted_index, 1])
 
-for i, t in enumerate(data):
-    a[4 * i + 0, 0] = t[1]
-    a[4 * i + 1, 0] = t[1]
-    a[4 * i + 2, 0] = t[2]
-    a[4 * i + 3, 0] = t[2]
-
-    a[4 * i + 0, 1] = 0
-    a[4 * i + 1, 1] = 1
-    a[4 * i + 2, 1] = 0
-    a[4 * i + 3, 1] = -1
-
-    a[4 * i:4 * i + 4, 2] = t[5]
+    return sorted_index, values, array
 
 
-ax1 = plt.subplot(3, 1, 1)
-ax1.set_ylabel("Global")
+def evolution(filename, outfile=False, delimiter=",", skip_header=1):
+    original_data = np.genfromtxt(filename, delimiter=delimiter, skip_header=skip_header)
+    users = original_data.shape[1] - 11
+    unique_tasks = np.unique(original_data[:, 6])
+    task_colors = plt.cm.Paired(np.linspace(0, 1, len(unique_tasks)))
+    ax1 = plt.subplot(users + 1, 1, 1)
+    ax1.set_ylabel("Global")
+    old_global_values = 0.0
+    for i, task_id in enumerate(unique_tasks):
+        global_sorted_index, global_values, global_array = fill_array(original_data, 1, 2, task_id)
+        ax1.fill_between(x=global_array[global_sorted_index, 0], y1=old_global_values + global_values,
+                         y2=old_global_values,
+                         facecolor=task_colors[i], label="Task {}".format(task_id))
+        old_global_values += global_values
+    plt.xticks(np.arange(int(min(original_data[:, 1])), int(max(original_data[:, 4])), 10.0))
+    ylims = ax1.get_ylim()
+    ax1.set_yticks(np.arange(0, int(ylims[1]) + 1, 1))
+    plt.legend()
 
-b = np.argsort(a[:, 0], kind="mergesort")
-val = np.cumsum(a[b, 1])
-ax1.fill_between(a[b, 0], val, facecolor="black")
+    for u in range(users):
+        ax = plt.subplot(users + 1, 1, u + 2, sharex=ax1)
+        user_data = original_data[original_data[:, 5] == u + 1]
+        old_user_values = 0.0
+        for i, task_id in enumerate(unique_tasks):
+            sorted_user_index, user_values, user_array = fill_array(user_data, 2, 4, task_id)
+            ax.fill_between(x=user_array[sorted_user_index, 0], y1=old_user_values + user_values, y2=old_user_values,
+                            facecolor=task_colors[i], label="Task {}".format(task_id))
+            old_user_values += user_values
+        plt.legend()
+        ylims = ax.get_ylim()
+        ax.set_yticks(np.arange(0, int(ylims[1]) + 1, 1))
+        ax.set_ylabel("User {}".format(u + 1))
+        for a, f in user_data[:, [2, 4]]:
+            ax.axvline(x=a, c="k", ls="dotted", lw=0.5)
+            ax.axvline(x=f, c="k", ls="dashdot", lw=0.5)
+
+    for a, ass in original_data[:, [1, 2]]:
+        ax1.axvline(x=a, c="k", ls="dotted", lw=0.5)
+        ax1.axvline(x=ass, c="k", ls="dashdot", lw=0.5)
+
+    all_axes = plt.gcf().get_axes()
+
+    max_y = max(y.get_ylim()[1] for y in all_axes)
+    max_x = max(x.get_xlim()[1] for x in all_axes)
 
 
+    plt.gcf().set_size_inches(max_x, (len(all_axes) * max_y))
 
-# for i, t in enumerate(unique_tasks):
-#     tmp = a[a[:, 2] == t]
-#     b = np.argsort(tmp[:, 0], kind="mergesort")
-#     val = np.cumsum(tmp[b, 1])
-#     ax1.fill_between(tmp[b, 0], val, facecolor=task_colors[i])
-
-for u in range(users):
-    ax = plt.subplot(3, 1, u + 2, sharex=ax1)
-    user_data = data[data[:, 4] == u + 1]
-    u_array = np.zeros((4 * len(user_data[:, 5]), 3))
-    for i, t in enumerate(user_data):
-        u_array[4 * i + 0, 0] = t[2]
-        u_array[4 * i + 1, 0] = t[2]
-        u_array[4 * i + 2, 0] = t[3]
-        u_array[4 * i + 3, 0] = t[3]
-
-        u_array[4 * i + 0, 1] = 0
-        u_array[4 * i + 1, 1] = 1
-        u_array[4 * i + 2, 1] = 0
-        u_array[4 * i + 3, 1] = -1
-
-        u_array[4 * i:4*i+4, 2] = t[5]
-
-    for i, t in enumerate(unique_tasks):
-        tmp = u_array[u_array[:, 2] == t]
-        b = np.argsort(tmp[:, 0], kind="mergesort")
-        val = np.cumsum(tmp[b, 1])
-        ax.fill_between(tmp[b, 0], val, facecolor=task_colors[i])
-    ax.set_ylabel("User {}".format(u + 1))
-    ylim = ax.get_ylim()
-    ax.set_ylim(top=ylim[1]+1)
-
-
-for t in data[:,1]:
-    ax1.axvline(x=t,c="grey",ls="dotted",lw=0.5)
-
-plt.show()
+    if not outfile:
+        plt.show()
+    else:
+        plt.savefig(filename,format="pdf")
+        plt.close()

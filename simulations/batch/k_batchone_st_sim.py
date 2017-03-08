@@ -1,6 +1,6 @@
 import simpy
 
-from evaluation.plot import evolution
+from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
 from policies.batch.k_batchone import K_BATCHONE
 from simulations import *
@@ -30,4 +30,4 @@ file_statistics.close()
 
 # calculate statistics and plots
 calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
+evolution(file_policy_name,outfile="{}.pdf".format(file_statistics_name[:-4]))

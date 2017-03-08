@@ -6,7 +6,7 @@ NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
 LAMBDA_ARR = AVG_SYS_LOAD * NUMBER_OF_USERS / SERVICE_INTERVAL
 GENERATION_INTERVAL = 1 / LAMBDA_ARR
-SIM_TIME = 50
+SIM_TIME = 500
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARAIBILITY = 0.2 * SERVICE_INTERVAL
@@ -18,20 +18,21 @@ Uses the passed string name to initialize the required files for the analysis. R
     :param name: string passed from the specific simulation script.
     :return: two file objects and their respective file names including the extension.
     """
-    file_policy_name = "{}.csv".format(name)
-    file_statistics_name = "{}_evolution.csv".format(name)
-    file_policy = open(file_policy_name, "w")
-    file_statistics = open(file_statistics_name, "w")
-    file_policy.write("job,arrival,started,finished,user,task")
-    file_statistics.write("now,global")
+    # file_policy_name = "{}.csv".format(name)
+    # file_statistics_name = "{}_evolution.csv".format(name)
+    file_policy = open(name, "w")
+    # file_statistics = open(file_statistics_name, "w")
+    file_policy.write("job,arrival,assigned,started,finished,user,task,task_name")
+    # file_statistics.write("now,global")
     for i in range(NUMBER_OF_USERS):
         file_policy.write(",user_{}_st".format(i + 1))
-        file_statistics.write(",user_{}".format(i + 1))
-    file_statistics.write(",task")
+        # file_statistics.write(",user_{}".format(i + 1))
+    # file_statistics.write(",task")
     file_policy.write("\n")
-    file_statistics.write("\n")
+    # file_statistics.write("\n")
 
-    return file_policy, file_statistics, file_policy_name, file_statistics_name
+    # return file_policy, file_statistics, file_policy_name, file_statistics_name
+    return file_policy
 
 def initialize_process(env,policy):
     # user tasks

@@ -91,6 +91,7 @@ Evaluate method for KBatch policies. Sets the required variables by the solver t
             job = self.batch_queue[job_index]
             self.users_queues[user_index].append(job)
             job.assigned_user = user_index
+            job.assigned = self.env.now
         self.batch_queue.clear()
         for user_index in range(self.number_of_users):
             if len(self.users_queues[user_index]) > 0:

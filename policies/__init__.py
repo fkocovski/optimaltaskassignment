@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 RANDOM_STATE = np.random.RandomState(1)
 RANDOM_STATE_ACTIONS = np.random.RandomState(1)
@@ -35,8 +36,8 @@ Parent class request method for user task objects to request an optimal solution
         policy_job.arrival = self.env.now
 
         policy_job.service_rate = [RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
-                                                    self.worker_variability / average_processing_time) for
-                                 _ in range(self.number_of_users)]
+                                                      self.worker_variability / average_processing_time) for
+                                   _ in range(self.number_of_users)]
 
         return policy_job
 
@@ -48,7 +49,7 @@ Parent class release method to manage and release finished policy job objects.
         policy_job.finished = self.env.now
         policy_job.save_info(self.file_policy)
 
-    def save_status(self,policy_job):
+    def save_status(self, policy_job):
         """
 Parent class method that saves information required to plot the policy evolution over time.
         """
@@ -71,6 +72,8 @@ Parent class method that is overriden by its children to save policy specific st
 
 
 class PolicyJob(object):
+    id_count = itertools.count()
+
     def __init__(self, user_task):
         """
 Policy job object initialization method.
@@ -78,11 +81,13 @@ Policy job object initialization method.
         """
         self.user_task = user_task
         self.arrival = None
+        self.assigned = None
         self.started = None
         self.finished = None
         self.assigned_user = None
         self.service_rate = None
         self.request_event = None
+        self.job_id = next(PolicyJob.id_count)
 
     def is_busy(self, now):
         """
@@ -113,7 +118,8 @@ Method used to save information required to calculate key metrics.
             return
 
         file.write(
-            "{},{},{},{},{},{}".format(id(self), self.arrival, self.started, self.finished, self.assigned_user + 1,self.user_task.task_id))
+            "{},{},{},{},{},{},{},{}".format(self.job_id, self.arrival, self.assigned, self.started, self.finished,
+                                             self.assigned_user + 1, self.user_task.task_id, self.user_task.name))
         for st in self.service_rate:
             file.write(",{}".format(st))
         file.write("\n")

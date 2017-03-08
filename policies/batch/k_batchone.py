@@ -84,6 +84,7 @@ Evaluate method for KBatchOne policies. Sets the required variables by the solve
                 self.batch_queue[job_index] = None
                 self.assigned_job_to_user[user_index] = job
                 job.assigned_user = user_index
+                job.assigned = self.env.now
                 job.started = self.env.now
                 job.request_event.succeed(job.service_rate[user_index])
         self.batch_queue = [job for job in self.batch_queue if job is not None]
