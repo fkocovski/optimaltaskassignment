@@ -99,7 +99,6 @@ class WZ_ONE_TD_VFA_OP(Policy):
         reward = 0.0
         busy_times = [state_space[action][self.wait_size + i] for i in range(self.number_of_users)]
         for job_index, user_index in enumerate(combinations[action]):
-            reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][
-                2 * self.wait_size + job_index]
-            busy_times[user_index] += state_space[action][2 * self.wait_size + job_index]
+            reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][2 * self.wait_size + user_index]
+            busy_times[user_index] += state_space[action][2 * self.wait_size + user_index]
         return reward

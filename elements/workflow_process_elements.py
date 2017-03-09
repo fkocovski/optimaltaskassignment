@@ -1,11 +1,13 @@
 import numpy as np
 import itertools
 
+
 class Node(object):
     node_id = itertools.count()
 
     def __init__(self):
         self.node_id = next(Node.node_id)
+
 
 class StartEvent(Node):
     def __init__(self, env, generation_interval, actions, weights):
@@ -31,7 +33,7 @@ Generates infinitely many tokens (implicit objects) following an exponential rat
             exp_arrival = self.RANDOM_STATE_ARRIVAL.exponential(self.generation_interval)
             yield self.env.timeout(exp_arrival)
             token = Token()
-            path = self.ACTIONS_RANDOM_STATE.choice(self.actions,p=self.weights)
+            path = self.ACTIONS_RANDOM_STATE.choice(self.actions, p=self.weights)
             token.actions = path
             if self.child is None:
                 print("Start event has no child assigned")
@@ -107,18 +109,17 @@ class DOR(Node):
     def forward(self, token):
         action = token.get_action(self)
         token.worked_by(self)
-        counter = Counter()
-        if not isinstance(action,int):
+        if not isinstance(action, int):
             for a in action:
-                    self.choose_child(a,counter,token)
+                self.choose_child(a, token)
         else:
-            self.choose_child(action, counter, token)
+            self.choose_child(action, token)
 
-    def choose_child(self,action,counter,token):
-        token.counter = counter
+    def choose_child(self, action, token):
         child = self.children[action]
-        counter.increment()
+        token.counter.increment()
         child_forward(child, self.env, token)
+
 
 class COR(Node):
     def __init__(self, env, name):
@@ -138,16 +139,17 @@ class COR(Node):
 
 class Token(object):
     def __init__(self):
-        self.counter = None
+        self.counter = Counter()
         self.history = []
         self.actions = None
 
-    def worked_by(self,element):
+    def worked_by(self, element):
         self.history.append(element.name)
 
-    def get_action(self,element):
+    def get_action(self, element):
         action = self.actions[element.node_id]
         return action
+
 
 class Counter(object):
     def __init__(self):

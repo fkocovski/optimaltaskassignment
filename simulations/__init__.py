@@ -1,9 +1,10 @@
 from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR, connect
 
-NUMBER_OF_USERS = 2
+NUMBER_OF_USERS = 3
 SERVICE_INTERVAL = 1
-SIM_TIME = 500
-BATCH_SIZE = 2
+GENERATION_INTERVAL = 10
+SIM_TIME = 1000
+BATCH_SIZE = 4
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARIABILITY = 0.2 * SERVICE_INTERVAL
 
@@ -17,7 +18,7 @@ def create_files(name):
     return file_policy
 
 
-def initialize_process(env, policy):
+def acquisition_process(env, policy):
     ut = UserTask(env, policy, "Setup Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_a = UserTask(env, policy, "Quick Check", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_b = UserTask(env, policy, "Relevance Test", SERVICE_INTERVAL, TASK_VARIABILITY)
@@ -57,12 +58,12 @@ def initialize_process(env, policy):
     xor_i.children.append(ut_g)
     xor_h.children.append(ut_h)
 
-    actions_pool = [{xor.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},
+    actions_pool = [{xor.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},{xor.node_id: 0, xor_a.node_id: 1,xor_b.node_id:0, xor_h.node_id: 0},
                     {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 1, xor_f.node_id: 0, cor_g.node_id: 2,
                      xor_h.node_id: 0}]
-    weights = [0.1, 0.9]
+    weights = [0.1, 0.1,0.8]
 
-    se = StartEvent(env, 10, actions_pool, weights)
+    se = StartEvent(env, GENERATION_INTERVAL, actions_pool, weights)
     connect(se, ut)
 
     return se

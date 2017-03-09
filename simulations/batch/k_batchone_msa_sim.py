@@ -16,7 +16,7 @@ file_policy,file_statistics,file_policy_name,file_statistics_name = create_files
 policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARIABILITY, BATCH_SIZE, msa, file_policy, file_statistics)
 
 # process initialization
-start_event = initialize_process(env,policy)
+start_event = acquisition_process(env, policy)
 
 # calls generation tokens process
 env.process(start_event.generate_tokens())

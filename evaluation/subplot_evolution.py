@@ -26,7 +26,7 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
     original_data = np.genfromtxt(filename, delimiter=delimiter, skip_header=skip_header)
     users = len(np.unique(original_data[:, 5]))
     unique_tasks = np.unique(original_data[:, 6])
-    task_colors = plt.cm.Vega20b(np.linspace(0, 1, len(unique_tasks)))
+    task_colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_tasks)))
     ax1 = plt.subplot(users + 1, 1, 1)
     ax1.set_ylabel("Global")
     old_global_values = 0.0
@@ -73,4 +73,4 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
         plt.show()
     else:
         file,ext = os.path.splitext(filename)
-        plt.savefig("{}_EVO.pdf".format(file), bbox_inches="tight")
+        plt.savefig("{}_EVO.pdf".format(file))

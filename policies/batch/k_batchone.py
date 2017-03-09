@@ -2,7 +2,7 @@ from policies import *
 
 
 class K_BATCHONE(Policy):
-    def __init__(self, env, number_of_users, worker_variability, batch_size, solver, file_policy, file_statistics):
+    def __init__(self, env, number_of_users, worker_variability, batch_size, solver, file_policy):
         """
 Initializes a KBatchOne policy.
         :param env: simpy environment.
@@ -11,9 +11,8 @@ Initializes a KBatchOne policy.
         :param batch_size: the batch size of the global queue.
         :param solver: the solver used for the optimal task assignment.
         :param file_policy: file object to calculate policy related statistics.
-        :param file_statistics: file object to draw the policy evolution.
         """
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.solver = solver
         self.name = "{}BATCH_ONE".format(self.batch_size)
@@ -28,16 +27,13 @@ Request method for KBatchOne policies. Creates a PolicyJob object and calls for 
         """
         k_batch_one_job = super().request(user_task)
 
-        self.save_status(k_batch_one_job)
 
         self.batch_queue.append(k_batch_one_job)
 
-        self.save_status(k_batch_one_job)
 
         if len(self.batch_queue) >= self.batch_size:
             self.evaluate()
 
-        self.save_status(k_batch_one_job)
 
         return k_batch_one_job
 
@@ -48,17 +44,14 @@ Release method for KBatchOne policies. Uses the passed parameter, which is a pol
         """
         super().release(k_batch_one_job)
 
-        self.save_status(k_batch_one_job)
 
         user_to_release_index = k_batch_one_job.assigned_user
         self.assigned_job_to_user[user_to_release_index] = None
 
-        self.save_status(k_batch_one_job)
 
         if len(self.batch_queue) >= self.batch_size:
             self.evaluate()
 
-        self.save_status(k_batch_one_job)
 
     def evaluate(self):
         """
@@ -88,16 +81,3 @@ Evaluate method for KBatchOne policies. Sets the required variables by the solve
                 job.started = self.env.now
                 job.request_event.succeed(job.service_rate[user_index])
         self.batch_queue = [job for job in self.batch_queue if job is not None]
-
-    def policy_status(self):
-        """
-Evaluates the current state of the policy. Overrides parent method with KBatchOne specific logic.
-        :return: returns a list where the first item is the global queue length and all subsequent elements are the respective user queue length.
-        """
-        current_status = [len(self.batch_queue)]
-        for i in range(self.number_of_users):
-            if self.assigned_job_to_user[i] is None:
-                current_status.append(0)
-            else:
-                current_status.append(1)
-        return current_status
