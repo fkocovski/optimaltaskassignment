@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def fill_array(data, start_index, finish_index, task_id):
@@ -23,9 +24,9 @@ def fill_array(data, start_index, finish_index, task_id):
 
 def evolution(filename, outfile=False, delimiter=",", skip_header=1):
     original_data = np.genfromtxt(filename, delimiter=delimiter, skip_header=skip_header)
-    users = original_data.shape[1] - 11
+    users = len(np.unique(original_data[:, 5]))
     unique_tasks = np.unique(original_data[:, 6])
-    task_colors = plt.cm.Paired(np.linspace(0, 1, len(unique_tasks)))
+    task_colors = plt.cm.Vega20b(np.linspace(0, 1, len(unique_tasks)))
     ax1 = plt.subplot(users + 1, 1, 1)
     ax1.set_ylabel("Global")
     old_global_values = 0.0
@@ -66,11 +67,10 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
     max_y = max(y.get_ylim()[1] for y in all_axes)
     max_x = max(x.get_xlim()[1] for x in all_axes)
 
-
-    plt.gcf().set_size_inches(max_x, (len(all_axes) * max_y))
+    plt.gcf().set_size_inches(max_x / 2.0, (len(all_axes) * max_y))
 
     if not outfile:
         plt.show()
     else:
-        plt.savefig(filename,format="pdf")
-        plt.close()
+        file,ext = os.path.splitext(filename)
+        plt.savefig("{}_EVO.pdf".format(file), bbox_inches="tight")

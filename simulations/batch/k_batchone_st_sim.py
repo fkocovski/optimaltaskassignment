@@ -10,10 +10,10 @@ from solvers.st_solver import st
 env = simpy.Environment()
 
 # open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}BATCHONE_ST".format(BATCH_SIZE))
+file_policy = create_files("{}BATCHONE_ST".format(BATCH_SIZE))
 
 # initialize policy
-policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, st, file_policy, file_statistics)
+policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, st, file_policy, None)
 
 # process initialization
 start_event = initialize_process(env,policy)
@@ -26,8 +26,8 @@ env.run(until=SIM_TIME)
 
 # close file
 file_policy.close()
-file_statistics.close()
+# file_statistics.close()
 
 # calculate statistics and plots
-calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-evolution(file_policy_name,outfile="{}.pdf".format(file_statistics_name[:-4]))
+calculate_statistics(file_policy.name, outfile=True)
+evolution(file_policy.name,outfile=True)

@@ -2,6 +2,7 @@ import numpy as np
 import simpy
 
 from evaluation.subplot_evolution import evolution
+# from evaluation.plot import evolution
 from evaluation.statistics import calculate_statistics
 from policies.others.wz_one_td_vfa_op import WZ_ONE_TD_VFA_OP
 from simulations import *
@@ -25,14 +26,14 @@ start_event = initialize_process(env,policy_train)
 env.process(start_event.generate_tokens())
 
 # runs simulation
-env.run(until=500)
+env.run(until=5000)
 
 # creates simulation environment
 env = simpy.Environment()
 
 # open file and write header
-# file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("WZ_ONE_TD_VFA_OP")
-file_policy = create_files("WZ_ONE_TD_VFA_OP")
+# file_policy, file_statistics, file_statistics_name = create_files("WZ_ONE_TD_VFA_OP")
+file_policy = create_files("WZ_ONE_TD_VFA_OP.csv")
 
 # initialize policy
 policy = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, None, theta, gamma, alpha,True,wait_size)
@@ -52,4 +53,5 @@ file_policy.close()
 
 # calculate statistics and plots
 calculate_statistics(file_policy.name, outfile=False)
-# evolution(file_policy.name,outfile=False)
+evolution(file_policy.name,outfile=True)
+# evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name))

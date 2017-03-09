@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def calculate_statistics(filename, outfile=False,delimiter=",", skip_header=1):
@@ -19,29 +20,34 @@ Calculates statistics for passed file.
     avg_service = np.average(service)
     n_of_jobs = original_data.shape[0]
 
+    kpis = [lateness,wait,service]
+    labels = ["Lateness", "Wait", "Service"]
+
+
     users = np.unique(original_data[:,5])
-    print(users)
     sim_time = np.ceil(max(original_data[:,4]))
     user_loads = []
     for i in range(len(users)):
         user_data = original_data[original_data[:, 5] == i + 1]
         user_loads.append(sum(user_data[:,4]-user_data[:,3])/sim_time)
     sys_load = np.mean(user_loads)
-    print(sys_load)
 
     fig = plt.figure(figsize=plt.figaspect(0.5))
     ax = fig.add_subplot(111)
     text = "Lateness: {:.4f}\nWait: {:.4f}\nService: {:.4f}\nJobs: {}\n$\phi$ load: {:.4f}".format(avg_lateness, avg_wait, avg_service,
                                                                               n_of_jobs,sys_load)
-    props = dict(boxstyle='square', facecolor='darkorange', alpha=0.75)
-    ax.boxplot([lateness,wait,service], labels=["Lateness", "Wait", "Service"], showmeans=True,
-               meanline=True, sym="")
+
+    props = dict(boxstyle='square', facecolor='darkorange', alpha=0.5)
+    bplot = ax.boxplot(x=kpis,labels=labels,notch=True,patch_artist=True)
     ax.text(0.8, 0.75, text, transform=ax.transAxes, bbox=props)
-    ax.set_title(filename)
-    ax.grid(True)
+    patches_colors = plt.cm.Vega20b(np.linspace(0, 1, len(kpis)))
+
+    for i,patch in enumerate(bplot["boxes"]):
+        patch.set_facecolor(patches_colors[i])
+        patch.set_alpha(0.5)
 
     if not outfile:
         plt.show()
     else:
-        plt.savefig(filename, format="pdf")
-        plt.close()
+        file, ext = os.path.splitext(filename)
+        plt.savefig("{}_KPI.pdf".format(file),bbox_inches="tight")

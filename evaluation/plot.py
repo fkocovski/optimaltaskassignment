@@ -22,7 +22,7 @@ def evolution(filename, outfile=None, delimiter=",", skiprows=1, title=None):
     #D = np.genfromtxt(filename, dtype=float, delimiter=delimiter, names=True)
 
     # basic figure setup
-    nusers = D.shape[1]-2
+    nusers = D.shape[1]-3
     H = [max(int(np.max(D[:,i+1])),1) for i in range(nusers+1)]  # heights of 'subplots' (global queue/user queues)
     P = np.hstack((0, np.cumsum([-H[i+1]-1 for i in range(nusers)])))  # 'subplot offsets'
     plt.figure(figsize=((np.max(D[:,0])-np.min(D[0,:]))/2.0, (H[0]-P[-1]+1.0)/2.0))

@@ -31,7 +31,7 @@ Uses the passed string name to initialize the required files for the analysis. R
     file_policy.write("\n")
     # file_statistics.write("\n")
 
-    # return file_policy, file_statistics, file_policy_name, file_statistics_name
+    # return file_policy, file_statistics, file_statistics_name
     return file_policy
 
 def initialize_process(env,policy):
