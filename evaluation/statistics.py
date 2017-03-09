@@ -4,11 +4,6 @@ import os
 
 
 def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
-    """
-Calculates statistics for passed file.
-    :param outfile: a string file containing the name of the file where the plot file is saved. If not provided, the plot is shown.
-    :param file: string of the file name.
-    """
     original_data = np.genfromtxt(filename, delimiter=delimiter, skip_header=skip_header)
 
     lateness = original_data[:, 4] - original_data[:, 1]

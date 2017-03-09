@@ -2,7 +2,7 @@ from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, C
 
 NUMBER_OF_USERS = 3
 SERVICE_INTERVAL = 1
-GENERATION_INTERVAL = 10
+GENERATION_INTERVAL = 3
 SIM_TIME = 1000
 BATCH_SIZE = 4
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
@@ -33,7 +33,7 @@ def acquisition_process(env, policy):
     xor_a = XOR(env, "xor_a")
     xor_b = XOR(env, "xor_b")
     cor_g = COR(env, "cor_g")
-    dor_c = DOR(env, "dor_c", cor_g)
+    dor_c = DOR(env, "dor_c")
     xor_d = XOR(env, "xor_d")
     xor_e = XOR(env, "xor_e")
     xor_f = XOR(env, "xor_f")

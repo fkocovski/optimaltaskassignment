@@ -99,12 +99,11 @@ class XOR(Node):
 
 
 class DOR(Node):
-    def __init__(self, env, name, cor):
+    def __init__(self, env, name):
         super().__init__()
         self.env = env
         self.name = name
         self.children = []
-        self.cor = cor
 
     def forward(self, token):
         action = token.get_action(self)
