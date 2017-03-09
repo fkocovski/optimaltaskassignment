@@ -13,7 +13,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP")
 
 # initialize policy
-policy = LLQP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics)
+policy = LLQP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)

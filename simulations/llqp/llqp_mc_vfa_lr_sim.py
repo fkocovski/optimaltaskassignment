@@ -22,7 +22,7 @@ for i in range(epochs):
     # FIXME: normalization as method
     # theta[0] = 0.0
     # theta[1] = 0.0
-    policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta/np.linalg.norm(theta), epsilon, gamma, alpha)
+    policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, theta / np.linalg.norm(theta), epsilon, gamma, alpha)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -56,8 +56,8 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_VFA_LR")
 
 # initialize policy
-policy = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma,
-                     alpha)
+policy = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, theta, epsilon, gamma,
+                        alpha)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)

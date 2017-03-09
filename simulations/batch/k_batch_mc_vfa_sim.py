@@ -31,7 +31,7 @@ for i in range(epochs):
     alpha_disc = initial_alpha / (i + 1)
 
     # initialize policy
-    policy_train = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, 1, None, None, theta, epsilon, gamma,
+    policy_train = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY, 1, None, None, theta, epsilon, gamma,
                                   alpha_disc)
 
     # start event
@@ -67,7 +67,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("1BATCH_MC_VFA")
 
 # initialize policy
-policy = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, 1, file_policy, file_statistics, theta, epsilon, gamma,
+policy = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY, 1, file_policy, file_statistics, theta, epsilon, gamma,
                         initial_alpha)
 
 # start event

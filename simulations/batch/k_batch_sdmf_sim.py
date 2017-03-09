@@ -14,7 +14,7 @@ env = simpy.Environment()
 file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batch_sdmf".format(BATCH_SIZE))
 
 # initialize policy
-policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, sdmf, file_policy, file_statistics)
+policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY, BATCH_SIZE, sdmf, file_policy, file_statistics)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)

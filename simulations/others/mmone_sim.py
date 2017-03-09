@@ -13,7 +13,7 @@ env = simpy.Environment()
 file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("mmone")
 
 # initialize policy
-policy = MMONE(env, 1, WORKER_VARAIBILITY, file_policy, file_statistics)
+policy = MMONE(env, 1, WORKER_VARIABILITY, file_policy, file_statistics)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)

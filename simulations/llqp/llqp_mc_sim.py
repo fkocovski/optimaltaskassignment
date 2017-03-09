@@ -21,7 +21,7 @@ for i in range(epochs):
     file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("run{}_mc".format(i))
 
     # initialize policy
-    policy = LLQP_MC(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, q_table, epsilon, gamma)
+    policy = LLQP_MC(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, q_table, epsilon, gamma)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)

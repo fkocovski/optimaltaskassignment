@@ -17,7 +17,7 @@ alpha = 0.0001
 env = simpy.Environment()
 
 # initialize policy
-policy_train = WZ_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha,False,wait_size)
+policy_train = WZ_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, theta, gamma, alpha, False, wait_size)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -41,7 +41,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("WZ_TD_VFA_OP")
 
 # initialize policy
-policy = WZ_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, gamma, alpha,True,wait_size)
+policy = WZ_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, theta, gamma, alpha, True, wait_size)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)

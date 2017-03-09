@@ -6,20 +6,18 @@ RANDOM_STATE_ACTIONS = np.random.RandomState(1)
 
 
 class Policy(object):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics):
+    def __init__(self, env, number_of_users, worker_variability, file_policy):
         """
 Parent class initialization for all policy objects.
         :param env: simpy environment.
         :param number_of_users: the number of users present in the system.
         :param worker_variability: worker variability in absolute value.
         :param file_policy: file object to calculate policy related statistics.
-        :param file_statistics: file object to draw the policy evolution.
         """
         self.env = env
         self.number_of_users = number_of_users
         self.worker_variability = worker_variability
         self.file_policy = file_policy
-        self.file_statistics = file_statistics
 
     def request(self, user_task):
         """
@@ -49,30 +47,9 @@ Parent class release method to manage and release finished policy job objects.
         policy_job.finished = self.env.now
         policy_job.save_info(self.file_policy)
 
-    def save_status(self, policy_job):
-        """
-Parent class method that saves information required to plot the policy evolution over time.
-        """
-        if self.file_statistics is None:
-            return
-
-        current_status = self.policy_status()
-        task_id = hex(id(policy_job.user_task))
-        self.file_statistics.write("{}".format(self.env.now))
-        for val in current_status:
-            self.file_statistics.write(",{}".format(val))
-        self.file_statistics.write(",{}".format(task_id))
-        self.file_statistics.write("\n")
-
-    def policy_status(self):
-        """
-Parent class method that is overriden by its children to save policy specific status information.
-        """
-        pass
-
 
 class PolicyJob(object):
-    id_count = itertools.count()
+    job_id = itertools.count()
 
     def __init__(self, user_task):
         """
@@ -87,7 +64,7 @@ Policy job object initialization method.
         self.assigned_user = None
         self.service_rate = None
         self.request_event = None
-        self.job_id = next(PolicyJob.id_count)
+        self.job_id = next(PolicyJob.job_id)
 
     def is_busy(self, now):
         """
@@ -119,7 +96,7 @@ Method used to save information required to calculate key metrics.
 
         file.write(
             "{},{},{},{},{},{},{},{}".format(self.job_id, self.arrival, self.assigned, self.started, self.finished,
-                                             self.assigned_user + 1, self.user_task.task_id, self.user_task.name))
+                                             self.assigned_user + 1, self.user_task.node_id, self.user_task.name))
         for st in self.service_rate:
             file.write(",{}".format(st))
         file.write("\n")

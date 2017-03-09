@@ -13,7 +13,7 @@ env = simpy.Environment()
 file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batch_st".format(BATCH_SIZE))
 
 # initialize policy
-policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, BATCH_SIZE, st, file_policy, file_statistics)
+policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY, BATCH_SIZE, st, file_policy, file_statistics)
 
 # process initialization
 start_event = initialize_process(env,policy)

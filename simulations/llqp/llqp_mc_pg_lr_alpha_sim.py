@@ -33,7 +33,7 @@ while eta < 5:
         # file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_PG_LR")
 
         # initialize policy
-        policy = LLQP_MC_PG_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta, gamma, alpha)
+        policy = LLQP_MC_PG_LR(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, theta, gamma, alpha)
 
         # start event
         start_event_test = StartEvent(env, GENERATION_INTERVAL)

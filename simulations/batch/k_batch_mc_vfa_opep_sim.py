@@ -19,7 +19,7 @@ for i in range(epochs):
     env = simpy.Environment()
 
     # initialize policy
-    policy_train = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, 1, theta, gamma, alpha,
+    policy_train = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, 1, theta, gamma, alpha,
                                        False, epsilon)
 
     # start event
@@ -52,7 +52,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("K_BATCH_MC_VFA_OPEP")
 
 # initialize policy
-policy = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, 1, theta, gamma,
+policy = K_BATCH_MC_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, 1, theta, gamma,
                              alpha, True, None)
 
 # start event

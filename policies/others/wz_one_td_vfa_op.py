@@ -3,9 +3,9 @@ import itertools
 
 
 class WZ_ONE_TD_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, gamma, alpha,
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
                  greedy, wait_size):
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
@@ -19,16 +19,10 @@ class WZ_ONE_TD_VFA_OP(Policy):
     def request(self, user_task):
         wz_one_job = super().request(user_task)
 
-        self.save_status(wz_one_job)
-
         self.batch_queue.append(wz_one_job)
-
-        self.save_status(wz_one_job)
 
         if len(self.batch_queue) >= self.wait_size:
             self.evaluate()
-
-        self.save_status(wz_one_job)
 
         return wz_one_job
 
@@ -37,16 +31,10 @@ class WZ_ONE_TD_VFA_OP(Policy):
 
         user_to_release_index = wz_one_job.assigned_user
 
-        self.save_status(wz_one_job)
-
         self.user_slot[user_to_release_index] = None
-
-        self.save_status(wz_one_job)
 
         if len(self.batch_queue) >= self.wait_size:
             self.evaluate()
-
-        self.save_status(wz_one_job)
 
     def evaluate(self):
         state_space, combinations = self.state_space()
@@ -86,23 +74,14 @@ class WZ_ONE_TD_VFA_OP(Policy):
         a = [0 if self.user_slot[i] is None else self.user_slot[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 
-        state_space = np.zeros((self.number_of_users ** self.wait_size,self.number_of_users + 2*self.wait_size))
+        state_space = np.zeros((self.number_of_users ** self.wait_size, self.number_of_users + 2 * self.wait_size))
 
-        combinations = list(itertools.product(range(self.number_of_users),repeat=self.wait_size))
+        combinations = list(itertools.product(range(self.number_of_users), repeat=self.wait_size))
 
         for i, combination in enumerate(combinations):
             state_space[i] = w + a + [p[user_index][job_index] for job_index, user_index in enumerate(combination)]
 
         return state_space, combinations
-
-    def policy_status(self):
-        current_status = [len(self.batch_queue)]
-        for i in range(self.number_of_users):
-            if self.user_slot[i] is None:
-                current_status.append(0)
-            else:
-                current_status.append(1)
-        return current_status
 
     def q(self, states, action):
         q = np.dot(states[action], self.theta[action])
@@ -111,13 +90,16 @@ class WZ_ONE_TD_VFA_OP(Policy):
     def update_theta(self, new_state_space):
         old_state_space, old_action, old_combinations = self.history
         reward = self.reward(old_state_space, old_action, old_combinations)
-        delta = -reward + self.gamma * (max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(old_state_space, old_action)
+        delta = -reward + self.gamma * (
+        max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(
+            old_state_space, old_action)
         self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
 
     def reward(self, state_space, action, combinations):
         reward = 0.0
         busy_times = [state_space[action][self.wait_size + i] for i in range(self.number_of_users)]
         for job_index, user_index in enumerate(combinations[action]):
-            reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][2*self.wait_size + job_index]
+            reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][
+                2 * self.wait_size + job_index]
             busy_times[user_index] += state_space[action][2 * self.wait_size + job_index]
         return reward

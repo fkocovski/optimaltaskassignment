@@ -17,7 +17,7 @@ alpha = 0.00001
 env = simpy.Environment()
 
 # initialize policy
-policy_train = K_BATCH_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None,1, theta, gamma, alpha,False)
+policy_train = K_BATCH_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, 1, theta, gamma, alpha, False)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -41,7 +41,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("K_BATCH_TD_VFA_OP")
 
 # initialize policy
-policy = K_BATCH_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics,1, theta, gamma, alpha,True)
+policy = K_BATCH_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, 1, theta, gamma, alpha, True)
 
 # start event
 start_event_test = StartEvent(env, GENERATION_INTERVAL)

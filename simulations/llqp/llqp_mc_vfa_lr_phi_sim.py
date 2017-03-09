@@ -30,7 +30,7 @@ for phi in np.linspace(3/2*np.pi+1e-6, 2*np.pi, 32):
         theta[2] = np.cos(phi)
         theta[3] = np.sin(phi)
 
-        policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, theta/np.linalg.norm(theta), epsilon, gamma, alpha)
+        policy_train = LLQP_MC_VFA_LR(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, theta / np.linalg.norm(theta), epsilon, gamma, alpha)
 
         # start event
         start_event = StartEvent(env, GENERATION_INTERVAL)

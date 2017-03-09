@@ -20,7 +20,7 @@ for i in range(epochs):
     env = simpy.Environment()
 
     # initialize policy
-    policy_train = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, None, None, w, theta, gamma, alpha, beta)
+    policy_train = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, w, theta, gamma, alpha, beta)
 
     # start event
     start_event = StartEvent(env, GENERATION_INTERVAL)
@@ -47,7 +47,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_PG_WB")
 
 # initialize policy
-policy = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, w, theta, gamma, alpha,
+policy = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, w, theta, gamma, alpha,
                        beta)
 
 # start event

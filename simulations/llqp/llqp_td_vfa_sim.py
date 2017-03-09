@@ -19,7 +19,7 @@ env = simpy.Environment()
 file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_TD_VFA")
 
 # initialize policy
-policy_train = LLQP_TD_VFA(env, NUMBER_OF_USERS, WORKER_VARAIBILITY, file_policy, file_statistics, theta, epsilon, gamma, alpha)
+policy_train = LLQP_TD_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, file_statistics, theta, epsilon, gamma, alpha)
 
 # start event
 start_event = StartEvent(env, GENERATION_INTERVAL)
