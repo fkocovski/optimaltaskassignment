@@ -1,8 +1,8 @@
 from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR, connect
 
-NUMBER_OF_USERS = 3
+NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
-GENERATION_INTERVAL = 3
+GENERATION_INTERVAL = 5
 SIM_TIME = 1000
 BATCH_SIZE = 4
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
@@ -58,10 +58,19 @@ def acquisition_process(env, policy):
     xor_i.children.append(ut_g)
     xor_h.children.append(ut_h)
 
-    actions_pool = [{xor.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},{xor.node_id: 0, xor_a.node_id: 1,xor_b.node_id:0, xor_h.node_id: 0},
+    actions_pool = [{xor.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},
+                    {xor.node_id: 0, xor_a.node_id: 1,xor_b.node_id:0, xor_h.node_id: 0},
+                    {xor.node_id: 0, xor_a.node_id: 0,dor_c.node_id:0, cor_g.node_id:0,xor_i.node_id:0},
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 0, xor_i.node_id: 0},
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 1, xor_i.node_id: 0},
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 2, xor_h.node_id: 0},
                     {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 1, xor_f.node_id: 0, cor_g.node_id: 2,
-                     xor_h.node_id: 0}]
-    weights = [0.1, 0.1,0.8]
+                     xor_h.node_id: 0},
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 0, xor_f.node_id: 0,xor_e.node_id:0,
+                     cor_g.node_id: 2,
+                     xor_h.node_id: 0}
+                    ]
+    weights = [1/len(actions_pool) for _ in range(len(actions_pool))]
 
     se = StartEvent(env, GENERATION_INTERVAL, actions_pool, weights)
     connect(se, ut)

@@ -19,11 +19,11 @@ start_event = acquisition_process(env, policy_train)
 
 env.process(start_event.generate_tokens())
 
-env.run(until=50000)
+env.run(until=10000)
 
 env = simpy.Environment()
 
-file_policy = create_files("WZ_ONE_TD_VFA_OP.csv")
+file_policy = create_files("WZ_ONE_TD_VFA_OP_BS{}_NU{}_GI{}_SIM{}.csv".format(BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SIM_TIME))
 
 policy = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, theta, gamma, alpha, True,
                           BATCH_SIZE)

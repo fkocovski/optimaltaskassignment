@@ -24,6 +24,10 @@ def fill_array(data, start_index, finish_index, task_id):
 
 def evolution(filename, outfile=False, delimiter=",", skip_header=1):
     original_data = np.genfromtxt(filename, delimiter=delimiter, skip_header=skip_header)
+
+    task_names = np.genfromtxt(filename,delimiter=delimiter,skip_header=skip_header,usecols=(6,7),dtype=None)
+    unique_names = dict(np.unique(task_names))
+
     users = len(np.unique(original_data[:, 5]))
     unique_tasks = np.unique(original_data[:, 6])
     task_colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_tasks)))
@@ -34,7 +38,7 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
         global_sorted_index, global_values, global_array = fill_array(original_data, 1, 2, task_id)
         ax1.fill_between(x=global_array[global_sorted_index, 0], y1=old_global_values + global_values,
                          y2=old_global_values,
-                         facecolor=task_colors[i], label="Task {}".format(task_id))
+                         facecolor=task_colors[i], label=unique_names[task_id].decode("UTF-8"))
         old_global_values += global_values
     plt.xticks(np.arange(int(min(original_data[:, 1])), int(max(original_data[:, 4])), 10.0))
     ylims = ax1.get_ylim()
@@ -48,7 +52,7 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
         for i, task_id in enumerate(unique_tasks):
             sorted_user_index, user_values, user_array = fill_array(user_data, 2, 4, task_id)
             ax.fill_between(x=user_array[sorted_user_index, 0], y1=old_user_values + user_values, y2=old_user_values,
-                            facecolor=task_colors[i], label="Task {}".format(task_id))
+                            facecolor=task_colors[i], label=unique_names[task_id].decode("UTF-8"))
             old_user_values += user_values
         plt.legend()
         ylims = ax.get_ylim()

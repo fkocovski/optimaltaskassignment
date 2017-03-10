@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+import sys
 
 
 class Node(object):
@@ -146,8 +147,11 @@ class Token(object):
         self.history.append(element.name)
 
     def get_action(self, element):
-        action = self.actions[element.node_id]
-        return action
+        try:
+            action = self.actions[element.node_id]
+            return action
+        except KeyError:
+            sys.exit("Chosen action doesn't lead to direct child, token's action path was {}. Aborting...".format(self.actions))
 
 
 class Counter(object):
