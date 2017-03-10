@@ -32,7 +32,7 @@ connect(start_event, user_task)
 env.process(start_event.generate_tokens())
 
 # runs simulation
-env.run(until=10000)
+env.run(until=1000)
 
 # creates simulation environment
 env = simpy.Environment()

@@ -19,7 +19,7 @@ start_event = acquisition_process(env, policy_train)
 
 env.process(start_event.generate_tokens())
 
-env.run(until=10000)
+env.run(until=1000)
 
 env = simpy.Environment()
 

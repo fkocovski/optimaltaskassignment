@@ -43,7 +43,13 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
     plt.xticks(np.arange(int(min(original_data[:, 1])), int(max(original_data[:, 4])), 10.0))
     ylims = ax1.get_ylim()
     ax1.set_yticks(np.arange(0, int(ylims[1]) + 1, 1))
-    plt.legend()
+    for a, ass in original_data[:, [1, 2]]:
+        ax1.axvline(x=a, c="k", ls="dotted", lw=0.5)
+        ax1.axvline(x=ass, c="k", ls="dashdot", lw=0.5)
+    handles, labels = ax1.get_legend_handles_labels()
+    assigned_artist = plt.Line2D((0, 1), (0, 0), color='k', linestyle='dotted',linewidth=0.5)
+    finished_artist = plt.Line2D((0, 1), (0, 0), color='k', linestyle='dashdot',linewidth=0.5)
+    ax1.legend(handles + [assigned_artist, finished_artist], labels + ["Arrival", "Assigned"])
 
     for u in range(users):
         ax = plt.subplot(users + 1, 1, u + 2, sharex=ax1)
@@ -54,7 +60,10 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
             ax.fill_between(x=user_array[sorted_user_index, 0], y1=old_user_values + user_values, y2=old_user_values,
                             facecolor=task_colors[i], label=unique_names[task_id].decode("UTF-8"))
             old_user_values += user_values
-        plt.legend()
+        handles, labels = ax.get_legend_handles_labels()
+        assigned_artist = plt.Line2D((0, 1), (0, 0), color='k', linestyle='dotted',linewidth=0.5)
+        finished_artist = plt.Line2D((0, 1), (0, 0), color='k', linestyle='dashdot',linewidth=0.5)
+        ax.legend(handles+[assigned_artist,finished_artist],labels+["Assigned","Finished"])
         ylims = ax.get_ylim()
         ax.set_yticks(np.arange(0, int(ylims[1]) + 1, 1))
         ax.set_ylabel("User {}".format(u + 1))
@@ -62,9 +71,7 @@ def evolution(filename, outfile=False, delimiter=",", skip_header=1):
             ax.axvline(x=a, c="k", ls="dotted", lw=0.5)
             ax.axvline(x=f, c="k", ls="dashdot", lw=0.5)
 
-    for a, ass in original_data[:, [1, 2]]:
-        ax1.axvline(x=a, c="k", ls="dotted", lw=0.5)
-        ax1.axvline(x=ass, c="k", ls="dashdot", lw=0.5)
+
 
     all_axes = plt.gcf().get_axes()
 
