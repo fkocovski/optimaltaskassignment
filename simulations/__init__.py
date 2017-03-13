@@ -1,12 +1,14 @@
-from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR, connect
+# from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR, connect
+from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR
 
-NUMBER_OF_USERS = 2
+NUMBER_OF_USERS = 6
 SERVICE_INTERVAL = 1
-GENERATION_INTERVAL = 5
+GENERATION_INTERVAL = 0.9
 SIM_TIME = 100
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARIABILITY = 0.2 * SERVICE_INTERVAL
+SEED = 1
 
 
 def create_files(name):
@@ -18,7 +20,7 @@ def create_files(name):
     return file_policy
 
 
-def acquisition_process(env, policy):
+def acquisition_process(env, policy,seed=1,generation_interval=GENERATION_INTERVAL,accelerate=False,starting_generation=None,sim_time=None):
     ut = UserTask(env, policy, "Setup Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_a = UserTask(env, policy, "Quick Check", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_b = UserTask(env, policy, "Relevance Test", SERVICE_INTERVAL, TASK_VARIABILITY)
@@ -40,23 +42,39 @@ def acquisition_process(env, policy):
     xor_h = XOR(env, "xor_h")
     xor_i = XOR(env, "xor_i")
 
-    connect(ut, xor)
-    xor.assign_children((ut_a, xor_b))
-    connect(ut_a, xor_a)
-    xor_a.assign_children((ut_b, xor_b))
-    xor_b.children.append(xor_h)
-    connect(ut_b, dor_c)
-    dor_c.children.extend((cor_g, ut_c, xor_f))
-    connect(ut_c, xor_d)
-    xor_d.assign_children((ut_d, cor_g))
-    connect(ut_d, xor_e)
-    xor_e.assign_children((cor_g, xor_f))
-    xor_f.children.append(ut_e)
-    connect(ut_e, cor_g)
-    cor_g.children.extend((ut_f, xor_i, xor_h))
-    connect(ut_f, xor_i)
-    xor_i.children.append(ut_g)
-    xor_h.children.append(ut_h)
+    ut.assign_child(xor)
+
+    xor.assign_child(ut_a,xor_b)
+
+    ut_a.assign_child(xor_a)
+
+    xor_a.assign_child(ut_b,xor_b)
+
+    xor_b.assign_child(xor_h)
+
+    ut_b.assign_child(dor_c)
+
+    dor_c.assign_child(cor_g,ut_c,xor_f)
+
+    ut_c.assign_child(xor_d)
+
+    xor_d.assign_child(ut_d,cor_g)
+
+    ut_d.assign_child(xor_e)
+
+    xor_e.assign_child(cor_g,xor_f)
+
+    xor_f.assign_child(ut_e)
+
+    ut_e.assign_child(cor_g)
+
+    cor_g.assign_child(ut_f,xor_i,xor_h)
+
+    ut_f.assign_child(xor_i)
+
+    xor_i.assign_child(ut_g)
+
+    xor_h.assign_child(ut_h)
 
     actions_pool = [{xor.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},
                     {xor.node_id: 0, xor_a.node_id: 1,xor_b.node_id:0, xor_h.node_id: 0},
@@ -72,7 +90,7 @@ def acquisition_process(env, policy):
                     ]
     weights = [1/len(actions_pool) for _ in range(len(actions_pool))]
 
-    se = StartEvent(env, GENERATION_INTERVAL, actions_pool, weights)
-    connect(se, ut)
+    se = StartEvent(env, generation_interval, actions_pool, weights,seed=seed,accelerate=accelerate,starting_generation=starting_generation,sim_time=sim_time)
+    se.assign_child(ut)
 
     return se

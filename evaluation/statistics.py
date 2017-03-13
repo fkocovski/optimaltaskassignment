@@ -26,22 +26,37 @@ def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
         user_loads.append(sum(user_data[:, 4] - user_data[:, 3]) / sim_time)
     sys_load = np.mean(user_loads)
 
-    fig = plt.figure(figsize=plt.figaspect(0.5))
-    ax = fig.add_subplot(111)
-    text = "Lateness: {:.4f}\nWait: {:.4f}\nService: {:.4f}\nJobs: {}\n$\phi$ load: {:.4f}".format(avg_lateness,
-                                                                                                   avg_wait,
-                                                                                                   avg_service,
-                                                                                                   n_of_jobs, sys_load)
+    fig = plt.figure(figsize=plt.figaspect(0.25))
+    ax = fig.add_subplot(121)
+    text = "Lateness: {:.4f}\nWait: {:.4f}\nService: {:.4f}\nJobs: {}".format(avg_lateness,avg_wait,avg_service,n_of_jobs)
 
-    props = dict(boxstyle='square', facecolor='darkorange')
-    bplot = ax.boxplot(x=kpis, labels=labels, notch=True, patch_artist=True, sym="")
-    ax.text(0.8,0.75 , text, transform=ax.transAxes, bbox=props)
-    patches_colors = plt.cm.rainbow(np.linspace(0, 1, len(kpis)))
+    props = dict(boxstyle='round', facecolor='darkorange')
+    ax.boxplot(x=kpis, labels=labels, notch=True, sym="")
+    ax_ylims = ax.get_ylim()
+    ax_xlims = ax.get_xlim()
+    ax.text(0.75*max(ax_xlims),0.75*max(ax_ylims), text, bbox=props)
 
-    for i, patch in enumerate(bplot["boxes"]):
-        patch.set_facecolor(patches_colors[i])
 
     ax.grid(True)
+
+    bars_colors = plt.cm.gray(np.linspace(0, 1, len(user_loads)))
+
+
+    ax2 = fig.add_subplot(122)
+    # ax2.axhline(sys_load,c="darkorange",ls="dashed",lw=0.5,label="Average system load: {:.2f} %".format(sys_load*100))
+    ax2.axhline(sys_load,c="darkorange",ls="dashed",label="Average system load: {:.2f} %".format(sys_load*100))
+    xt = [xtv for xtv in range(len(user_loads))]
+    xtl = ["User {}".format(user+1) for user in range(len(user_loads))]
+    ax2.bar(xt,user_loads,color=bars_colors,edgecolor="k",tick_label=xtl)
+    ax2.legend()
+
+
+    yt = np.arange(max(np.around(ax2.get_ylim(),decimals=1))+0.1,step=0.1)
+
+    ytl = ["{} %".format(int(val*100)) for val in yt]
+
+    ax2.set_yticks(yt)
+    ax2.set_yticklabels(ytl)
 
     if not outfile:
         plt.show()

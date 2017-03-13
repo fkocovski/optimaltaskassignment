@@ -2,7 +2,7 @@ from policies import *
 import itertools
 
 
-class WZ_ONE_TD_VFA_OP(Policy):
+class WZ_ONE_TD_VFA_OPEP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
                  greedy, wait_size,seed=1):
         super().__init__(env, number_of_users, worker_variability, file_policy,seed=seed)
@@ -11,10 +11,14 @@ class WZ_ONE_TD_VFA_OP(Policy):
         self.alpha = alpha
         self.greedy = greedy
         self.wait_size = wait_size
-        self.name = "WZ_ONE_TD_VFA_OP"
+        self.name = "WZ_ONE_TD_VFA_OPEP"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
+        self.EPSILON_GREEDY_RANDOM_STATE = np.random.RandomState(seed)
+        if not self.greedy:
+            self.epsilon = 1.0
+            self.decay = 1
 
     def request(self, user_task):
         wz_one_job = super().request(user_task)
@@ -43,7 +47,14 @@ class WZ_ONE_TD_VFA_OP(Policy):
             action = max(range(self.number_of_users ** self.wait_size),
                          key=lambda a: self.q(state_space, a))
         else:
-            action = self.RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
+            rnd = self.EPSILON_GREEDY_RANDOM_STATE.rand()
+            epsilon = self.epsilon/self.decay
+            self.decay += 1
+            if rnd < epsilon:
+                action = self.RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
+            else:
+                action = max(range(self.number_of_users ** self.wait_size),
+                             key=lambda a: self.q(state_space, a))
 
         for job_index, user_index in enumerate(combinations[action]):
             if self.user_slot[user_index] is None:
