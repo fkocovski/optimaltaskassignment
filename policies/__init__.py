@@ -1,11 +1,9 @@
-import numpy as np
 import itertools
 
 
-
-
 class Policy(object):
-    def __init__(self, env, number_of_users, worker_variability, file_policy,seed=1):
+    # def __init__(self, env, number_of_users, worker_variability, file_policy, seed=1):
+    def __init__(self, env, number_of_users, worker_variability, file_policy):
         """
 Parent class initialization for all policy objects.
         :param env: simpy environment.
@@ -17,16 +15,16 @@ Parent class initialization for all policy objects.
         self.number_of_users = number_of_users
         self.worker_variability = worker_variability
         self.file_policy = file_policy
-        self.RANDOM_STATE = np.random.RandomState(seed)
-        self.RANDOM_STATE_ACTIONS = np.random.RandomState(seed)
+        # self.RANDOM_STATE = np.random.RandomState(seed)
+        # self.RANDOM_STATE_ACTIONS = np.random.RandomState(seed)
 
-    def request(self, user_task):
+    def request(self, user_task,token):
         """
 Parent class request method for user task objects to request an optimal solution. Initializes a policy job.
         :param user_task: user task object that requests optimal solution.
         :return: initialized policy job object.
         """
-        average_processing_time = self.RANDOM_STATE.gamma(
+        average_processing_time = token.random_state.gamma(
             user_task.service_interval ** 2 / user_task.task_variability,
             user_task.task_variability / user_task.service_interval)
 
@@ -34,8 +32,8 @@ Parent class request method for user task objects to request an optimal solution
         policy_job.request_event = self.env.event()
         policy_job.arrival = self.env.now
 
-        policy_job.service_rate = [self.RANDOM_STATE.gamma(average_processing_time ** 2 / self.worker_variability,
-                                                      self.worker_variability / average_processing_time) for
+        policy_job.service_rate = [token.random_state.gamma(average_processing_time ** 2 / self.worker_variability,
+                                                           self.worker_variability / average_processing_time) for
                                    _ in range(self.number_of_users)]
 
         return policy_job

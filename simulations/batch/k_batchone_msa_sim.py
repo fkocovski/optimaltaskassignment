@@ -12,7 +12,7 @@ file_policy = create_files("{}BATCHONE_MSA_BS{}_NU{}_GI{}_SIM{}.csv".format(BATC
 
 policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARIABILITY, BATCH_SIZE, msa, file_policy)
 
-start_event = acquisition_process(env, policy)
+start_event = acquisition_process(env, policy,1,GENERATION_INTERVAL,False,None,None,None)
 
 env.process(start_event.generate_tokens())
 

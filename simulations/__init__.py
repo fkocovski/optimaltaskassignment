@@ -1,14 +1,14 @@
-# from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR, connect
+import randomstate.prng.pcg64 as pcg
 from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR
 
-NUMBER_OF_USERS = 6
+NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
-GENERATION_INTERVAL = 0.9
-SIM_TIME = 100
+GENERATION_INTERVAL = 3
+SIM_TIME = 500
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARIABILITY = 0.2 * SERVICE_INTERVAL
-SEED = 1
+SEED = 5
 
 
 def create_files(name):
@@ -20,7 +20,7 @@ def create_files(name):
     return file_policy
 
 
-def acquisition_process(env, policy,seed=1,generation_interval=GENERATION_INTERVAL,accelerate=False,starting_generation=None,sim_time=None):
+def acquisition_process(env, policy,seed,generation_interval,accelerate,starting_generation,sim_time,sigmoid_param):
     ut = UserTask(env, policy, "Setup Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_a = UserTask(env, policy, "Quick Check", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_b = UserTask(env, policy, "Relevance Test", SERVICE_INTERVAL, TASK_VARIABILITY)
@@ -88,9 +88,12 @@ def acquisition_process(env, policy,seed=1,generation_interval=GENERATION_INTERV
                      cor_g.node_id: 2,
                      xor_h.node_id: 0}
                     ]
+
     weights = [1/len(actions_pool) for _ in range(len(actions_pool))]
 
-    se = StartEvent(env, generation_interval, actions_pool, weights,seed=seed,accelerate=accelerate,starting_generation=starting_generation,sim_time=sim_time)
+    master_state = pcg.RandomState(seed)
+
+    se = StartEvent(env, generation_interval, actions_pool, weights,master_state,accelerate,starting_generation,sim_time,sigmoid_param)
     se.assign_child(ut)
 
     return se

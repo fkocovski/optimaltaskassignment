@@ -1,27 +1,31 @@
+import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
-import itertools
 
 
 class WZ_ONE_TD_VFA_OPEP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
-                 greedy, wait_size,seed=1):
-        super().__init__(env, number_of_users, worker_variability, file_policy,seed=seed)
+                 greedy, wait_size,sim_time_training,sigmoid_param):
+        # super().__init__(env, number_of_users, worker_variability, file_policy,seed)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
         self.wait_size = wait_size
+        self.sim_time_training = sim_time_training
+        self.sigmoid_param = sigmoid_param
         self.name = "WZ_ONE_TD_VFA_OPEP"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
-        self.EPSILON_GREEDY_RANDOM_STATE = np.random.RandomState(seed)
-        if not self.greedy:
-            self.epsilon = 1.0
-            self.decay = 1
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
+        # TODO: remove if sigmoid plot not needed anymore
+        self.g = []
+        self.t = []
 
-    def request(self, user_task):
-        wz_one_job = super().request(user_task)
+    def request(self, user_task,token):
+        wz_one_job = super().request(user_task,token)
 
         self.batch_queue.append(wz_one_job)
 
@@ -48,10 +52,9 @@ class WZ_ONE_TD_VFA_OPEP(Policy):
                          key=lambda a: self.q(state_space, a))
         else:
             rnd = self.EPSILON_GREEDY_RANDOM_STATE.rand()
-            epsilon = self.epsilon/self.decay
-            self.decay += 1
+            epsilon = self.sigmoid(self.env.now)
             if rnd < epsilon:
-                action = self.RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
+                action = self.EPSILON_GREEDY_RANDOM_STATE.randint(0, self.number_of_users ** self.wait_size)
             else:
                 action = max(range(self.number_of_users ** self.wait_size),
                              key=lambda a: self.q(state_space, a))
@@ -113,3 +116,9 @@ class WZ_ONE_TD_VFA_OPEP(Policy):
             reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][2 * self.wait_size + user_index]
             busy_times[user_index] += state_space[action][2 * self.wait_size + user_index]
         return reward
+
+    def sigmoid(self,t):
+        sig = (1.0 - 0.0) / (1 + np.exp(self.sigmoid_param*(t - self.sim_time_training/2)))
+        self.t.append(t)
+        self.g.append(sig)
+        return sig

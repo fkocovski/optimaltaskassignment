@@ -19,13 +19,13 @@ Initializes a KBatchOne policy.
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
 
-    def request(self, user_task):
+    def request(self, user_task,token):
         """
 Request method for KBatchOne policies. Creates a PolicyJob object and calls for the appropriate evaluation method with the corresponding solver.
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        k_batch_one_job = super().request(user_task)
+        k_batch_one_job = super().request(user_task,token)
 
 
         self.batch_queue.append(k_batch_one_job)
