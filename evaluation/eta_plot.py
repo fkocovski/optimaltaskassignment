@@ -12,7 +12,7 @@ def eta_plot(etas, rewards, outfile=None):
     plt.plot(etas, avg_rewards, label="Mean lateness")
     plt.legend()
 
-    # output
+    # TODO change outfile to be boolean as other plot scripts
     if outfile is None:
         plt.show()
     else:
