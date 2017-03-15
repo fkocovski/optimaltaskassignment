@@ -6,7 +6,6 @@ from policies.batch.k_batch import K_BATCH
 from simulations import *
 from solvers.st_solver import st
 
-# creates simulation environment
 env = simpy.Environment()
 
 # open file and write header

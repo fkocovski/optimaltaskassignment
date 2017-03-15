@@ -8,7 +8,7 @@ from solvers.msa_solver import msa
 
 env = simpy.Environment()
 
-file_policy = create_files("{}BATCH_MSA_BS{}_NU{}_GI{}_SIM{}.csv".format(BATCH_SIZE,BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SIM_TIME))
+file_policy = create_files("{}BATCH_MSA_NU{}_GI{}_SIM{}.csv".format(BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SIM_TIME))
 
 policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY,file_policy, BATCH_SIZE, msa)
 
