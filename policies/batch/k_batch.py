@@ -3,7 +3,7 @@ from collections import deque
 
 
 class K_BATCH(Policy):
-    def __init__(self, env, number_of_users, worker_variability, batch_size, solver, file_policy, file_statistics):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, batch_size, solver):
         """
 Initializes a KBatch policy.
         :param env: simpy environment.
@@ -14,31 +14,28 @@ Initializes a KBatch policy.
         :param file_policy: file object to calculate policy related statistics.
         :param file_statistics: file object to draw the policy evolution.
         """
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.solver = solver
         self.name = "{}_BATCH".format(self.batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
 
-    def request(self, user_task):
+    def request(self, user_task,token):
         """
 Request method for KBatch policies. Creates a PolicyJob object and calls for the appropriate evaluation method with the corresponding solver.
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        k_batch_job = super().request(user_task)
+        k_batch_job = super().request(user_task,token)
 
-        self.save_status(k_batch_job)
 
         self.batch_queue.append(k_batch_job)
 
-        self.save_status(k_batch_job)
 
         if len(self.batch_queue) == self.batch_size:
             self.evaluate()
 
-        self.save_status(k_batch_job)
 
         return k_batch_job
 
@@ -52,16 +49,13 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
         user_to_release_index = k_batch_job.assigned_user
         queue_to_pop = self.users_queues[user_to_release_index]
 
-        self.save_status(k_batch_job)
         queue_to_pop.popleft()
-        self.save_status(k_batch_job)
 
         if len(queue_to_pop) > 0:
             next_k_batch_job = queue_to_pop[0]
             next_k_batch_job.started = self.env.now
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
-        self.save_status(k_batch_job)
 
     def evaluate(self):
         """
@@ -99,13 +93,3 @@ Evaluate method for KBatch policies. Sets the required variables by the solver t
                 if not leftmost_llpq_element.is_busy(self.env.now):
                     leftmost_llpq_element.started = self.env.now
                     leftmost_llpq_element.request_event.succeed(leftmost_llpq_element.service_rate[user_index])
-
-    def policy_status(self):
-        """
-Evaluates the current state of the policy. Overrides parent method with KBatch specific logic.
-        :return: returns a list where the first item is the global queue length and all subsequent elements are the respective user queues length.
-        """
-        current_status = [len(self.batch_queue)]
-        for i in range(self.number_of_users):
-            current_status.append(len(self.users_queues[i]))
-        return current_status
