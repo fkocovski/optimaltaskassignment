@@ -13,7 +13,7 @@ def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
     avg_lateness = np.average(lateness)
     avg_wait = np.average(wait)
     avg_service = np.average(service)
-    n_of_jobs = original_data.shape[0]
+    n_of_tokens = np.unique(original_data.shape[:,8])
 
     kpis = [lateness, wait, service]
     labels = ["Lateness", "Wait", "Service"]
@@ -28,7 +28,7 @@ def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
 
     fig = plt.figure(figsize=plt.figaspect(0.25))
     ax = fig.add_subplot(121)
-    text = "Lateness: {:.4f}\nWait: {:.4f}\nService: {:.4f}\nJobs: {}".format(avg_lateness,avg_wait,avg_service,n_of_jobs)
+    text = "Lateness: {:.4f}\nWait: {:.4f}\nService: {:.4f}\nTokens: {}".format(avg_lateness,avg_wait,avg_service,n_of_tokens)
 
     props = dict(boxstyle='round', facecolor='darkorange')
     ax.boxplot(x=kpis, labels=labels, notch=True, sym="")
