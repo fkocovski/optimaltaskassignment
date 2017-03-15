@@ -36,6 +36,8 @@ plt.legend()
 plt.xticks(np.arange(1, max_length + 1), x_labels)
 plt.title("Sys. load: {}, Users: {}, Policy: {}, Solver: {}".format(sys_load, n_users, policy, solver))
 
+
+# TODO change outfile to be boolean as other plot scripts
 if outfile is None:
     plt.show()
 else:
