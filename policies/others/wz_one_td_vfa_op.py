@@ -1,23 +1,24 @@
+import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
-import itertools
-
 
 class WZ_ONE_TD_VFA_OP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
-                 greedy, wait_size,seed=1):
-        super().__init__(env, number_of_users, worker_variability, file_policy,seed=seed)
+                 greedy, wait_size):
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
         self.wait_size = wait_size
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
         self.name = "WZ_ONE_TD_VFA_OP"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
 
-    def request(self, user_task):
-        wz_one_job = super().request(user_task)
+    def request(self, user_task,token):
+        wz_one_job = super().request(user_task,token)
 
         self.batch_queue.append(wz_one_job)
 

@@ -9,26 +9,29 @@ from simulations import *
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))
 gamma = 0.5
 alpha = 0.0001
+sim_time_training = SIM_TIME*250
 
 env = simpy.Environment()
 
 policy_train = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, theta, gamma, alpha, False,
-                                BATCH_SIZE,seed=SEED)
+                                BATCH_SIZE)
 
-start_event = acquisition_process(env, policy_train,seed=SEED,generation_interval=1.1)
+start_event = acquisition_process(env, policy_train,SEED,GENERATION_INTERVAL,False,None,None,None)
 
 env.process(start_event.generate_tokens())
 
-env.run(until=10000)
+env.run(until=sim_time_training)
 
 env = simpy.Environment()
 
-file_policy = create_files("WZ_ONE_TD_VFA_OP_BS{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
+file_policy = create_files("{}_BS{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(policy_train.name,BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
+
+print(theta)
 
 policy = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, theta, gamma, alpha, True,
                           BATCH_SIZE)
 
-start_event = acquisition_process(env, policy)
+start_event = acquisition_process(env, policy,1,GENERATION_INTERVAL,False,None,None,None)
 
 env.process(start_event.generate_tokens())
 
