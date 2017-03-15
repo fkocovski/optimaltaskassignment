@@ -13,7 +13,7 @@ def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
     avg_lateness = np.average(lateness)
     avg_wait = np.average(wait)
     avg_service = np.average(service)
-    n_of_tokens = np.unique(original_data.shape[:,8])
+    n_of_tokens = len(np.unique(original_data[:,8]))
 
     kpis = [lateness, wait, service]
     labels = ["Lateness", "Wait", "Service"]
