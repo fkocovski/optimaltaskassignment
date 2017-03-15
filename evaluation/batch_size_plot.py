@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
 sys_load = 0.5
 n_users = 5
 policy = "KBatch"

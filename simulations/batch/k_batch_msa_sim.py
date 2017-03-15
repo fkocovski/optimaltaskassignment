@@ -1,40 +1,24 @@
 import simpy
 
-from elements.workflow_process_elements import StartEvent, UserTask, connect
-from evaluation.plot import evolution
+from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
 from policies.batch.k_batch import K_BATCH
 from simulations import *
 from solvers.msa_solver import msa
 
-# creates simulation environment
 env = simpy.Environment()
 
-# open file and write header
-file_policy,file_statistics,file_policy_name,file_statistics_name = create_files("{}batch_msa".format(BATCH_SIZE))
+file_policy = create_files("{}BATCH_MSA_BS{}_NU{}_GI{}_SIM{}.csv".format(BATCH_SIZE,BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SIM_TIME))
 
-# initialize policy
-policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY, BATCH_SIZE, msa, file_policy, file_statistics)
+policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY,file_policy, BATCH_SIZE, msa)
 
-# start event
-start_event = StartEvent(env, GENERATION_INTERVAL)
+start_event = acquisition_process(env, policy,1,GENERATION_INTERVAL,False,None,None,None)
 
-# user tasks
-user_task = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
-
-# connections
-connect(start_event, user_task)
-
-# calls generation tokens process
 env.process(start_event.generate_tokens())
 
-# runs simulation
 env.run(until=SIM_TIME)
 
-# close file
 file_policy.close()
-file_statistics.close()
 
-# calculate statistics and plots
-calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
+calculate_statistics(file_policy.name, outfile=True)
+evolution(file_policy.name,outfile=True)
