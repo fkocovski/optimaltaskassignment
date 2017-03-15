@@ -1,14 +1,14 @@
 import randomstate.prng.pcg64 as pcg
 from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR
 
-NUMBER_OF_USERS = 3
+NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
 GENERATION_INTERVAL = 5
 SIM_TIME = 500
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARIABILITY = 0.2 * SERVICE_INTERVAL
-SEED = 5
+SEED = 1
 
 
 def create_files(name):

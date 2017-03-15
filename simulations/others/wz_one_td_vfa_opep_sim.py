@@ -2,17 +2,16 @@ import simpy
 import numpy as np
 
 from evaluation.sigmoid import sigmoid
-
 from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
 from policies.others.wz_one_td_vfa_opep import WZ_ONE_TD_VFA_OPEP
 from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))
-gamma = 0.5
+gamma = 0.9
 alpha = 0.0001
-sim_time_training = SIM_TIME*250
-sigmoid_param = 0.001
+sim_time_training = SIM_TIME*500
+sigmoid_param = 0.0001
 
 env = simpy.Environment()
 
@@ -31,7 +30,6 @@ env = simpy.Environment()
 
 file_policy = create_files("{}_BS{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(policy_train.name,BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
 
-print(theta)
 
 policy = WZ_ONE_TD_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy,theta, gamma, alpha, True,
                           BATCH_SIZE,None,None)
