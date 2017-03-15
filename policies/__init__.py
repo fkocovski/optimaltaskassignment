@@ -26,7 +26,7 @@ Parent class request method for user task objects to request an optimal solution
             user_task.service_interval ** 2 / user_task.task_variability,
             user_task.task_variability / user_task.service_interval)
 
-        policy_job = PolicyJob(user_task)
+        policy_job = PolicyJob(user_task,token)
         policy_job.request_event = self.env.event()
         policy_job.arrival = self.env.now
 
@@ -48,12 +48,13 @@ Parent class release method to manage and release finished policy job objects.
 class PolicyJob(object):
     job_id = itertools.count()
 
-    def __init__(self, user_task):
+    def __init__(self, user_task,token):
         """
 Policy job object initialization method.
         :param user_task: user task passed is used to uniquely identify it inside a workflow process.
         """
         self.user_task = user_task
+        self.token = token
         self.arrival = None
         self.assigned = None
         self.started = None
@@ -92,8 +93,8 @@ Method used to save information required to calculate key metrics.
             return
 
         file.write(
-            "{},{},{},{},{},{},{},{}".format(self.job_id, self.arrival, self.assigned, self.started, self.finished,
-                                             self.assigned_user + 1, self.user_task.node_id, self.user_task.name))
+            "{},{},{},{},{},{},{},{},{}".format(self.job_id, self.arrival, self.assigned, self.started, self.finished,
+                                             self.assigned_user + 1, self.user_task.node_id, self.user_task.name,self.token.id))
         for st in self.service_rate:
             file.write(",{}".format(st))
         file.write("\n")

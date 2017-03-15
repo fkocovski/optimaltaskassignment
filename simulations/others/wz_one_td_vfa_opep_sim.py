@@ -8,10 +8,10 @@ from policies.others.wz_one_td_vfa_opep import WZ_ONE_TD_VFA_OPEP
 from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))
-gamma = 0.9
+gamma = 0.5
 alpha = 0.0001
 sim_time_training = SIM_TIME*500
-sigmoid_param = 0.0001
+sigmoid_param = 0.0001/6.5
 
 env = simpy.Environment()
 

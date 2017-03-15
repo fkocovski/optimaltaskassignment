@@ -4,16 +4,16 @@ from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, C
 NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
 GENERATION_INTERVAL = 5
-SIM_TIME = 500
+SIM_TIME = 1000
 BATCH_SIZE = 1
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARIABILITY = 0.2 * SERVICE_INTERVAL
-SEED = 1
+SEED = 3
 
 
 def create_files(name):
     file_policy = open(name, "w")
-    file_policy.write("job,arrival,assigned,started,finished,user,task,task_name")
+    file_policy.write("job,arrival,assigned,started,finished,user,task,task_name,token_id")
     for i in range(NUMBER_OF_USERS):
         file_policy.write(",user_{}_st".format(i + 1))
     file_policy.write("\n")

@@ -170,11 +170,13 @@ class COR(Node):
 
 
 class Token(object):
+    token_id = itertools.count()
     def __init__(self, random_state):
         self.random_state = random_state
         self.counter = Counter()
         self.history = []
         self.actions = None
+        self.id = next(Token.token_id)
 
     def worked_by(self, element):
         self.history.append(element.name)

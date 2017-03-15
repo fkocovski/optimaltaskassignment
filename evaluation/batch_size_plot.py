@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 policy = "BATCH"
-solver = "MSA"
+solver = "ST"
 nu = 2
 gi = 5
 sim = 500
@@ -42,4 +42,4 @@ plt.xticks(np.arange(1, max_length + 1), x_labels)
 if not outfile:
     plt.show()
 else:
-    plt.savefig("../simulations/{}/1-{}{}_NU{}_GI{}_SIM{}_BSEVAL.pdf".format(folder,max_length,policy,nu,gi,sim))
+    plt.savefig("../simulations/{}/1-{}{}_{}_NU{}_GI{}_SIM{}_BSEVAL.pdf".format(folder,max_length,policy,solver,nu,gi,sim))
