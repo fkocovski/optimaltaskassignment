@@ -68,6 +68,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         llqp_queue = self.users_queues[llqp_index]
         llqp_job.assigned_user = llqp_index
         llqp_queue.append(llqp_job)
+        llqp_job.assigned = self.env.now
         leftmost_llqp_queue_element = llqp_queue[0]
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now

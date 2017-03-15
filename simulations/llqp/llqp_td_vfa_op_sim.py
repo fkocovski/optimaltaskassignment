@@ -25,7 +25,6 @@ env = simpy.Environment()
 
 file_policy = create_files("{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(policy_train.name,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
 
-
 policy = LLQP_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, theta, gamma, alpha, True)
 
 start_event = acquisition_process(env, policy,1,GENERATION_INTERVAL,False,None,None,None)
