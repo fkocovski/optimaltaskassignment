@@ -49,6 +49,7 @@ class LLQP_TD_VFA_OP(Policy):
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
         llqp_queue.append(llqp_job)
+        llqp_job.assigned = self.env.now
         leftmost_llqp_queue_element = llqp_queue[0]
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now
@@ -58,12 +59,12 @@ class LLQP_TD_VFA_OP(Policy):
             if self.history is not None:
                 self.update_theta(busy_times)
 
-        reward = busy_times[action] + llqp_job.service_rate[action]
+            reward = busy_times[action] + llqp_job.service_rate[action]
 
-        self.history = (busy_times, action,reward)
+            self.history = (busy_times, action,reward)
 
     def get_busy_times(self):
-        busy_times = [None] * self.number_of_users
+        busy_times = np.zeros(self.number_of_users)
         for user_index, user_deq in enumerate(self.users_queues):
             if len(user_deq) > 0:
                 busy_times[user_index] = sum(job.service_rate[user_index] for job in user_deq)
@@ -74,12 +75,10 @@ class LLQP_TD_VFA_OP(Policy):
         return busy_times
 
     def q(self, states, action):
-        q = np.dot(states[action], self.theta[action])
+        q = np.dot(states, self.theta[action])
         return q
 
     def update_theta(self,new_busy_times):
         old_busy_times, old_action, reward = self.history
-
-        delta = -reward + self.gamma * (max(self.q(new_busy_times, a) for a in range(self.number_of_users))) - self.q(
-            old_busy_times, old_action)
-        self.theta[old_action] += self.alpha * delta * old_busy_times[old_action]
+        delta = -reward + self.gamma * (max(self.q(new_busy_times, a) for a in range(self.number_of_users))) - self.q(old_busy_times, old_action)
+        self.theta[old_action] += self.alpha * delta * old_busy_times

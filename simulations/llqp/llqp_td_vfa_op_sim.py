@@ -3,18 +3,17 @@ import simpy
 
 from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.others.wz_one_td_vfa_op import WZ_ONE_TD_VFA_OP
+from policies.llqp.llqp_td_vfa_op import LLQP_TD_VFA_OP
 from simulations import *
 
-theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))
+theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS))
 gamma = 0.5
 alpha = 0.001
-sim_time_training = SIM_TIME*5
+sim_time_training = SIM_TIME*500
 
 env = simpy.Environment()
 
-policy_train = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, theta, gamma, alpha, False,
-                                BATCH_SIZE)
+policy_train = LLQP_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, theta, gamma, alpha, False)
 
 start_event = acquisition_process(env, policy_train,SEED,GENERATION_INTERVAL,False,None,None,None)
 
@@ -24,11 +23,10 @@ env.run(until=sim_time_training)
 
 env = simpy.Environment()
 
-file_policy = create_files("{}_BS{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(policy_train.name,BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
+file_policy = create_files("{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(policy_train.name,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
 
 
-policy = WZ_ONE_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, theta, gamma, alpha, True,
-                          BATCH_SIZE)
+policy = LLQP_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, theta, gamma, alpha, True)
 
 start_event = acquisition_process(env, policy,1,GENERATION_INTERVAL,False,None,None,None)
 
