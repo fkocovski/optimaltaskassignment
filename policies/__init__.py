@@ -2,7 +2,6 @@ import itertools
 
 
 class Policy(object):
-    # def __init__(self, env, number_of_users, worker_variability, file_policy, seed=1):
     def __init__(self, env, number_of_users, worker_variability, file_policy):
         """
 Parent class initialization for all policy objects.
@@ -15,12 +14,11 @@ Parent class initialization for all policy objects.
         self.number_of_users = number_of_users
         self.worker_variability = worker_variability
         self.file_policy = file_policy
-        # self.RANDOM_STATE = np.random.RandomState(seed)
-        # self.RANDOM_STATE_ACTIONS = np.random.RandomState(seed)
 
     def request(self, user_task,token):
         """
 Parent class request method for user task objects to request an optimal solution. Initializes a policy job.
+        :param token: token going through the process.
         :param user_task: user task object that requests optimal solution.
         :return: initialized policy job object.
         """
