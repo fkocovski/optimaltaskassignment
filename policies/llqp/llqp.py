@@ -3,32 +3,29 @@ from collections import deque
 
 
 class LLQP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics):
+    def __init__(self, env, number_of_users, worker_variability, file_policy):
         """
 Initializes an LLQP policy.
         :param env: simpy environment.
         :param number_of_users: the number of users present in the system.
         :param worker_variability: worker variability in absolute value.
         :param file_policy: file object to calculate policy related statistics.
-        :param file_statistics: file object to draw the policy evolution.
         """
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.name = "LLQP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
 
-    def request(self, user_task):
+    def request(self, user_task,token):
         """
 Request method for LLQP policies. Creates a PolicyJob object and calls for the appropriate evaluation method.
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        llqp_job = super().request(user_task)
+        llqp_job = super().request(user_task,token)
 
-        self.save_status()
 
         self.evaluate(llqp_job)
 
-        self.save_status()
 
         return llqp_job
 
@@ -42,11 +39,9 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
-        self.save_status()
 
         user_queue_to_free.popleft()
 
-        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
@@ -77,13 +72,3 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now
             llqp_job.request_event.succeed(llqp_job.service_rate[llqp_index])
-
-    def policy_status(self):
-        """
-Evaluates the current state of the policy. Overrides parent method with LLQP specific logic.
-        :return: returns a list where the first item is the global queue length (in LLQP always zero) and all subsequent elements are the respective user queues length.
-        """
-        current_status = [0]
-        for i in range(self.number_of_users):
-            current_status.append(len(self.users_queues[i]))
-        return current_status
