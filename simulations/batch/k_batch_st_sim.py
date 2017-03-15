@@ -10,7 +10,7 @@ env = simpy.Environment()
 
 file_policy = create_files("{}BATCH_ST_NU{}_GI{}_SIM{}.csv".format(BATCH_SIZE,NUMBER_OF_USERS,GENERATION_INTERVAL,SIM_TIME))
 
-policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY, BATCH_SIZE, st, file_policy)
+policy = K_BATCH(env, NUMBER_OF_USERS, WORKER_VARIABILITY,file_policy, BATCH_SIZE, st)
 
 start_event = acquisition_process(env, policy,1,GENERATION_INTERVAL,False,None,None,None)
 
