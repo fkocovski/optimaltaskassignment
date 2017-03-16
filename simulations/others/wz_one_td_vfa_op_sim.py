@@ -36,6 +36,9 @@ env.process(start_event.generate_tokens())
 
 env.run(until=SIM_TIME)
 
+# TODO only for statistical checks. Remove when finished
+print("Out of {} evaluations in {} cases there was a user actually free, i.e. in {:.2f}% of the cases!".format(policy.total_evals,policy.actually_free,policy.actually_free/policy.total_evals*100))
+
 file_policy.close()
 
 calculate_statistics(file_policy.name, outfile=True)

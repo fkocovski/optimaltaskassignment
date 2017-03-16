@@ -1,8 +1,8 @@
 import numpy as np
 import simpy
-
-from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
+
+from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
 from policies.llqp.llqp_mc import LLQP_MC
 from simulations import *

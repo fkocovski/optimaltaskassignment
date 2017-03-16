@@ -1,12 +1,10 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import simpy
 
-from elements.workflow_process_elements import StartEvent, UserTask, connect
-from evaluation.plot import evolution
-from evaluation.statistics import calculate_statistics
+from elements.workflow_process_elements import connect
 from policies.llqp.llqp_pg_alpha import LLQP_PG_ALPHA
 from simulations import *
-import matplotlib.pyplot as plt
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)

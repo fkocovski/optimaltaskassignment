@@ -1,8 +1,8 @@
 import numpy as np
 import simpy
-
-from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
+
+from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
 from policies.batch.k_batch_mc_vfa_opep import K_BATCH_MC_VFA_OPEP
 from simulations import *

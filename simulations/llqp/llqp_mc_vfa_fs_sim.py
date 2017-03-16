@@ -1,12 +1,12 @@
 import numpy as np
 import simpy
-
-from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
+
+from elements.workflow_process_elements import connect
+from evaluation.composed_history import composed_history
 from evaluation.statistics import calculate_statistics
 from policies.llqp.llqp_mc_vfa_fs import LLQP_MC_VFA_FS
 from simulations import *
-from evaluation.composed_history import composed_history
 
 # init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)

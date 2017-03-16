@@ -1,7 +1,7 @@
 import simpy
-
-from elements.workflow_process_elements import StartEvent, UserTask, connect
 from evaluation.plot import evolution
+
+from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
 from policies.others.sq import SQ
 from simulations import *

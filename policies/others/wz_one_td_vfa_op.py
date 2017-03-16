@@ -16,6 +16,9 @@ class WZ_ONE_TD_VFA_OP(Policy):
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
+        # TODO only for statistical checks. Remove when finished
+        self.total_evals = 0
+        self.actually_free = 0
 
     def request(self, user_task,token):
         wz_one_job = super().request(user_task,token)
@@ -38,6 +41,7 @@ class WZ_ONE_TD_VFA_OP(Policy):
             self.evaluate()
 
     def evaluate(self):
+
         state_space, combinations = self.state_space()
 
         if self.greedy:
@@ -46,7 +50,13 @@ class WZ_ONE_TD_VFA_OP(Policy):
         else:
             action = self.RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
 
+        if self.greedy:
+            print(combinations[action])
+            print(len(self.batch_queue))
         for job_index, user_index in enumerate(combinations[action]):
+            # TODO only for statistical checks. Remove when finished
+            if self.greedy:
+                self.total_evals += 1
             if self.user_slot[user_index] is None:
                 wz_one_job = self.batch_queue[job_index]
                 self.batch_queue[job_index] = None
@@ -55,6 +65,12 @@ class WZ_ONE_TD_VFA_OP(Policy):
                 wz_one_job.assigned = self.env.now
                 wz_one_job.started = self.env.now
                 wz_one_job.request_event.succeed(wz_one_job.service_rate[user_index])
+            # TODO only for statistical checks. Remove when finished
+            else:
+                if self.greedy:
+                    if None in self.user_slot:
+                        self.actually_free += 1
+
         self.batch_queue = [job for job in self.batch_queue if job is not None]
 
         if not self.greedy:
