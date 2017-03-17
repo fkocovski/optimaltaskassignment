@@ -59,8 +59,9 @@ Generates infinitely many tokens (implicit objects) following an exponential rat
             else:
                 exp_arrival = token.random_state.exponential(self.generation_interval)
             yield self.env.timeout(exp_arrival)
-            path = token.random_state.choice(self.actions, p=self.weights)
-            token.actions = path
+            if self.actions is not None:
+                path = token.random_state.choice(self.actions, p=self.weights)
+                token.actions = path
             if self.child is None:
                 print("Start event has no child assigned")
                 break

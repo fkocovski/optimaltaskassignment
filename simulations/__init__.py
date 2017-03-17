@@ -4,7 +4,7 @@ from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, C
 
 NUMBER_OF_USERS = 2
 SERVICE_INTERVAL = 1
-GENERATION_INTERVAL = 2
+GENERATION_INTERVAL = 5
 SIM_TIME = 1000
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
@@ -95,6 +95,16 @@ def acquisition_process(env, policy,seed,generation_interval,accelerate,starting
     master_state = pcg.RandomState(seed)
 
     se = StartEvent(env, generation_interval, actions_pool, weights,master_state,accelerate,starting_generation,sim_time,sigmoid_param)
+    se.assign_child(ut)
+
+    return se
+
+def simple_process(env, policy,seed,generation_interval,accelerate,starting_generation,sim_time,sigmoid_param):
+    ut = UserTask(env, policy, "User Task", SERVICE_INTERVAL, TASK_VARIABILITY)
+    master_state = pcg.RandomState(seed)
+
+    se = StartEvent(env, generation_interval, None, 1, master_state, accelerate, starting_generation,
+                    sim_time, sigmoid_param)
     se.assign_child(ut)
 
     return se
