@@ -9,7 +9,7 @@ from simulations import *
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS))
 gamma = 0.5
 alpha = 0.0001
-sim_time_training = SIM_TIME*50
+sim_time_training = SIM_TIME*100
 
 env = simpy.Environment()
 
