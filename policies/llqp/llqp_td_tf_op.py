@@ -1,23 +1,39 @@
 import randomstate.prng.pcg64 as pcg
 import numpy as np
+import tensorflow as tf
 from policies import *
 from collections import deque
 
 
-class LLQP_TD_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma,alpha,greedy):
+class LLQP_TD_TF_OP(Policy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha, greedy):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
-        self.name = "LLQP_TD_VFA_OP"
+        self.name = "LLQP_TD_TF_OP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = None
 
-    def request(self, user_task,token):
-        llqp_job = super().request(user_task,token)
+        self.w = [tf.Variable(tf.zeros([self.number_of_users])) for _ in range(self.number_of_users)]
+        self.x = tf.placeholder(tf.float32)
+        self.q_val = [tf.reduce_sum(tf.multiply(self.x, self.w[a])) for a in range(self.number_of_users)]
+        self.y = [tf.placeholder(tf.float32) for _ in range(self.number_of_users)]
+        squared_deltas = [tf.square(self.y[a] - self.q_val[a]) for a in range(self.number_of_users)]
+        loss = [tf.reduce_sum(squared_deltas[a]) for a in range(self.number_of_users)]
+        optimizer = [tf.train.GradientDescentOptimizer(0.01) for _ in range(self.number_of_users)]
+        self.train = [optimizer[a].minimize(loss[a]) for a in range(self.number_of_users)]
+        self.tf_init = tf.global_variables_initializer()
+        self.sess = tf.Session()
+        self.sess.run(self.tf_init)
+
+        w = self.sess.run(self.w)
+        print(w)
+
+    def request(self, user_task, token):
+        llqp_job = super().request(user_task, token)
 
         self.evaluate(llqp_job)
 
@@ -61,7 +77,7 @@ class LLQP_TD_VFA_OP(Policy):
 
             reward = busy_times[action] + llqp_job.service_rate[action]
 
-            self.history = (busy_times, action,reward)
+            self.history = (busy_times, action, reward)
 
     def get_busy_times(self):
         busy_times = np.zeros(self.number_of_users)
@@ -75,10 +91,10 @@ class LLQP_TD_VFA_OP(Policy):
         return busy_times
 
     def q(self, states, action):
-        q = np.dot(states, self.theta[action])
+        q = self.sess.run(self.q_val[action], {self.x: states})
         return q
 
-    def update_theta(self,new_busy_times):
+    def update_theta(self, new_busy_times):
         old_busy_times, old_action, reward = self.history
-        delta = -reward + self.gamma * (max(self.q(new_busy_times, a) for a in range(self.number_of_users))) - self.q(old_busy_times, old_action)
-        self.theta[old_action] += self.alpha * delta * old_busy_times
+        y = reward + self.gamma * (max(self.q(new_busy_times, a) for a in range(self.number_of_users)))
+        self.sess.run(self.train[old_action],{self.x:old_busy_times,self.y[old_action]:y})
