@@ -21,7 +21,8 @@ def create_files(name):
     return file_policy
 
 
-def acquisition_process(env, policy,seed,generation_interval,accelerate,starting_generation,sim_time,sigmoid_param):
+def acquisition_process(env, policy, seed, generation_interval, accelerate, starting_generation, sim_time,
+                        sigmoid_param):
     ut = UserTask(env, policy, "Setup Acquisition Offer", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_a = UserTask(env, policy, "Quick Check", SERVICE_INTERVAL, TASK_VARIABILITY)
     ut_b = UserTask(env, policy, "Relevance Test", SERVICE_INTERVAL, TASK_VARIABILITY)
@@ -45,31 +46,31 @@ def acquisition_process(env, policy,seed,generation_interval,accelerate,starting
 
     ut.assign_child(xor)
 
-    xor.assign_child(ut_a,xor_b)
+    xor.assign_child(ut_a, xor_b)
 
     ut_a.assign_child(xor_a)
 
-    xor_a.assign_child(ut_b,xor_b)
+    xor_a.assign_child(ut_b, xor_b)
 
     xor_b.assign_child(xor_h)
 
     ut_b.assign_child(dor_c)
 
-    dor_c.assign_child(cor_g,ut_c,xor_f)
+    dor_c.assign_child(cor_g, ut_c, xor_f)
 
     ut_c.assign_child(xor_d)
 
-    xor_d.assign_child(ut_d,cor_g)
+    xor_d.assign_child(ut_d, cor_g)
 
     ut_d.assign_child(xor_e)
 
-    xor_e.assign_child(cor_g,xor_f)
+    xor_e.assign_child(cor_g, xor_f)
 
     xor_f.assign_child(ut_e)
 
     ut_e.assign_child(cor_g)
 
-    cor_g.assign_child(ut_f,xor_i,xor_h)
+    cor_g.assign_child(ut_f, xor_i, xor_h)
 
     ut_f.assign_child(xor_i)
 
@@ -78,32 +79,36 @@ def acquisition_process(env, policy,seed,generation_interval,accelerate,starting
     xor_h.assign_child(ut_h)
 
     actions_pool = [{xor.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},
-                    {xor.node_id: 0, xor_a.node_id: 1,xor_b.node_id:0, xor_h.node_id: 0},
-                    {xor.node_id: 0, xor_a.node_id: 0,dor_c.node_id:0, cor_g.node_id:0,xor_i.node_id:0},
+                    {xor.node_id: 0, xor_a.node_id: 1, xor_b.node_id: 0, xor_h.node_id: 0},
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 0, xor_i.node_id: 0},
                     {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 0, xor_i.node_id: 0},
                     {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 1, xor_i.node_id: 0},
                     {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: 0, cor_g.node_id: 2, xor_h.node_id: 0},
-                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 1, xor_f.node_id: 0, cor_g.node_id: 2,
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 1, xor_f.node_id: 0,
+                     cor_g.node_id: 2,
                      xor_h.node_id: 0},
-                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 0, xor_f.node_id: 0,xor_e.node_id:0,
+                    {xor.node_id: 0, xor_a.node_id: 0, dor_c.node_id: (1, 2), xor_d.node_id: 0, xor_f.node_id: 0,
+                     xor_e.node_id: 0,
                      cor_g.node_id: 2,
                      xor_h.node_id: 0}
                     ]
 
-    weights = [1/len(actions_pool) for _ in range(len(actions_pool))]
+    weights = [1 / len(actions_pool) for _ in range(len(actions_pool))]
 
     master_state = pcg.RandomState(seed)
 
-    se = StartEvent(env, generation_interval, actions_pool, weights,master_state,accelerate,starting_generation,sim_time,sigmoid_param)
+    se = StartEvent(env, generation_interval, actions_pool, weights, master_state, accelerate, starting_generation,
+                    sim_time, sigmoid_param)
     se.assign_child(ut)
 
     return se
 
-def simple_process(env, policy,seed,generation_interval,accelerate,starting_generation,sim_time,sigmoid_param):
-    ut = UserTask(env, policy, "User Task", SERVICE_INTERVAL, TASK_VARIABILITY)
+
+def simple_process(env, policy, seed, generation_interval, accelerate, starting_generation, sim_time, sigmoid_param):
+    ut = UserTask(env, policy, "User Task", SERVICE_INTERVAL, TASK_VARIABILITY, terminal=True)
     master_state = pcg.RandomState(seed)
 
-    se = StartEvent(env, generation_interval, None, 1, master_state, accelerate, starting_generation,
+    se = StartEvent(env, generation_interval, None, None, master_state, accelerate, starting_generation,
                     sim_time, sigmoid_param)
     se.assign_child(ut)
 

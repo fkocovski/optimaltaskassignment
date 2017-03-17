@@ -6,7 +6,7 @@ from collections import deque
 
 
 class LLQP_TD_TF_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha, greedy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, w, gamma, greedy,sess):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
@@ -15,18 +15,16 @@ class LLQP_TD_TF_OP(Policy):
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = None
 
-        self.w = [tf.Variable(tf.zeros([self.number_of_users])) for _ in range(self.number_of_users)]
+        self.w = w
         self.x = tf.placeholder(tf.float32,shape=[self.number_of_users])
-        self.q_val = [tf.reduce_sum(tf.multiply(self.x, self.w[a])) for a in range(self.number_of_users)]
+        self.q_val = [tf.reduce_sum(tf.multiply(self.x,self.w[a])) for a in range(self.number_of_users)]
         self.y = [tf.placeholder(tf.float32) for _ in range(self.number_of_users)]
         squared_deltas = [tf.square(self.y[a] - self.q_val[a]) for a in range(self.number_of_users)]
-        # loss = [tf.reduce_sum(squared_deltas[a]) for a in range(self.number_of_users)]
         loss = [squared_deltas[a] for a in range(self.number_of_users)]
         optimizer = [tf.train.GradientDescentOptimizer(0.0001) for _ in range(self.number_of_users)]
         self.train = [optimizer[a].minimize(loss[a]) for a in range(self.number_of_users)]
-        self.tf_init = tf.global_variables_initializer()
-        self.sess = tf.Session()
-        self.sess.run(self.tf_init)
+        self.sess = sess
+
 
     def request(self, user_task, token):
         llqp_job = super().request(user_task, token)
@@ -92,12 +90,5 @@ class LLQP_TD_TF_OP(Policy):
 
     def update_theta(self, new_busy_times):
         old_busy_times, old_action, reward = self.history
-        # y = reward + self.gamma * (min(self.q(new_busy_times, a) for a in range(self.number_of_users))) - self.q(old_busy_times, old_action)
         y = reward + self.gamma * (min(self.q(new_busy_times, a) for a in range(self.number_of_users)))
-        w_old = self.sess.run(self.w)
         self.sess.run(self.train[old_action],{self.x:old_busy_times,self.y[old_action]:y})
-        w_new = self.sess.run(self.w)
-        diff_w = [w_new[a]-w_old[a] for a in range(self.number_of_users)]
-        for w_val in diff_w:
-            print(w_val,y)
-        print("------")
