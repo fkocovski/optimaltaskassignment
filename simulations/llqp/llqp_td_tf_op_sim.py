@@ -6,7 +6,8 @@ from evaluation.statistics import calculate_statistics
 from policies.llqp.llqp_td_tf_op import LLQP_TD_TF_OP
 from simulations import *
 
-w = [tf.Variable(tf.zeros([NUMBER_OF_USERS])) for _ in range(NUMBER_OF_USERS)]
+# w = [tf.Variable(tf.zeros([NUMBER_OF_USERS])) for _ in range(NUMBER_OF_USERS)]
+w = [tf.Variable(tf.random_normal([NUMBER_OF_USERS],seed=SEED)) for _ in range(NUMBER_OF_USERS)]
 with tf.Session() as sess:
     tf_init = tf.global_variables_initializer()
     sess.run(tf_init)
