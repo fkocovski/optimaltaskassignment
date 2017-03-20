@@ -4,12 +4,10 @@ import tensorflow as tf
 from policies import *
 
 class BI_ONE_TD_TF(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
-                 greedy, wait_size,sess,w):
+    def __init__(self, env, number_of_users, worker_variability, file_policy,  gamma,
+                 greedy, wait_size,sess,weights,biases,out):
         super().__init__(env, number_of_users, worker_variability, file_policy)
-        self.theta = theta
         self.gamma = gamma
-        self.alpha = alpha
         self.greedy = greedy
         self.wait_size = wait_size
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
@@ -20,37 +18,23 @@ class BI_ONE_TD_TF(Policy):
 
         self.sess = sess
 
-
-        # Network Parameters
-        n_input = self.wait_size+self.wait_size*self.number_of_users+self.number_of_users  # wj+pij+ai
-        n_out = self.wait_size
-        # http://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
-        mean_size = n_input+n_out/2
-        n_hidden_1 = mean_size
-        n_hidden_2 = mean_size
-
-        # Store layers weight & bias
-        weights = {
-            'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-            'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-            'out': tf.Variable(tf.random_normal([n_hidden_2, n_out]))
-        }
-        biases = {
-            'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-            'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-            'out': tf.Variable(tf.random_normal([n_out]))
-        }
-
-
-        self.inp = tf.placeholder(tf.float32,shape=n_input)
-        self.out = [tf.Variable(tf.zeros([n_out])) for _ in range(self.wait_size)]
+        self.inp = tf.placeholder(tf.float32)
 
         # Construct model
-        pred = self.multilayer_perceptron(self.inp, weights, biases)
+        layer_1 = tf.add(tf.matmul(self.inp, weights['h1']), biases['b1'])
+        self.layer_1 = tf.nn.relu(layer_1)
+        # Hidden layer with RELU activation
+        layer_2 = tf.add(tf.matmul(self.layer_1, weights['h2']), biases['b2'])
+        self.layer_2 = tf.nn.relu(layer_2)
+        # Output layer with linear activation
+        self.pred = tf.matmul(self.layer_2, weights['out']) + biases['out']
 
-        cost = tf.reduce_mean(tf.nn.softmax(pred))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(cost)
-
+        self.out = out
+        self.softmax = tf.nn.softmax(self.pred)
+        self.cost = tf.reduce_mean(self.softmax)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(self.cost)
+        tf_init = tf.global_variables_initializer()
+        self.sess.run(tf_init)
     def request(self, user_task,token):
         wz_one_job = super().request(user_task,token)
 
@@ -74,10 +58,10 @@ class BI_ONE_TD_TF(Policy):
     def evaluate(self):
 
         state = self.state_space()
-        
-        output = self.sess.run(self.out, {self.inp:state})
+        output = self.sess.run(self.pred,{self.inp:state})
+        print(output)
 
-        for user,preferences in enumerate(output):
+        for job,preferences in enumerate(output):
             job = self.RANDOM_STATE_ACTIONS.choice(preferences,p=preferences)
             if self.user_slot[user] is None:
                 wz_one_job = self.batch_queue[job_index]
@@ -92,9 +76,9 @@ class BI_ONE_TD_TF(Policy):
 
         if not self.greedy:
             if self.history is not None:
-                self.update_theta(state_space)
-
-        self.history = (state_space, action, combinations)
+                # self.update_theta(state_space)
+                pass
+        # self.history = (state_space, action, combinations)
 
     def state_space(self):
         # wj
@@ -136,7 +120,7 @@ class BI_ONE_TD_TF(Policy):
     # Create model
     def multilayer_perceptron(self,x, weights, biases):
         # Hidden layer with RELU activation
-        layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
+        self.layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
         layer_1 = tf.nn.relu(layer_1)
         # Hidden layer with RELU activation
         layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
