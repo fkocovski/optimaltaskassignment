@@ -6,7 +6,7 @@ from evaluation.plot import evolution
 
 from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
-from policies.batch.k_batch_mc_vfa import K_BATCH_MC_VFA
+from policies.reinforcement_learning.batch import K_BATCH_MC_VFA
 from simulations import *
 
 # init theta and reinforcement learning variables

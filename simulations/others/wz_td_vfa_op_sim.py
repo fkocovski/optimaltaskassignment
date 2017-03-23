@@ -4,7 +4,7 @@ from evaluation.plot import evolution
 
 from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
-from policies.others.wz_td_vfa_op import WZ_TD_VFA_OP
+from policies.reinforcement_learning.others import WZ_TD_VFA_OP
 from simulations import *
 
 # init theta and reinforcement learning variables

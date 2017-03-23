@@ -1,7 +1,8 @@
 import simpy
-from evaluation.subplot_evolution import evolution
+
 from evaluation.statistics import calculate_statistics
-from policies.batch.k_batch import K_BATCH
+from evaluation.subplot_evolution import evolution
+from policies.optimization.batch.k_batch import K_BATCH
 from simulations import *
 from solvers.st_solver import st
 

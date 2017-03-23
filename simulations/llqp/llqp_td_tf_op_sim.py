@@ -1,11 +1,12 @@
+from datetime import datetime
+
 import simpy
 import tensorflow as tf
 
-from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_td_tf_op import LLQP_TD_TF_OP
+from evaluation.subplot_evolution import evolution
+from policies.reinforcement_learning.llqp import LLQP_TD_TF_OP
 from simulations import *
-from datetime import datetime
 
 with tf.name_scope("user_w"):
     w = [tf.Variable(tf.random_normal([NUMBER_OF_USERS],seed=SEED+i),name="user{}_w".format(i)) for i in range(NUMBER_OF_USERS)]

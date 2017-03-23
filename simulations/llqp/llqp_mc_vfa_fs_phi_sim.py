@@ -3,7 +3,7 @@ import simpy
 
 from elements.workflow_process_elements import connect
 from evaluation.phi_plot import phi_plot
-from policies.llqp.llqp_mc_vfa_fs import LLQP_MC_VFA_FS
+from policies.reinforcement_learning.llqp import LLQP_MC_VFA_FS
 from simulations import *
 
 # init theta and reinforcement learning variables

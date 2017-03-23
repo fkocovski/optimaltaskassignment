@@ -1,9 +1,9 @@
 import numpy as np
 import simpy
 
-from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_td_vfa_op import LLQP_TD_VFA_OP
+from evaluation.subplot_evolution import evolution
+from policies.reinforcement_learning.llqp.llqp_td_vfa_op import LLQP_TD_VFA_OP
 from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS))

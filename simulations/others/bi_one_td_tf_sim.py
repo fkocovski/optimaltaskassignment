@@ -1,9 +1,9 @@
 import simpy
 import tensorflow as tf
 
-from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.others.bi_one_td_tf import BI_ONE_TD_TF
+from evaluation.subplot_evolution import evolution
+from policies.reinforcement_learning.others import BI_ONE_TD_TF
 from simulations import *
 
 policy_name = "BI_ONE_TD_TF_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)

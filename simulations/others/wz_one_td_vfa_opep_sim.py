@@ -1,10 +1,10 @@
-import simpy
 import numpy as np
+import simpy
 
 from evaluation.sigmoid import sigmoid
-from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.others.wz_one_td_vfa_opep import WZ_ONE_TD_VFA_OPEP
+from evaluation.subplot_evolution import evolution
+from policies.reinforcement_learning.others import WZ_ONE_TD_VFA_OPEP
 from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))

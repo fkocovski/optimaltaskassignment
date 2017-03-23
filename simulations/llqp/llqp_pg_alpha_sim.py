@@ -3,7 +3,7 @@ import numpy as np
 import simpy
 
 from elements.workflow_process_elements import connect
-from policies.llqp.llqp_pg_alpha import LLQP_PG_ALPHA
+from policies.reinforcement_learning.llqp.llqp_pg_alpha import LLQP_PG_ALPHA
 from simulations import *
 
 # init theta and reinforcement learning variables

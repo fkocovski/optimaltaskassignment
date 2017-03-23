@@ -4,7 +4,7 @@ from evaluation.plot import evolution
 
 from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_mc_pg_lr import LLQP_MC_PG_LR
+from policies.reinforcement_learning.llqp import LLQP_MC_PG_LR
 from simulations import *
 
 # init theta and reinforcement learning variables

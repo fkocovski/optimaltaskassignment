@@ -1,7 +1,8 @@
 import simpy
-from evaluation.subplot_evolution import evolution
+
 from evaluation.statistics import calculate_statistics
-from policies.batch.k_batchone import K_BATCHONE
+from evaluation.subplot_evolution import evolution
+from policies.optimization.batch.k_batchone import K_BATCHONE
 from simulations import *
 from solvers.dmf_solver import dmf
 
@@ -9,11 +10,11 @@ policy_name = "{}BATCHONE_DMF_NU{}_GI{}_SIM{}".format(NUMBER_OF_USERS, GENERATIO
 
 env = simpy.Environment()
 
-file_policy= create_files("{}.csv".format(policy_name))
+file_policy = create_files("{}.csv".format(policy_name))
 
-policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARIABILITY,file_policy, BATCH_SIZE, dmf)
+policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, BATCH_SIZE, dmf)
 
-start_event = acquisition_process(env,policy,1,GENERATION_INTERVAL,False,None,None,None)
+start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
 
 env.process(start_event.generate_tokens())
 

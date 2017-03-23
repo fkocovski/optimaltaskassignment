@@ -1,9 +1,9 @@
 import numpy as np
 import simpy
 
-from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.others.wz_one_td_vfa_op import WZ_ONE_TD_VFA_OP
+from evaluation.subplot_evolution import evolution
+from policies.reinforcement_learning.others import WZ_ONE_TD_VFA_OP
 from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))

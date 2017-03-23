@@ -3,7 +3,7 @@ import simpy
 
 from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp_pg_ac import LLQP_PG_AC
+from policies.reinforcement_learning.llqp import LLQP_PG_AC
 from simulations import *
 
 # init theta and reinforcement learning variables

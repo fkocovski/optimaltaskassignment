@@ -3,7 +3,7 @@ import simpy
 
 from elements.workflow_process_elements import connect
 from evaluation.eta_plot import eta_plot
-from policies.llqp.llqp_mc_pg_lr import LLQP_MC_PG_LR
+from policies.reinforcement_learning.llqp import LLQP_MC_PG_LR
 from simulations import *
 
 # init theta and reinforcement learning variables

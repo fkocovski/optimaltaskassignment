@@ -1,7 +1,8 @@
 import simpy
-from evaluation.subplot_evolution import evolution
+
 from evaluation.statistics import calculate_statistics
-from policies.llqp.llqp import LLQP
+from evaluation.subplot_evolution import evolution
+from policies.optimization.llqp import LLQP
 from simulations import *
 
 policy_name = "LLQP_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
