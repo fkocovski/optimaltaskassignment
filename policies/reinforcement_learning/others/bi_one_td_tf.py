@@ -1,12 +1,13 @@
-import randomstate.prng.pcg64 as pcg
 import numpy as np
+import randomstate.prng.pcg64 as pcg
 import tensorflow as tf
 from policies import *
 from datetime import datetime
 
+
 class BI_ONE_TD_TF(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy,  gamma,
-                 greedy, wait_size,sess,weights,biases,n_input):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, gamma,
+                 greedy, wait_size, sess, weights, biases, n_input):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
@@ -20,7 +21,7 @@ class BI_ONE_TD_TF(Policy):
         self.count = 0
 
         with tf.name_scope("input"):
-            self.inp = tf.placeholder(tf.float32,name="state_space",shape=(1,n_input))
+            self.inp = tf.placeholder(tf.float32, name="state_space", shape=(1, n_input))
 
         with tf.name_scope("neural_network"):
             layer_1 = tf.add(tf.matmul(self.inp, weights['h1']), biases['b1'])
@@ -37,11 +38,10 @@ class BI_ONE_TD_TF(Policy):
         self.sess.run(tf_init)
         now = datetime.now()
         self.writer = tf.summary.FileWriter("../tensorboard/{}/{}".format(self.name, now.strftime("%d.%m.%y-%H.%M.%S")),
-                                       tf.get_default_graph())
+                                            tf.get_default_graph())
 
-
-    def request(self, user_task,token):
-        wz_one_job = super().request(user_task,token)
+    def request(self, user_task, token):
+        wz_one_job = super().request(user_task, token)
 
         self.batch_queue.append(wz_one_job)
 
@@ -62,15 +62,13 @@ class BI_ONE_TD_TF(Policy):
 
     def evaluate(self):
 
-        state,w,p,a = self.state_space()
-        output = self.sess.run(self.cost,{self.inp:state})
-
-
+        state, w, p, a = self.state_space()
+        output = self.sess.run(self.cost, {self.inp: state})
 
         choices = []
 
-        for job_index,preferences in enumerate(output):
-            user = self.RANDOM_STATE_ACTIONS.choice(np.arange(0,self.number_of_users),p=preferences.flatten())
+        for job_index, preferences in enumerate(output):
+            user = self.RANDOM_STATE_ACTIONS.choice(np.arange(0, self.number_of_users), p=preferences.flatten())
             choices.append(user)
             if self.user_slot[user] is None:
                 wz_one_job = self.batch_queue[job_index]
@@ -83,19 +81,17 @@ class BI_ONE_TD_TF(Policy):
 
         self.batch_queue = [job for job in self.batch_queue if job is not None]
 
-        rewards = self.reward(w,p,a,choices)
-
+        rewards = self.reward(w, p, a, choices)
 
         try:
             gradients_output = self.sess.run(self.gradients[0])
 
             for gradient in gradients_output:
-                for grad,val in gradient:
+                for grad, val in gradient:
                     print(grad)
                     print(val)
         except Exception as e:
             print(e)
-
 
         # for gradient,value in gradients[0]:
         #     print("GRADIENT")
@@ -111,7 +107,7 @@ class BI_ONE_TD_TF(Policy):
             if self.history is not None:
                 # self.update_theta(state)
                 pass
-        self.history = (state, output, rewards,choices)
+        self.history = (state, output, rewards, choices)
 
     def state_space(self):
         # wj
@@ -126,11 +122,10 @@ class BI_ONE_TD_TF(Policy):
         a = [0 if self.user_slot[i] is None else self.user_slot[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 
-        state = np.array(w+flat_p+a)
-        state = state.reshape((1,len(state)))
+        state = np.array(w + flat_p + a)
+        state = state.reshape((1, len(state)))
 
-
-        return state,w,p,a
+        return state, w, p, a
 
     # def q(self, states, action):
     #     q = np.dot(states[action], self.theta[action])
@@ -142,8 +137,7 @@ class BI_ONE_TD_TF(Policy):
         #     old_state_space, old_action)
         # self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
 
-
-    def reward(self, w,p,a, choices):
+    def reward(self, w, p, a, choices):
         # reward = 0.0
         reward = []
         busy_times = [a[i] for i in range(self.number_of_users)]
@@ -159,5 +153,5 @@ class BI_ONE_TD_TF(Policy):
         # print("-----")
         return reward
 
-    def score_function(self,gradient,policy_value):
-        return gradient/policy_value
+    def score_function(self, gradient, policy_value):
+        return gradient / policy_value

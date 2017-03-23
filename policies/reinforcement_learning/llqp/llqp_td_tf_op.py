@@ -1,5 +1,5 @@
-import randomstate.prng.pcg64 as pcg
 import numpy as np
+import randomstate.prng.pcg64 as pcg
 import tensorflow as tf
 from policies import *
 from collections import deque
