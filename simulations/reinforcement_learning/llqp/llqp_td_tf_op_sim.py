@@ -14,7 +14,7 @@ with tf.Session() as sess:
     tf_init_local = tf.local_variables_initializer()
     sess.run([tf_init, tf_init_local])
     gamma = 0.5
-    sim_time_training = SIM_TIME * 50
+    sim_time_training = SIM_TIME * 10
 
     env = simpy.Environment()
 
