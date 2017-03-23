@@ -7,16 +7,17 @@ from policies.llqp.llqp_td_tf_op import LLQP_TD_TF_OP
 from simulations import *
 from datetime import datetime
 
-w = [tf.Variable(tf.random_normal([NUMBER_OF_USERS],seed=SEED)) for _ in range(NUMBER_OF_USERS)]
+with tf.name_scope("user_w"):
+    w = [tf.Variable(tf.random_normal([NUMBER_OF_USERS],seed=SEED+i),name="user{}_w".format(i)) for i in range(NUMBER_OF_USERS)]
 policy_name = "LLQP_TD_TF_OP_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 with tf.Session() as sess:
     tf_init = tf.global_variables_initializer()
-    sess.run(tf_init)
+    tf_init_local = tf.local_variables_initializer()
+    sess.run([tf_init, tf_init_local])
     now = datetime.now()
-    writer = tf.summary.FileWriter("../tensorboard/{}/{}".format(policy_name,now.strftime("%H.%M.%S-%d.%m.%y")), tf.get_default_graph())
     gamma = 0.5
-    sim_time_training = SIM_TIME * 2
+    sim_time_training = SIM_TIME * 50
 
     env = simpy.Environment()
 

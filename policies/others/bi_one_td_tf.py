@@ -2,39 +2,44 @@ import randomstate.prng.pcg64 as pcg
 import numpy as np
 import tensorflow as tf
 from policies import *
+from datetime import datetime
 
 class BI_ONE_TD_TF(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy,  gamma,
-                 greedy, wait_size,sess,weights,biases,out):
+                 greedy, wait_size,sess,weights,biases,n_input):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
         self.wait_size = wait_size
+        self.sess = sess
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
         self.name = "BI_ONE_TD_TF"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
+        self.count = 0
 
-        self.sess = sess
+        with tf.name_scope("input"):
+            self.inp = tf.placeholder(tf.float32,name="state_space",shape=(1,n_input))
 
-        self.inp = tf.placeholder(tf.float32)
-
-        # Construct model
-        layer_1 = tf.add(tf.matmul(self.inp, weights['h1']), biases['b1'])
-        self.layer_1 = tf.nn.relu(layer_1)
-        # Hidden layer with RELU activation
-        layer_2 = tf.add(tf.matmul(self.layer_1, weights['h2']), biases['b2'])
-        self.layer_2 = tf.nn.relu(layer_2)
-        # Output layer with linear activation
-        self.pred = tf.matmul(self.layer_2, weights['out']) + biases['out']
-
-        self.out = out
-        self.softmax = tf.nn.softmax(self.pred)
-        self.cost = tf.reduce_mean(self.softmax)
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=0.001).minimize(self.cost)
+        with tf.name_scope("neural_network"):
+            layer_1 = tf.add(tf.matmul(self.inp, weights['h1']), biases['b1'])
+            layer_1 = tf.nn.relu(layer_1)
+            layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
+            layer_2 = tf.nn.relu(layer_2)
+            self.pred = [tf.matmul(layer_2, weights['out'][b]) + biases['out'][b] for b in range(self.wait_size)]
+            self.cost = [tf.nn.softmax(self.pred[b]) for b in range(self.wait_size)]
+            optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+            self.gradients = [optimizer.compute_gradients(self.cost[b]) for b in range(self.wait_size)]
+            for g in self.gradients:
+                print(g)
         tf_init = tf.global_variables_initializer()
         self.sess.run(tf_init)
+        now = datetime.now()
+        self.writer = tf.summary.FileWriter("../tensorboard/{}/{}".format(self.name, now.strftime("%d.%m.%y-%H.%M.%S")),
+                                       tf.get_default_graph())
+
+
     def request(self, user_task,token):
         wz_one_job = super().request(user_task,token)
 
@@ -57,28 +62,56 @@ class BI_ONE_TD_TF(Policy):
 
     def evaluate(self):
 
-        state = self.state_space()
-        output = self.sess.run(self.pred,{self.inp:state})
-        print(output)
+        state,w,p,a = self.state_space()
+        output = self.sess.run(self.cost,{self.inp:state})
 
-        for job,preferences in enumerate(output):
-            job = self.RANDOM_STATE_ACTIONS.choice(preferences,p=preferences)
+
+
+        choices = []
+
+        for job_index,preferences in enumerate(output):
+            user = self.RANDOM_STATE_ACTIONS.choice(np.arange(0,self.number_of_users),p=preferences.flatten())
+            choices.append(user)
             if self.user_slot[user] is None:
                 wz_one_job = self.batch_queue[job_index]
                 self.batch_queue[job_index] = None
-                self.user_slot[user_index] = wz_one_job
-                wz_one_job.assigned_user = user_index
+                self.user_slot[user] = wz_one_job
+                wz_one_job.assigned_user = user
                 wz_one_job.assigned = self.env.now
                 wz_one_job.started = self.env.now
-                wz_one_job.request_event.succeed(wz_one_job.service_rate[user_index])
+                wz_one_job.request_event.succeed(wz_one_job.service_rate[user])
 
         self.batch_queue = [job for job in self.batch_queue if job is not None]
 
+        rewards = self.reward(w,p,a,choices)
+
+
+        try:
+            gradients_output = self.sess.run(self.gradients[0])
+
+            for gradient in gradients_output:
+                for grad,val in gradient:
+                    print(grad)
+                    print(val)
+        except Exception as e:
+            print(e)
+
+
+        # for gradient,value in gradients[0]:
+        #     print("GRADIENT")
+        #     print(gradient)
+        #     print("VALUE")
+        #     print(value)
+        #     print("TRUE VALUE")
+        #     print(self.sess.run(self.weights["h1"]))
+        #     print("==")
+        print("------")
+
         if not self.greedy:
             if self.history is not None:
-                # self.update_theta(state_space)
+                # self.update_theta(state)
                 pass
-        # self.history = (state_space, action, combinations)
+        self.history = (state, output, rewards,choices)
 
     def state_space(self):
         # wj
@@ -93,38 +126,38 @@ class BI_ONE_TD_TF(Policy):
         a = [0 if self.user_slot[i] is None else self.user_slot[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 
-        state = w+flat_p+a
+        state = np.array(w+flat_p+a)
+        state = state.reshape((1,len(state)))
 
-        return state
 
-    def q(self, states, action):
-        q = np.dot(states[action], self.theta[action])
-        return q
+        return state,w,p,a
 
-    def update_theta(self, new_state_space):
-        old_state_space, old_action, old_combinations = self.history
-        reward = self.reward(old_state_space, old_action, old_combinations)
-        delta = -reward + self.gamma * (
-        max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(
-            old_state_space, old_action)
-        self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
+    # def q(self, states, action):
+    #     q = np.dot(states[action], self.theta[action])
+    #     return q
 
-    def reward(self, state_space, action, combinations):
-        reward = 0.0
-        busy_times = [state_space[action][self.wait_size + i] for i in range(self.number_of_users)]
-        for job_index, user_index in enumerate(combinations[action]):
-            reward += state_space[action][job_index] + busy_times[user_index] + state_space[action][2 * self.wait_size + user_index]
-            busy_times[user_index] += state_space[action][2 * self.wait_size + user_index]
+    def update_theta(self):
+        old_state_space, old_choices, reward = self.history
+        # delta = -reward + self.gamma * (max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(
+        #     old_state_space, old_action)
+        # self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
+
+
+    def reward(self, w,p,a, choices):
+        # reward = 0.0
+        reward = []
+        busy_times = [a[i] for i in range(self.number_of_users)]
+        for job_index, user_index in enumerate(choices):
+            # reward += w[job_index] + busy_times[user_index] + p[user_index][job_index]
+            reward.append(w[job_index] + busy_times[user_index] + p[user_index][job_index])
+            busy_times[user_index] += p[user_index][job_index]
+        # print(reward)
+        # print(w)
+        # print(p)
+        # print(a)
+        # print(choices)
+        # print("-----")
         return reward
 
-    # Create model
-    def multilayer_perceptron(self,x, weights, biases):
-        # Hidden layer with RELU activation
-        self.layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-        layer_1 = tf.nn.relu(layer_1)
-        # Hidden layer with RELU activation
-        layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-        layer_2 = tf.nn.relu(layer_2)
-        # Output layer with linear activation
-        out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
-        return out_layer
+    def score_function(self,gradient,policy_value):
+        return gradient/policy_value

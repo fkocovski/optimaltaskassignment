@@ -13,7 +13,10 @@ class Node(object):
     def assign_child(self, *children):
         for child in children:
             if isinstance(self, (StartEvent, UserTask)):
-                self.child = child
+                if self.child is None:
+                    self.child = child
+                else:
+                    sys.exit("Trying to assign more than one child to {} but it only can have one direct child. Children list is: {}".format(self,children))
             elif isinstance(self, (XOR, DOR, COR)):
                 self.children.append(child)
 

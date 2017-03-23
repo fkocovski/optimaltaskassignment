@@ -9,7 +9,7 @@ SIM_TIME = 1000
 BATCH_SIZE = 2
 TASK_VARIABILITY = 0.2 * SERVICE_INTERVAL
 WORKER_VARIABILITY = 0.2 * SERVICE_INTERVAL
-SEED = 10
+SEED = 6
 
 
 def create_files(name):
@@ -99,7 +99,7 @@ def acquisition_process(env, policy, seed, generation_interval, accelerate, star
 
     se = StartEvent(env, generation_interval, actions_pool, weights, master_state, accelerate, starting_generation,
                     sim_time, sigmoid_param)
-    se.assign_child(ut)
+    se.assign_child(ut,ut)
 
     return se
 
