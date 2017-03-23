@@ -1,94 +1,54 @@
-import time
-
 import numpy as np
 import simpy
-from evaluation.plot import evolution
-
-from elements.workflow_process_elements import connect
+from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.reinforcement_learning.batch import K_BATCH_MC_VFA
+from policies.reinforcement_learning.batch.k_batch_mc_vfa import K_BATCH_MC_VFA
 from simulations import *
 
-# init theta and reinforcement learning variables
 theta = np.zeros(2 * (NUMBER_OF_USERS ** 2))
 gamma = 1
-epochs = 5000
+epochs = 10
 initial_alpha = 1e-2
-
-# start of simulation
-start = time.time()
+policy_name = "{}BATCH_MC_VFA_NU{}_GI{}_TRSD{}_SIM{}".format(1,NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 for i in range(epochs):
-    # creates simulation environment
     env = simpy.Environment()
 
-    # fixed parameters
     epsilon = 0.1
     # alpha_disc = initial_alpha
 
-    # decay parameters
     # epsilon = 1 / (i + 1)
     alpha_disc = initial_alpha / (i + 1)
 
-    # initialize policy
-    policy_train = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY, 1, None, None, theta, epsilon, gamma,
+    # this method only works with batch size 1
+    policy_train = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY,None,1, theta, epsilon, gamma,
                                   alpha_disc)
 
-    # start event
-    start_event = StartEvent(env, GENERATION_INTERVAL)
+    start_event = acquisition_process(env,policy_train,SEED,GENERATION_INTERVAL,False,None,None,None)
 
-    # user tasks
-    user_task = UserTask(env, policy_train, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
-
-    # connections
-    connect(start_event, user_task)
-
-    # calls generation tokens process
     env.process(start_event.generate_tokens())
 
-    # runs simulation
     env.run(until=SIM_TIME)
 
-    # update theta
     K_BATCH_MC_VFA.update_theta(policy_train)
 
-    if i % 1000 == 0:
-        # end of simulation
-        end = time.time()
-        print("FINISHED TRAINING SESSION {} in {}".format(i,end-start))
-
-# set epsilon to 0.0 to make test policy behave full greedy
 epsilon = 0.0
 
-# creates simulation environment
 env = simpy.Environment()
 
-# open file and write header
-file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("1BATCH_MC_VFA")
+file_policy = create_files("{}.csv".format(policy_name))
 
-# initialize policy
-policy = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY, 1, file_policy, file_statistics, theta, epsilon, gamma,
+# this method only works with batch size 1
+policy = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY,file_policy,1, theta, epsilon, gamma,
                         initial_alpha)
 
-# start event
-start_event = StartEvent(env, GENERATION_INTERVAL)
+start_event = acquisition_process(env,policy,SEED,GENERATION_INTERVAL,False,None,None,None)
 
-# user tasks
-user_task = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
-
-# connections
-connect(start_event, user_task)
-
-# calls generation tokens process
 env.process(start_event.generate_tokens())
 
-# runs simulation
 env.run(until=SIM_TIME)
 
-# close file
 file_policy.close()
-file_statistics.close()
 
-# calculate statistics and plots
-calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
+calculate_statistics(file_policy.name, outfile=True)
+evolution(file_policy.name, outfile=True)

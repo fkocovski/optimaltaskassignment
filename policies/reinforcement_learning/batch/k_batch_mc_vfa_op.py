@@ -1,9 +1,11 @@
+import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class K_BATCH_MC_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, batch_size, theta, gamma,
+    def __init__(self, env, number_of_users, worker_variability, file_policy, batch_size, theta, gamma,
                  alpha, greedy):
         """
 Initializes a MC policy with VFA.
@@ -18,36 +20,34 @@ Initializes a MC policy with VFA.
         :param alpha: step size parameter for the gradient descent method.
         :param greedy: boolean indicating whether the policy should use a greedy approach.
         """
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
         self.name = "{}_BATCH_MC_VFA_OP".format(batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
         self.history = []
         self.rewards = []
 
-    def request(self, user_task):
+    def request(self, user_task,token):
         """
 Request method for MC policies. Creates a PolicyJob object and calls for the appropriate evaluation method.
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        k_batch_job = super().request(user_task)
+        k_batch_job = super().request(user_task,token)
 
-        self.save_status()
 
         self.batch_queue.append(k_batch_job)
 
-        self.save_status()
 
         if len(self.batch_queue) == self.batch_size:
             self.evaluate(k_batch_job)
 
-        self.save_status()
 
         return k_batch_job
 
@@ -62,18 +62,16 @@ Release method for MC policies. Uses the passed parameter, which is a policyjob 
 
         user_queue_to_free = self.users_queues[user_to_release_index]
 
-        self.save_status()
 
         user_queue_to_free.popleft()
 
-        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_k_batch_job = user_queue_to_free[0]
             next_k_batch_job.started = self.env.now
+            next_k_batch_job.assigned = self.env.now
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
-        self.save_status()
 
     def evaluate(self, k_batch_job):
         """
@@ -86,13 +84,14 @@ Evaluate method for MC policies. Creates a continuous state space which correspo
             action = max(range(self.number_of_users),
                          key=lambda action: self.q(state_space, action))
         else:
-            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users)
+            action = self.EPSILON_GREEDY_RANDOM_STATE.randint(0, self.number_of_users)
 
         self.history.append((state_space, action))
         self.rewards.append(state_space[action][action] + k_batch_job.service_rate[action])
 
         user_queue = self.users_queues[action]
         k_batch_job.assigned_user = action
+        k_batch_job.assigned = self.env.now
         user_queue.append(k_batch_job)
         # TODO: extend clear method of batch queue for bigger batch queue size
         self.batch_queue.clear()
