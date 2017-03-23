@@ -3,8 +3,8 @@ from evaluation.plot import evolution
 
 from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
-from policies.others.mmone import MMONE
 from simulations import *
+from to_delete.mmone import MMONE
 
 # creates simulation environment
 env = simpy.Environment()

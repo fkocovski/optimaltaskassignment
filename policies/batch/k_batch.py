@@ -21,21 +21,18 @@ Initializes a KBatch policy.
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
 
-    def request(self, user_task,token):
+    def request(self, user_task, token):
         """
 Request method for KBatch policies. Creates a PolicyJob object and calls for the appropriate evaluation method with the corresponding solver.
         :param user_task: a user task object.
         :return: a policyjob object to be yielded in the simpy environment.
         """
-        k_batch_job = super().request(user_task,token)
-
+        k_batch_job = super().request(user_task, token)
 
         self.batch_queue.append(k_batch_job)
 
-
         if len(self.batch_queue) == self.batch_size:
             self.evaluate()
-
 
         return k_batch_job
 
@@ -55,7 +52,6 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
             next_k_batch_job = queue_to_pop[0]
             next_k_batch_job.started = self.env.now
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
-
 
     def evaluate(self):
         """

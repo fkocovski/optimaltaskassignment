@@ -2,7 +2,7 @@ from policies import *
 
 
 class K_BATCHONE(Policy):
-    def __init__(self, env, number_of_users, worker_variability, batch_size, solver, file_policy):
+    def __init__(self, env, number_of_users, worker_variability,file_policy, batch_size, solver):
         """
 Initializes a KBatchOne policy.
         :param env: simpy environment.

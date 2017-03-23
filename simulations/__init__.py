@@ -99,7 +99,7 @@ def acquisition_process(env, policy, seed, generation_interval, accelerate, star
 
     se = StartEvent(env, generation_interval, actions_pool, weights, master_state, accelerate, starting_generation,
                     sim_time, sigmoid_param)
-    se.assign_child(ut,ut)
+    se.assign_child(ut)
 
     return se
 

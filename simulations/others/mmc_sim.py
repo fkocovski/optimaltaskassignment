@@ -3,8 +3,8 @@ from evaluation.plot import evolution
 
 from elements.workflow_process_elements import connect
 from evaluation.statistics import calculate_statistics
-from policies.others.mmc import MMC
 from simulations import *
+from to_delete.mmc import MMC
 
 # creates simulation environment
 env = simpy.Environment()

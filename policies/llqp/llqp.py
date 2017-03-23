@@ -55,6 +55,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         """
         llqp_index = None
         lowest_time = None
+
         for user_index, user_deq in enumerate(self.users_queues):
             current_total_time = 0
             if len(user_deq) > 0:
@@ -65,6 +66,7 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
             if lowest_time is None or lowest_time > current_total_time:
                 llqp_index = user_index
                 lowest_time = current_total_time
+
         llqp_queue = self.users_queues[llqp_index]
         llqp_job.assigned_user = llqp_index
         llqp_queue.append(llqp_job)
