@@ -1,5 +1,5 @@
-import randomstate.prng.pcg64 as pcg
 import numpy as np
+import randomstate.prng.pcg64 as pcg
 from policies import *
 
 class WZ_ONE_TD_VFA_OP(Policy):
@@ -12,7 +12,7 @@ class WZ_ONE_TD_VFA_OP(Policy):
         self.greedy = greedy
         self.wait_size = wait_size
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
-        self.name = "WZ_ONE_TD_VFA_OP"
+        self.name = "{}_WZ_ONE_TD_VFA_OP".format(self.wait_size)
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
@@ -50,9 +50,6 @@ class WZ_ONE_TD_VFA_OP(Policy):
         else:
             action = self.RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
 
-        if self.greedy:
-            print(combinations[action])
-            print(len(self.batch_queue))
         for job_index, user_index in enumerate(combinations[action]):
             # TODO only for statistical checks. Remove when finished
             if self.greedy:

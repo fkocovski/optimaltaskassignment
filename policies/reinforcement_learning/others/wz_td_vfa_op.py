@@ -1,35 +1,31 @@
+import numpy as np
+import randomstate.prng.pcg64 as pcg
 from policies import *
 from collections import deque
-import itertools
 
 
 class WZ_TD_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, theta, gamma, alpha,
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
                  greedy, wait_size):
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
         self.wait_size = wait_size
-        self.name = "WZ_TD_VFA_OP"
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
+        self.name = "{}_WZ_TD_VFA_OP".format(self.wait_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
         self.history = None
 
-    def request(self, user_task):
-        wz_job = super().request(user_task)
-
-        self.save_status()
+    def request(self, user_task, token):
+        wz_job = super().request(user_task, token)
 
         self.batch_queue.append(wz_job)
 
-        self.save_status()
-
         if len(self.batch_queue) == self.wait_size:
             self.evaluate()
-
-        self.save_status()
 
         return wz_job
 
@@ -37,21 +33,14 @@ class WZ_TD_VFA_OP(Policy):
         super().release(wz_job)
 
         user_to_release_index = wz_job.assigned_user
-
         user_queue_to_free = self.users_queues[user_to_release_index]
-
-        self.save_status()
-
         user_queue_to_free.popleft()
-
-        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_wz_job = user_queue_to_free[0]
             next_wz_job.started = self.env.now
+            next_wz_job.assigned = self.env.now
             next_wz_job.request_event.succeed(next_wz_job.service_rate[user_to_release_index])
-
-        self.save_status()
 
     def evaluate(self):
         state_space, combinations, w = self.state_space()
@@ -60,12 +49,13 @@ class WZ_TD_VFA_OP(Policy):
             action = max(range(self.number_of_users ** self.wait_size),
                          key=lambda a: self.q(state_space, a))
         else:
-            action = RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
+            action = self.RANDOM_STATE_ACTIONS.randint(0, self.number_of_users ** self.wait_size)
 
         for job_index, user_index in enumerate(combinations[action]):
             wz_queue = self.users_queues[user_index]
             wz_job = self.batch_queue[job_index]
             wz_job.assigned_user = user_index
+            wz_job.assigned = self.env.now
             wz_queue.append(wz_job)
             leftmost = wz_queue[0]
             if not leftmost.is_busy(self.env.now):
@@ -98,7 +88,7 @@ class WZ_TD_VFA_OP(Policy):
                 if current_user_element[user_index].is_busy(self.env.now):
                     a[user_index] -= self.env.now - current_user_element[user_index].started
 
-        state_space = np.zeros((self.number_of_users ** self.wait_size,self.number_of_users + self.wait_size))
+        state_space = np.zeros((self.number_of_users ** self.wait_size, self.number_of_users + self.wait_size))
 
         combinations = list(itertools.product(range(self.number_of_users), repeat=self.wait_size))
 
@@ -106,12 +96,6 @@ class WZ_TD_VFA_OP(Policy):
             state_space[i] = a + [p[user_index][job_index] for job_index, user_index in enumerate(combination)]
 
         return state_space, combinations, w
-
-    def policy_status(self):
-        current_status = [len(self.batch_queue)]
-        for i in range(self.number_of_users):
-            current_status.append(len(self.users_queues[i]))
-        return current_status
 
     def q(self, states, action):
         q = np.dot(states[action], self.theta[action])
@@ -123,7 +107,6 @@ class WZ_TD_VFA_OP(Policy):
             max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(
             old_state_space, old_action)
         self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
-        print(self.theta)
 
     def reward(self, state_space, action, combinations, w):
         reward = 0.0

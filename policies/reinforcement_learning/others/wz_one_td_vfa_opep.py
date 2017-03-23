@@ -1,12 +1,11 @@
-import randomstate.prng.pcg64 as pcg
 import numpy as np
+import randomstate.prng.pcg64 as pcg
 from policies import *
 
 
 class WZ_ONE_TD_VFA_OPEP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
                  greedy, wait_size,sim_time_training,sigmoid_param):
-        # super().__init__(env, number_of_users, worker_variability, file_policy,seed)
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
@@ -15,11 +14,11 @@ class WZ_ONE_TD_VFA_OPEP(Policy):
         self.wait_size = wait_size
         self.sim_time_training = sim_time_training
         self.sigmoid_param = sigmoid_param
-        self.name = "WZ_ONE_TD_VFA_OPEP"
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
+        self.name = "{}_WZ_ONE_TD_VFA_OPEP".format(self.wait_size)
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
-        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
         # TODO: remove if sigmoid plot not needed anymore
         self.g = []
         self.t = []
