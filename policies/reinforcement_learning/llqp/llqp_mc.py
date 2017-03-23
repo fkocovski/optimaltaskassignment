@@ -1,64 +1,42 @@
+import numpy as np
+import randomstate.prng.pcg64 as pcg
 from policies import *
 from collections import deque
 
 
 class LLQP_MC(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, file_statistics, q_table, epsilon, gamma):
-        """
-Initializes an LLQP policy.
-        :param env: simpy environment.
-        :param number_of_users: the number of users present in the system.
-        :param worker_variability: worker variability in absolute value.
-        :param file_policy: file object to calculate policy related statistics.
-        :param file_statistics: file object to draw the policy evolution.
-        """
-        super().__init__(env, number_of_users, worker_variability, file_policy, file_statistics)
-        self.name = "LLQP"
-        self.users_queues = [deque() for _ in range(self.number_of_users)]
+    def __init__(self, env, number_of_users, worker_variability, file_policy, q_table, epsilon, gamma):
+        super().__init__(env, number_of_users, worker_variability, file_policy)
         self.q_table = q_table
         self.epsilon = epsilon
+        self.gamma = gamma
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
+        self.name = "LLQP_MC"
+        self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = []
         self.returns = []
-        self.gamma = gamma
 
-    def request(self, user_task):
-        """
-Request method for LLQP policies. Creates a PolicyJob object and calls for the appropriate evaluation method.
-        :param user_task: a user task object.
-        :return: a policyjob object to be yielded in the simpy environment.
-        """
-        llqp_job = super().request(user_task)
+    def request(self, user_task,token):
+        llqp_job = super().request(user_task,token)
 
         self.evaluate(llqp_job)
-
-        self.save_status()
 
         return llqp_job
 
     def release(self, llqp_job):
-        """
-Release method for LLQP policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the released user's queue is not empty, it assigns the next policyjob to be worked.
-        :param llqp_job: a policyjob object.
-        """
         super().release(llqp_job)
+
         user_to_release_index = llqp_job.assigned_user
-
         user_queue_to_free = self.users_queues[user_to_release_index]
-
         user_queue_to_free.popleft()
-
-        self.save_status()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
+            next_llqp_job.assigned = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
     def evaluate(self, llqp_job):
-        """
-Evaluate method for LLQP policies. Looks for the currently least loaded person to assign the policyjob.
-        :param llqp_job: a policyjob object to be assigned.
-        """
         busy_times = [None] * self.number_of_users
         for user_index, user_deq in enumerate(self.users_queues):
             if len(user_deq) > 0:
@@ -73,8 +51,8 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
         current_state = [None] * self.number_of_users
         for i, a in enumerate(busy_times):
             current_state[i] = int(a)
-        if RANDOM_STATE_ACTIONS.rand() < self.epsilon:
-            action = RANDOM_STATE_ACTIONS.randint(0, 2)
+        if self.EPSILON_GREEDY_RANDOM_STATE.rand() < self.epsilon:
+            action = self.EPSILON_GREEDY_RANDOM_STATE.randint(0, 2)
         else:
             action = np.argmax(self.q_table[current_state[0], current_state[1]])
 
@@ -82,21 +60,13 @@ Evaluate method for LLQP policies. Looks for the currently least loaded person t
 
         llqp_queue = self.users_queues[action]
         llqp_job.assigned_user = action
+        llqp_job.assigned = self.env.now
         llqp_queue.append(llqp_job)
         leftmost_llqp_queue_element = llqp_queue[0]
         if not leftmost_llqp_queue_element.is_busy(self.env.now):
             llqp_job.started = self.env.now
             llqp_job.request_event.succeed(llqp_job.service_rate[action])
 
-    def policy_status(self):
-        """
-Evaluates the current state of the policy. Overrides parent method with LLQP specific logic.
-        :return: returns a list where the first item is the global queue length (in LLQP always zero) and all subsequent elements are the respective user queues length.
-        """
-        current_status = [0]
-        for i in range(self.number_of_users):
-            current_status.append(len(self.users_queues[i]))
-        return current_status
 
     def update_policy_status(self, user_one, user_two, action):
         if user_one < user_two and action == 0:

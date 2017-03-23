@@ -3,15 +3,6 @@ from policies import *
 
 class K_BATCHONE(Policy):
     def __init__(self, env, number_of_users, worker_variability,file_policy, batch_size, solver):
-        """
-Initializes a KBatchOne policy.
-        :param env: simpy environment.
-        :param number_of_users: the number of users present in the system.
-        :param worker_variability: worker variability in absolute value.
-        :param batch_size: the batch size of the global queue.
-        :param solver: the solver used for the optimal task assignment.
-        :param file_policy: file object to calculate policy related statistics.
-        """
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.solver = solver
@@ -20,11 +11,6 @@ Initializes a KBatchOne policy.
         self.batch_queue = []
 
     def request(self, user_task,token):
-        """
-Request method for KBatchOne policies. Creates a PolicyJob object and calls for the appropriate evaluation method with the corresponding solver.
-        :param user_task: a user task object.
-        :return: a policyjob object to be yielded in the simpy environment.
-        """
         k_batch_one_job = super().request(user_task,token)
 
 
@@ -38,10 +24,6 @@ Request method for KBatchOne policies. Creates a PolicyJob object and calls for 
         return k_batch_one_job
 
     def release(self, k_batch_one_job):
-        """
-Release method for KBatchOne policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the global queue's size is greater than the batch size, it calls the appropriate evaluation method again.
-        :param k_batch_one_job: a policyjob object.
-        """
         super().release(k_batch_one_job)
 
 
@@ -54,9 +36,6 @@ Release method for KBatchOne policies. Uses the passed parameter, which is a pol
 
 
     def evaluate(self):
-        """
-Evaluate method for KBatchOne policies. Sets the required variables by the solver then calls the appropriate solver assigned and implements its returned solution.
-        """
         # wj
         w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
 

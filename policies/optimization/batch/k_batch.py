@@ -4,16 +4,6 @@ from collections import deque
 
 class K_BATCH(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, batch_size, solver):
-        """
-Initializes a KBatch policy.
-        :param env: simpy environment.
-        :param number_of_users: the number of users present in the system.
-        :param worker_variability: worker variability in absolute value.
-        :param batch_size: the batch size of the global queue.
-        :param solver: the solver used for the optimal task assignment.
-        :param file_policy: file object to calculate policy related statistics.
-        :param file_statistics: file object to draw the policy evolution.
-        """
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.solver = solver
@@ -22,11 +12,6 @@ Initializes a KBatch policy.
         self.batch_queue = []
 
     def request(self, user_task, token):
-        """
-Request method for KBatch policies. Creates a PolicyJob object and calls for the appropriate evaluation method with the corresponding solver.
-        :param user_task: a user task object.
-        :return: a policyjob object to be yielded in the simpy environment.
-        """
         k_batch_job = super().request(user_task, token)
 
         self.batch_queue.append(k_batch_job)
@@ -37,10 +22,6 @@ Request method for KBatch policies. Creates a PolicyJob object and calls for the
         return k_batch_job
 
     def release(self, k_batch_job):
-        """
-Release method for KBatch policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the released user's queue is not empty, it assigns the next policyjob to be worked.
-        :param k_batch_job: a policyjob object.
-        """
         super().release(k_batch_job)
 
         user_to_release_index = k_batch_job.assigned_user
@@ -54,9 +35,6 @@ Release method for KBatch policies. Uses the passed parameter, which is a policy
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
     def evaluate(self):
-        """
-Evaluate method for KBatch policies. Sets the required variables by the solver then calls the appropriate solver assigned and implements its returned solution.
-        """
         # wj
         w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
 

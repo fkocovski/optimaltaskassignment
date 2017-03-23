@@ -1,11 +1,8 @@
-from datetime import datetime
-
 import simpy
 import tensorflow as tf
-
-from evaluation.statistics import calculate_statistics
 from evaluation.subplot_evolution import evolution
-from policies.reinforcement_learning.llqp import LLQP_TD_TF_OP
+from evaluation.statistics import calculate_statistics
+from policies.reinforcement_learning.llqp.llqp_td_tf_op import LLQP_TD_TF_OP
 from simulations import *
 
 with tf.name_scope("user_w"):
@@ -16,7 +13,6 @@ with tf.Session() as sess:
     tf_init = tf.global_variables_initializer()
     tf_init_local = tf.local_variables_initializer()
     sess.run([tf_init, tf_init_local])
-    now = datetime.now()
     gamma = 0.5
     sim_time_training = SIM_TIME * 50
 

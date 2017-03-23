@@ -1,15 +1,15 @@
 import numpy as np
 import simpy
-
-from evaluation.statistics import calculate_statistics
 from evaluation.subplot_evolution import evolution
+from evaluation.statistics import calculate_statistics
 from policies.reinforcement_learning.llqp.llqp_td_vfa_op import LLQP_TD_VFA_OP
 from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS))
 gamma = 0.5
 alpha = 0.0001
-sim_time_training = SIM_TIME*100
+sim_time_training = SIM_TIME*50
+policy_name = "LLQP_TD_VFA_OP_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 env = simpy.Environment()
 
@@ -23,7 +23,7 @@ env.run(until=sim_time_training)
 
 env = simpy.Environment()
 
-file_policy = create_files("{}_NU{}_GI{}_TRSD{}_SIM{}.csv".format(policy_train.name,NUMBER_OF_USERS,GENERATION_INTERVAL,SEED,SIM_TIME))
+file_policy = create_files("{}.csv".format(policy_name))
 
 policy = LLQP_TD_VFA_OP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, theta, gamma, alpha, True)
 

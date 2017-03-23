@@ -1,17 +1,15 @@
 import numpy as np
 import simpy
-
-from elements.workflow_process_elements import connect
 from evaluation.eta_plot import eta_plot
-from policies.reinforcement_learning.llqp import LLQP_MC_PG_LR
+from policies.reinforcement_learning.llqp.llqp_mc_pg_lr import LLQP_MC_PG_LR
 from simulations import *
 
-# init theta and reinforcement learning variables
 theta = np.zeros(NUMBER_OF_USERS ** 2)
-gamma = 0.9
+gamma = 0.5
 epochs = 100
-alpha = 0.000001
+alpha = 0.0001
 eta = 0.0
+policy_name = "LLQP_MC_PG_LR_ETA_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 etas = []
 list_of_rewards = []
@@ -23,44 +21,24 @@ while eta < 5:
     theta[3] = -eta
 
     rewards = []
-    for j in range(100000):
-        # creates simulation environment
+    for j in range(epochs):
         env = simpy.Environment()
 
-        # open file and write header
-        # file_policy, file_statistics, file_policy_name, file_statistics_name = create_files("LLQP_MC_PG_LR")
+        policy = LLQP_MC_PG_LR(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, theta, gamma, alpha)
 
-        # initialize policy
-        policy = LLQP_MC_PG_LR(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, None, theta, gamma, alpha)
+        start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
 
-        # start event
-        start_event_test = StartEvent(env, GENERATION_INTERVAL)
+        env.process(start_event.generate_tokens())
 
-        # user tasks
-        user_task_test = UserTask(env, policy, "User task 1", SERVICE_INTERVAL, TASK_VARIABILITY)
-
-        # connections
-        connect(start_event_test, user_task_test)
-
-        # calls generation tokens process
-        env.process(start_event_test.generate_tokens())
-
-        # runs simulation
         env.run(until=SIM_TIME)
 
         avg_reward = np.mean(policy.jobs_lateness)
 
         rewards.append(avg_reward)
-        # close file
-        # file_policy.close()
-        # file_statistics.close()
 
-        # calculate statistics and plots
-        # calculate_statistics(file_policy_name, outfile="{}.pdf".format(file_policy_name[:-4]))
-        # evolution(file_statistics_name, outfile="{}.pdf".format(file_statistics_name[:-4]))
     list_of_rewards.append(rewards)
     etas.append(eta)
 
     eta += 0.5
 
-eta_plot(etas,list_of_rewards,"eta_plot.pdf")
+eta_plot(etas,list_of_rewards,policy_name,outfile=False)

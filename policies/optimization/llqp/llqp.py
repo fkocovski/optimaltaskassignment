@@ -4,23 +4,11 @@ from collections import deque
 
 class LLQP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy):
-        """
-Initializes an LLQP policy.
-        :param env: simpy environment.
-        :param number_of_users: the number of users present in the system.
-        :param worker_variability: worker variability in absolute value.
-        :param file_policy: file object to calculate policy related statistics.
-        """
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.name = "LLQP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
 
     def request(self, user_task,token):
-        """
-Request method for LLQP policies. Creates a PolicyJob object and calls for the appropriate evaluation method.
-        :param user_task: a user task object.
-        :return: a policyjob object to be yielded in the simpy environment.
-        """
         llqp_job = super().request(user_task,token)
 
 
@@ -30,10 +18,6 @@ Request method for LLQP policies. Creates a PolicyJob object and calls for the a
         return llqp_job
 
     def release(self, llqp_job):
-        """
-Release method for LLQP policies. Uses the passed parameter, which is a policyjob previously yielded by the request method and releases it. Furthermore it frees the user that worked the passed policyjob object. If the released user's queue is not empty, it assigns the next policyjob to be worked.
-        :param llqp_job: a policyjob object.
-        """
         super().release(llqp_job)
         user_to_release_index = llqp_job.assigned_user
 
@@ -49,10 +33,6 @@ Release method for LLQP policies. Uses the passed parameter, which is a policyjo
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
     def evaluate(self, llqp_job):
-        """
-Evaluate method for LLQP policies. Looks for the currently least loaded person to assign the policyjob.
-        :param llqp_job: a policyjob object to be assigned.
-        """
         llqp_index = None
         lowest_time = None
 

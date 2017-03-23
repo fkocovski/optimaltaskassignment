@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def phi_plot(phis, rewards, outfile=None):
+def phi_plot(phis, rewards, filename,outfile=False):
     avg_rewards = [np.mean(rwd) for rwd in rewards]
     std_rewards = [np.std(rwd) for rwd in rewards]
     plt.figure(figsize=(2*len(rewards),len(rewards)))
@@ -15,9 +15,7 @@ def phi_plot(phis, rewards, outfile=None):
     # plt.axvline(x=2*np.pi,c="g",ls="--",label=r"$2\pi$")
     plt.legend()
 
-    # output
-    if outfile is None:
+    if not outfile:
         plt.show()
     else:
-        plt.savefig(outfile, bbox_inches="tight")
-        plt.close()
+        plt.savefig("{}_PHI.pdf".format(filename))

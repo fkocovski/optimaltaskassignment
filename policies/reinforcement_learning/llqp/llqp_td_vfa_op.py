@@ -27,14 +27,13 @@ class LLQP_TD_VFA_OP(Policy):
         super().release(llqp_job)
 
         user_to_release_index = llqp_job.assigned_user
-
         user_queue_to_free = self.users_queues[user_to_release_index]
-
         user_queue_to_free.popleft()
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
+            next_llqp_job.assigned = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
     def evaluate(self, llqp_job):

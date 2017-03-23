@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def eta_plot(etas, rewards, outfile=None):
+def eta_plot(etas, rewards, filename,outfile=False):
     avg_rewards = [np.mean(rwd) for rwd in rewards]
     std_rewards = [np.std(rwd) for rwd in rewards]
     plt.xlabel("eta value")
@@ -12,9 +12,7 @@ def eta_plot(etas, rewards, outfile=None):
     plt.plot(etas, avg_rewards, label="Mean lateness")
     plt.legend()
 
-    # TODO change outfile to be boolean as other plot scripts
-    if outfile is None:
+    if not outfile:
         plt.show()
     else:
-        plt.savefig(outfile, bbox_inches="tight")
-        plt.close()
+        plt.savefig("{}_ETA.pdf".format(filename))
