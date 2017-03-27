@@ -11,34 +11,36 @@ n_input = BATCH_SIZE + NUMBER_OF_USERS * BATCH_SIZE + NUMBER_OF_USERS  # wj+pij+
 n_out = NUMBER_OF_USERS
 n_hidden_1 = n_input * 10
 n_hidden_2 = n_input * 10
+epochs = 20
 
-with tf.name_scope("weights_biases"):
+with tf.name_scope("weights"):
     weights = {
         'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1]), name="h1"),
         'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2]), name="h2"),
         'out': [tf.Variable(tf.random_normal([n_hidden_2, n_out]), name="out") for _ in range(BATCH_SIZE)]
     }
-
+with tf.name_scope("biases"):
     biases = {
         'b1': tf.Variable(tf.random_normal([n_hidden_1]), name="b1"),
         'b2': tf.Variable(tf.random_normal([n_hidden_2]), name="b2"),
-        'out': [tf.Variable(tf.random_normal([n_out]), name="bout") for _ in range(BATCH_SIZE)]
+        'out': [tf.Variable(tf.random_normal([n_out]), name="out") for _ in range(BATCH_SIZE)]
     }
 
 with tf.Session() as sess:
     gamma = 0.5
     sim_time_training = SIM_TIME * 2
+    for _ in range(epochs):
+        env = simpy.Environment()
 
-    env = simpy.Environment()
+        policy_train = BI_ONE_TD_TF(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, gamma, False, BATCH_SIZE, sess, weights,
+                                    biases, n_input)
 
-    policy_train = BI_ONE_TD_TF(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, gamma, False, BATCH_SIZE, sess, weights,
-                                biases, n_input)
+        start_event = acquisition_process(env, policy_train, SEED, GENERATION_INTERVAL, False, None, None, None)
 
-    start_event = acquisition_process(env, policy_train, SEED, GENERATION_INTERVAL, False, None, None, None)
+        env.process(start_event.generate_tokens())
 
-    env.process(start_event.generate_tokens())
-
-    env.run(until=sim_time_training)
+        env.run(until=sim_time_training)
+        policy_train.update_theta()
 
     env = simpy.Environment()
 

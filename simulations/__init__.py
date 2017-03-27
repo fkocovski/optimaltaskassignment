@@ -2,7 +2,7 @@ import randomstate.prng.pcg64 as pcg
 
 from elements.workflow_process_elements import StartEvent, UserTask, XOR, DOR, COR
 
-NUMBER_OF_USERS = 2
+NUMBER_OF_USERS = 3
 SERVICE_INTERVAL = 1
 GENERATION_INTERVAL = 5
 SIM_TIME = 100
