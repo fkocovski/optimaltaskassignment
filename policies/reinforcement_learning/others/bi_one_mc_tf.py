@@ -7,12 +7,13 @@ from datetime import datetime
 
 class BI_ONE_MC_TF(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, gamma,
-                 greedy, wait_size, sess, weights, biases, n_input):
+                 greedy, wait_size, sess,batch_input, weights, biases,n_input):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
         self.wait_size = wait_size
         self.sess = sess
+        self.batch_input = batch_input
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
         self.name = "BI_ONE_MC_TF"
         self.user_slot = [None] * self.number_of_users
@@ -22,6 +23,7 @@ class BI_ONE_MC_TF(Policy):
 
         with tf.name_scope("input"):
             self.inp = tf.placeholder(tf.float32, name="state_space", shape=(1, n_input))
+            # self.inp = tf.placeholder(tf.float32, name="state_space", shape=(1, None))
             self.gradient_input = tf.placeholder(tf.float32, name="gradient_input", shape=(self.number_of_users, 1))
             self.factor_input = tf.placeholder(tf.float32, name="factor_input")
 
@@ -33,7 +35,7 @@ class BI_ONE_MC_TF(Policy):
             self.pred = [tf.matmul(layer_2, weights['out'][b]) + biases['out'][b] for b in range(self.wait_size)]
             self.probabilities = [tf.nn.softmax(self.pred[b]) for b in range(self.wait_size)]
             self.cost = [tf.matmul(self.probabilities[b], self.gradient_input) for b in range(self.wait_size)]
-            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
             self.gradients = [self.optimizer.compute_gradients(self.cost[b],
                                                                [weights["h1"], weights["h2"], weights["out"][b],
                                                                 biases["b1"], biases["b2"], biases["out"][b]]) for b in
@@ -92,33 +94,54 @@ class BI_ONE_MC_TF(Policy):
 
     def state_space(self):
         # wj
-        w = [self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)]
+        max_w = 1000*max([self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)])
+        w = np.full(self.batch_input,max_w)
+        # w = np.zeros(self.batch_input)
+        # w = [self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)]
+        for i in range(self.batch_input):
+            try:
+                w[i] = self.env.now - self.batch_queue[i].arrival
+            except IndexError:
+                break
+
 
         # pij
-        p = [[self.batch_queue[j].service_rate[i] for j in range(self.wait_size)] for i in
-             range(self.number_of_users)]
-        flat_p = [item for sublist in p for item in sublist]
+        max_pij = 1000*max([max([self.batch_queue[j].service_rate[i] for j in range(self.wait_size)]) for i in range(self.number_of_users)])
+        p = np.full((self.number_of_users,self.batch_input),max_pij)
+        # p = np.zeros((self.number_of_users,self.batch_input))
+        # p = [[self.batch_queue[j].service_rate[i] for j in range(self.wait_size)] for i in
+        #      range(self.number_of_users)]
+        for i in range(self.number_of_users):
+            for j in range(self.batch_input):
+                try:
+                    p[i][j] = self.batch_queue[j].service_rate[i]
+                except IndexError:
+                    break
+        # flat_p = [item for sublist in p for item in sublist]
+        flat_p = p.flatten()
 
         # ai
         a = [0 if self.user_slot[i] is None else self.user_slot[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 
-        state = np.array(w + flat_p + a)
+        # state = np.array(w + flat_p + a)
+        state = np.concatenate((w,flat_p,np.array(a)))
         state = state.reshape((1, len(state)))
 
         return state, w, p, a
 
     def update_theta(self):
-        for i, (state, output, choices) in enumerate(self.history):
-            rewards = self.discount_rewards(i)
+        for t, (state, output, choices) in enumerate(self.history):
+            rewards = self.discount_rewards(t)
             for index, preferences in enumerate(output):
-                reshape_output = np.reshape(preferences, (self.number_of_users, 1))
                 chosen_user = choices[index]
-                prob_value = output[index][0][chosen_user]
+                prob_value = preferences.flatten()[chosen_user]
                 reward = rewards[index]
                 factor = reward / prob_value
+                grad_input = np.zeros((self.number_of_users,1))
+                grad_input[chosen_user] = 1.0
                 self.sess.run(self.apply[index],
-                              {self.inp: state, self.gradient_input: reshape_output, self.factor_input: factor})
+                              {self.inp: state, self.gradient_input: grad_input, self.factor_input: factor})
 
     def reward(self, w, p, a, choices):
         reward = []
@@ -129,8 +152,9 @@ class BI_ONE_MC_TF(Policy):
         return reward
 
     def discount_rewards(self, time):
-        g = [0.0] * self.wait_size
-        for t in range(time + 1):
-            for reward_index, reward in enumerate(self.rewards[t]):
-                g[reward_index] += (self.gamma ** t) * reward
+        # FIXME: logic with remaining rewards to discount
+        g = np.zeros(self.wait_size)
+        for t,rewards in enumerate(self.rewards[time:]):
+            for i,reward in enumerate(rewards):
+                g[i] += (self.gamma**t)*reward
         return g
