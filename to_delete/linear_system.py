@@ -57,11 +57,14 @@ ders2 = sess.run(grads_vals, {x: [[1.0], [2.0]], y: [[1.0, 0.0, 0.0]]})
 # for grad, val in ders2:
 #     np.multiply(grad, 0.5, grad)
 
-for g,v in ders2:
-    print(g,v)
-    print("===")
 
-sess.run(apply,{x: [[1.0], [2.0]], y: [[1.0, 0.0, 0.0]],factor:0.5})
+w = sess.run(W)
+print(w)
+
+for _ in range(5):
+    sess.run(apply,{x: [[1.0], [2.0]], y: [[0.0, 1.0, 0.0]],factor:0.5})
+    w = sess.run(W)
+    print(w)
 # print(ders_initial)
 # print(ders2)
 # print(ders_initial1)
