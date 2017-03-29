@@ -9,7 +9,7 @@ def half_der(g):
 
 RS = np.random.RandomState(42)
 
-learning_rate = 0.01
+learning_rate = 0.1
 training = 1000
 display_steps = 50
 
@@ -61,10 +61,9 @@ ders2 = sess.run(grads_vals, {x: [[1.0], [2.0]], y: [[1.0, 0.0, 0.0]]})
 w = sess.run(W)
 print(w)
 
-for _ in range(5):
-    sess.run(apply,{x: [[1.0], [2.0]], y: [[0.0, 1.0, 0.0]],factor:0.5})
-    w = sess.run(W)
-    print(w)
+sess.run(apply,{x: [[1.0], [2.0]], y: [[0.0, 1.0, 0.0]],factor:10})
+w = sess.run(W)
+print(w)
 # print(ders_initial)
 # print(ders2)
 # print(ders_initial1)

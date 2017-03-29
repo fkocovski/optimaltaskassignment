@@ -19,7 +19,6 @@ class WZ_ONE_TD_VFA_OPEP(Policy):
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = None
-        # TODO: remove if sigmoid plot not needed anymore
         self.g = []
         self.t = []
 

@@ -7,15 +7,13 @@ from datetime import datetime
 
 class BI_ONE_MC_TF(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, gamma,
-                 greedy, wait_size, sess,batch_input, weights, biases,n_input):
+                 greedy, wait_size, sess,batch_input,probabilities,apply,state_space_input,gradient_input,factor_input,epochs):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
         self.wait_size = wait_size
         self.sess = sess
         self.batch_input = batch_input
-        self.weights = weights
-        self.biases = biases
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
         self.name = "BI_ONE_MC_TF"
         self.user_slot = [None] * self.number_of_users
@@ -23,49 +21,39 @@ class BI_ONE_MC_TF(Policy):
         self.history = []
         self.rewards = []
 
-        with tf.name_scope("input"):
-            self.inp = tf.placeholder(tf.float32, name="state_space", shape=(1, n_input))
-            self.gradient_input = tf.placeholder(tf.float32, name="gradient_input", shape=(self.number_of_users, 1))
-            self.factor_input = tf.placeholder(tf.float32, name="factor_input")
+        self.probabilities = probabilities
+        self.apply = apply
+        self.state_space_input = state_space_input
+        self.gradient_input = gradient_input
+        self.factor_input = factor_input
 
-        with tf.name_scope("neural_network"):
-            layer_1 = tf.add(tf.matmul(self.inp, self.weights['h1']), self.biases['b1'])
-            layer_1 = tf.nn.relu(layer_1)
-            layer_2 = tf.add(tf.matmul(layer_1, self.weights['h2']), self.biases['b2'])
-            layer_2 = tf.nn.relu(layer_2)
-            self.pred = [tf.matmul(layer_2, self.weights['out'][b]) + self.biases['out'][b] for b in range(self.batch_input)]
-            self.probabilities = [tf.nn.softmax(self.pred[b]) for b in range(self.batch_input)]
 
-        with tf.name_scope("optimizer"):
-            self.cost = [tf.matmul(self.probabilities[b], self.gradient_input) for b in range(self.batch_input)]
-            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01)
-            self.gradients = [self.optimizer.compute_gradients(self.cost[b],
-                                                               [self.weights["h1"], self.weights["h2"], self.weights["out"][b],
-                                                                self.biases["b1"], self.biases["b2"], self.biases["out"][b]]) for b in
-                              range(self.batch_input)]
-            gradients_values = [[(g * self.factor_input, v) for g, v in self.gradients[b]] for b in range(self.batch_input)]
-            self.apply = [self.optimizer.apply_gradients(gradients_values[b]) for
-                          b in range(self.batch_input)]
 
         if self.greedy:
+            for b in range(self.batch_input):
+                tf.summary.histogram("softmax_{}".format(b),self.probabilities[b])
+            self.reward_sum = tf.placeholder(tf.float32)
+            tf.summary.scalar("total_lateness",tf.reduce_sum(self.reward_sum))
+            self.merged_histograms = tf.summary.merge_all()
+            self.global_step = 0
             now = datetime.now()
-            self.writer = tf.summary.FileWriter("../tensorboard/{}/{}".format(self.name, now.strftime("%d.%m.%y-%H.%M.%S")),
+            self.writer = tf.summary.FileWriter("../tensorboard/{}/{}-{}EP".format(self.name, now.strftime("%d.%m.%y-%H.%M.%S"),epochs),
                                                 tf.get_default_graph())
 
     def request(self, user_task, token):
-        wz_one_job = super().request(user_task, token)
+        bi_one_job = super().request(user_task, token)
 
-        self.batch_queue.append(wz_one_job)
+        self.batch_queue.append(bi_one_job)
 
         if len(self.batch_queue) >= self.wait_size:
             self.evaluate()
 
-        return wz_one_job
+        return bi_one_job
 
-    def release(self, wz_one_job):
-        super().release(wz_one_job)
+    def release(self, bi_one_job):
+        super().release(bi_one_job)
 
-        user_to_release_index = wz_one_job.assigned_user
+        user_to_release_index = bi_one_job.assigned_user
 
         self.user_slot[user_to_release_index] = None
 
@@ -75,22 +63,41 @@ class BI_ONE_MC_TF(Policy):
     def evaluate(self):
 
         state, w, p, a = self.state_space()
-        output = self.sess.run(self.probabilities, {self.inp: state})
-        choices = []
+        output = self.sess.run(self.probabilities, {self.state_space_input: state})
+
+
+        # print(state,"state_space")
+        # print(self.sess.run(self.layer_1,{self.state_space_input: state}),"layer1")
+        # print(self.sess.run(self.layer_2,{self.state_space_input: state}),"layer2")
+        # print(self.sess.run(self.pred,{self.state_space_input: state}),"pred")
+        # print(output,"softmax")
+        # print("=====")
+
+        choices = [None]*self.batch_input
 
         for job_index, preferences in enumerate(output):
-            user = self.RANDOM_STATE_ACTIONS.choice(np.arange(0, self.number_of_users), p=preferences.flatten())
-            choices.append(user)
-            if self.user_slot[user] is None:
-                wz_one_job = self.batch_queue[job_index]
-                self.batch_queue[job_index] = None
-                self.user_slot[user] = wz_one_job
-                wz_one_job.assigned_user = user
-                wz_one_job.assigned = self.env.now
-                wz_one_job.started = self.env.now
-                wz_one_job.request_event.succeed(wz_one_job.service_rate[user])
+            try:
+                bi_one_job = self.batch_queue[job_index]
+                user = self.RANDOM_STATE_ACTIONS.choice(np.arange(0, self.number_of_users), p=preferences.flatten())
+                choices[job_index] = user
+                if self.user_slot[user] is None:
+                        self.batch_queue[job_index] = None
+                        self.user_slot[user] = bi_one_job
+                        bi_one_job.assigned_user = user
+                        bi_one_job.assigned = self.env.now
+                        bi_one_job.started = self.env.now
+                        bi_one_job.request_event.succeed(bi_one_job.service_rate[user])
+            except IndexError:
+                    break
 
         self.batch_queue = [job for job in self.batch_queue if job is not None]
+
+        if self.greedy:
+            if self.global_step % 10 == 0:
+                rewards = self.reward(w, p, a, choices)
+                infos_to_save = self.sess.run(self.merged_histograms,{self.state_space_input:state,self.reward_sum:rewards})
+                self.writer.add_summary(infos_to_save,self.global_step)
+            self.global_step += 1
 
         if not self.greedy:
             self.rewards.append(self.reward(w, p, a, choices))
@@ -98,21 +105,23 @@ class BI_ONE_MC_TF(Policy):
 
     def state_space(self):
         # wj
-        # max_w = 1000*max([self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)])
+        # max_w = max([self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)])
         # w = np.full(self.batch_input,max_w)
         w = np.zeros(self.batch_input)
-
+        r = np.zeros(self.batch_input)
         # w = [self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)]
 
         for i in range(self.batch_input):
             try:
                 w[i] = self.env.now - self.batch_queue[i].arrival
+                r[i] = 1
             except IndexError:
                 break
 
 
+
         # pij
-        # max_pij = 1000*max([max([self.batch_queue[j].service_rate[i] for j in range(self.wait_size)]) for i in range(self.number_of_users)])
+        # max_pij = max([max([self.batch_queue[j].service_rate[i] for j in range(self.wait_size)]) for i in range(self.number_of_users)])
         # p = np.full((self.number_of_users,self.batch_input),max_pij)
         p = np.zeros((self.number_of_users,self.batch_input))
 
@@ -126,6 +135,8 @@ class BI_ONE_MC_TF(Policy):
                 except IndexError:
                     break
         # flat_p = [item for sublist in p for item in sublist]
+
+
         flat_p = p.flatten()
 
         # ai
@@ -133,37 +144,34 @@ class BI_ONE_MC_TF(Policy):
              in range(self.number_of_users)]
 
         # state = np.array(w + flat_p + a)
-        state = np.concatenate((w,flat_p,np.array(a)))
+        state = np.concatenate((w,flat_p,np.array(a),r))
         state = state.reshape((1, len(state)))
 
         return state, w, p, a
 
     def train(self):
-        print(len(self.history))
+        # self.sess.run(self.test_op,{self.test_input:2.0})
+        # print(self.test_var.eval())
+
         for t, (state, output, choices) in enumerate(self.history):
-            rewards = self.discount_rewards(t)
-            for job_index, preferences in enumerate(output):
-                chosen_user = choices[job_index]
-                prob_value = preferences.flatten()[chosen_user]
-                reward = rewards[job_index]
+            disc_rewards = self.discount_rewards(t)
+            tmp_choices = [choice for choice in choices if choice is not None]
+            for job_index, chosen_user in enumerate(tmp_choices):
+                # print(job_index,chosen_user)
+                prob_value = output[job_index].flatten()[chosen_user]
+                reward = disc_rewards[job_index]
                 factor = reward / prob_value
                 grad_input = np.zeros((self.number_of_users,1))
                 grad_input[chosen_user] = 1.0
-                h1 = self.sess.run(self.weights["h1"])
-                print("===")
-                print(h1.shape)
                 self.sess.run(self.apply[job_index],
-                              {self.inp: state, self.gradient_input: grad_input, self.factor_input: factor})
-                h1 = self.sess.run(self.weights["h1"])
-                print("---")
-                print(h1)
-                print("===")
+                              {self.state_space_input: state, self.gradient_input: grad_input, self.factor_input: factor})
 
     def reward(self, w, p, a, choices):
-        reward = []
+        reward = np.zeros(self.batch_input)
         busy_times = [a[i] for i in range(self.number_of_users)]
-        for job_index, user_index in enumerate(choices):
-            reward.append(w[job_index] + busy_times[user_index] + p[user_index][job_index])
+        tmp_choices = [choice for choice in choices if choice is not None]
+        for job_index, user_index in enumerate(tmp_choices):
+            reward[job_index] = w[job_index] + busy_times[user_index] + p[user_index][job_index]
             busy_times[user_index] += p[user_index][job_index]
         return reward
 
