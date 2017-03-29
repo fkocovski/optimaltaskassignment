@@ -33,7 +33,7 @@ class BI_ONE_MC_TF(Policy):
             for b in range(self.batch_input):
                 tf.summary.histogram("softmax_{}".format(b),self.probabilities[b])
             self.reward_sum = tf.placeholder(tf.float32)
-            tf.summary.scalar("total_lateness",tf.reduce_sum(self.reward_sum))
+            tf.summary.scalar("mean_lateness",tf.reduce_mean(self.reward_sum))
             self.merged_histograms = tf.summary.merge_all()
             self.global_step = 0
             now = datetime.now()

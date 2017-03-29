@@ -1,32 +1,36 @@
 import simpy
 import tensorflow as tf
+import time
 from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
 from policies.reinforcement_learning.others.bi_one_mc_tf import BI_ONE_MC_TF
 from simulations import *
 
-policy_name = "{}_BI_ONE_MC_TF_NU{}_GI{}_TRSD{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
-                                                              SIM_TIME)
 batch_input = 2
 n_input = batch_input + NUMBER_OF_USERS * batch_input + NUMBER_OF_USERS + batch_input  # wj+pij+ai+rj
 n_out = NUMBER_OF_USERS
-n_hidden_1 = n_input * 10
-n_hidden_2 = n_input * 10
+hidden_layers_size = int((n_input+n_out)/2)
+n_hidden_1 = hidden_layers_size
+n_hidden_2 = hidden_layers_size
 epochs = 1000
 gamma = 0.5
+learn_rate = 0.001
+var_multiplicator = 0.0001
+policy_name = "{}_BI_ONE_MC_TF_NU{}_GI{}_TRSD{}_SIM{}".format(batch_input, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
+                                                              SIM_TIME)
 
 with tf.name_scope("weights"):
     weights = {
-        'h1': tf.Variable(0.001*tf.random_normal([n_input, n_hidden_1], seed=SEED), name="h1"),
-        'h2': tf.Variable(0.001*tf.random_normal([n_hidden_1, n_hidden_2], seed=SEED + 1), name="h2"),
-        'out': [tf.Variable(0.001*tf.random_normal([n_hidden_2, n_out], seed=SEED + (b+1)*2), name="out") for b in
+        'h1': tf.Variable(var_multiplicator*tf.random_normal([n_input, n_hidden_1]), name="h1"),
+        'h2': tf.Variable(var_multiplicator*tf.random_normal([n_hidden_1, n_hidden_2]), name="h2"),
+        'out': [tf.Variable(var_multiplicator*tf.random_normal([n_hidden_2, n_out]), name="out") for b in
                 range(batch_input)]
     }
 with tf.name_scope("biases"):
     biases = {
-        'b1': tf.Variable(0.001*tf.random_normal([n_hidden_1], seed=SEED + 3), name="b1"),
-        'b2': tf.Variable(0.001*tf.random_normal([n_hidden_2], seed=SEED + 4), name="b2"),
-        'out': [tf.Variable(0.001*tf.random_normal([n_out], seed=SEED + (b+1)*5), name="out") for b in range(batch_input)]
+        'b1': tf.Variable(var_multiplicator*tf.random_normal([n_hidden_1]), name="b1"),
+        'b2': tf.Variable(var_multiplicator*tf.random_normal([n_hidden_2]), name="b2"),
+        'out': [tf.Variable(var_multiplicator*tf.random_normal([n_out]), name="out") for b in range(batch_input)]
     }
 
 with tf.name_scope("input"):
@@ -45,7 +49,7 @@ with tf.name_scope("neural_network"):
 
 with tf.name_scope("optimizer"):
     cost = [tf.matmul(probabilities[b], gradient_input) for b in range(batch_input)]
-    optimizer = [tf.train.GradientDescentOptimizer(learning_rate=0.0001) for _ in range(batch_input)]
+    optimizer = [tf.train.AdamOptimizer(learning_rate=learn_rate) for _ in range(batch_input)]
     gradients = [optimizer[b].compute_gradients(cost[b],
                                                           [weights["h1"], weights["h2"],
                                                            weights["out"][b],
@@ -60,7 +64,10 @@ with tf.name_scope("optimizer"):
 with tf.Session() as sess:
     tf_init = tf.global_variables_initializer()
     sess.run(tf_init)
+    to_go = epochs
     for i in range(epochs):
+        if i % 100 == 0 :
+            start = time.time()
         env = simpy.Environment()
 
         policy_train = BI_ONE_MC_TF(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, gamma, False, BATCH_SIZE, sess,
@@ -72,11 +79,13 @@ with tf.Session() as sess:
 
         env.run(until=SIM_TIME)
         policy_train.train()
-
-        print("finished {}".format(i))
-        # wh1 = sess.run(weights["h1"])
-        # print(wh1)
-        print("======")
+        if i % 100 == 0:
+            end = time.time()
+            elapsed = end-start
+            remaining_time = time.gmtime(to_go*elapsed)
+            print("finished {}, training will finish in {}".format(i,time.strftime("%H:%M:%S",remaining_time)))
+            print("======")
+        to_go -= 1
 
     env = simpy.Environment()
 
