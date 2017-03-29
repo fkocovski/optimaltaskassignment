@@ -1,10 +1,12 @@
+import time
+
 import simpy
 import tensorflow as tf
-import time
-from evaluation.subplot_evolution import evolution
+
 from evaluation.statistics import calculate_statistics
-from policies.reinforcement_learning.others.bi_one_mc_tf_2l import BI_ONE_MC_TF
+from evaluation.subplot_evolution import evolution
 from simulations import *
+from to_delete.bi_one_mc_tf_2l import BI_ONE_MC_TF
 
 batch_input = 3
 n_input = batch_input + NUMBER_OF_USERS * batch_input + NUMBER_OF_USERS + batch_input  # wj+pij+ai+rj

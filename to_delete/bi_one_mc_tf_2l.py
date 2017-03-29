@@ -7,41 +7,39 @@ from datetime import datetime
 
 class BI_ONE_MC_TF_2L(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, gamma,
-                 greedy, wait_size, sess, batch_input, predictions, probabilities, apply, state_space_input, gradient_input,
-                 factor_input,writer,seed):
+                 greedy, wait_size, sess,batch_input,probabilities,apply,state_space_input,gradient_input,factor_input,epochs,weights,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
         self.wait_size = wait_size
         self.sess = sess
         self.batch_input = batch_input
-        self.predictions = predictions
-        self.probabilities = probabilities
-        self.apply = apply
-        self.state_space_input = state_space_input
-        self.gradient_input = gradient_input
-        self.factor_input = factor_input
-        self.writer = writer
-        self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
         self.name = "BI_ONE_MC_TF_2L"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = []
         self.rewards = []
 
+        self.probabilities = probabilities
+        self.apply = apply
+        self.state_space_input = state_space_input
+        self.gradient_input = gradient_input
+        self.factor_input = factor_input
         self.global_step = 0
 
-        if self.greedy:
-            softmaxes = []
-            preds = []
-            for b in range(self.batch_input):
-                softmaxes.append(tf.summary.histogram("softmax_{}".format(b), self.probabilities[b]))
-                preds.append(tf.summary.histogram("predictions_{}".format(b),self.predictions[b]))
-            self.summary_softmaxes = tf.summary.merge(softmaxes)
-            self.summary_preds = tf.summary.merge(preds)
-            self.reward_sum = tf.placeholder(tf.float32)
-            self.summary_lateness = tf.summary.scalar("mean_lateness", tf.reduce_mean(self.reward_sum))
 
+
+        if self.greedy:
+            for b in range(self.batch_input):
+                tf.summary.histogram("softmax_{}".format(b),self.probabilities[b])
+            tf.summary.histogram("h1",weights["h1"])
+            self.reward_sum = tf.placeholder(tf.float32)
+            tf.summary.scalar("mean_lateness",tf.reduce_mean(self.reward_sum))
+            self.merged_histograms = tf.summary.merge_all()
+            now = datetime.now()
+            self.writer = tf.summary.FileWriter("../tensorboard/{}/{}-{}EP".format(self.name, now.strftime("%d.%m.%y-%H.%M.%S"),epochs),
+                                                tf.get_default_graph())
 
     def request(self, user_task, token):
         bi_one_job = super().request(user_task, token)
@@ -73,10 +71,7 @@ class BI_ONE_MC_TF_2L(Policy):
         #         print(output,"softmax")
         #     self.global_step +=1
 
-        # if not self.greedy:
-        #     print(output)
-
-        choices = [None] * self.batch_input
+        choices = [None]*self.batch_input
 
         for job_index, preferences in enumerate(output):
             try:
@@ -84,25 +79,22 @@ class BI_ONE_MC_TF_2L(Policy):
                 user = self.RANDOM_STATE_ACTIONS.choice(np.arange(0, self.number_of_users), p=preferences.flatten())
                 choices[job_index] = user
                 if self.user_slot[user] is None:
-                    self.batch_queue[job_index] = None
-                    self.user_slot[user] = bi_one_job
-                    bi_one_job.assigned_user = user
-                    bi_one_job.assigned = self.env.now
-                    bi_one_job.started = self.env.now
-                    bi_one_job.request_event.succeed(bi_one_job.service_rate[user])
+                        self.batch_queue[job_index] = None
+                        self.user_slot[user] = bi_one_job
+                        bi_one_job.assigned_user = user
+                        bi_one_job.assigned = self.env.now
+                        bi_one_job.started = self.env.now
+                        bi_one_job.request_event.succeed(bi_one_job.service_rate[user])
             except IndexError:
-                break
+                    break
 
         self.batch_queue = [job for job in self.batch_queue if job is not None]
 
         if self.greedy:
             if self.global_step % 10 == 0:
                 rewards = self.reward(w, p, a, choices)
-                sum_preds,sum_soft, sum_lat = self.sess.run([self.summary_preds,self.summary_softmaxes, self.summary_lateness],
-                                                  {self.state_space_input: state, self.reward_sum: rewards})
-                self.writer.add_summary(sum_preds, self.global_step)
-                self.writer.add_summary(sum_soft, self.global_step)
-                self.writer.add_summary(sum_lat, self.global_step)
+                infos_to_save = self.sess.run(self.merged_histograms,{self.state_space_input:state,self.reward_sum:rewards})
+                self.writer.add_summary(infos_to_save,self.global_step)
             self.global_step += 1
 
         if not self.greedy:
@@ -124,10 +116,12 @@ class BI_ONE_MC_TF_2L(Policy):
             except IndexError:
                 break
 
+
+
         # pij
         # max_pij = max([max([self.batch_queue[j].service_rate[i] for j in range(self.wait_size)]) for i in range(self.number_of_users)])
         # p = np.full((self.number_of_users,self.batch_input),max_pij)
-        p = np.zeros((self.number_of_users, self.batch_input))
+        p = np.zeros((self.number_of_users,self.batch_input))
 
         # p = [[self.batch_queue[j].service_rate[i] for j in range(self.wait_size)] for i in
         #      range(self.number_of_users)]
@@ -148,7 +142,7 @@ class BI_ONE_MC_TF_2L(Policy):
              in range(self.number_of_users)]
 
         # state = np.array(w + flat_p + a)
-        state = np.concatenate((w, flat_p, np.array(a), r))
+        state = np.concatenate((w,flat_p,np.array(a),r))
         state = state.reshape((1, len(state)))
 
         return state, w, p, a
@@ -165,11 +159,10 @@ class BI_ONE_MC_TF_2L(Policy):
                 prob_value = output[job_index].flatten()[chosen_user]
                 reward = disc_rewards[job_index]
                 factor = reward / prob_value
-                grad_input = np.zeros((self.number_of_users, 1))
+                grad_input = np.zeros((self.number_of_users,1))
                 grad_input[chosen_user] = 1.0
                 self.sess.run(self.apply[job_index],
-                              {self.state_space_input: state, self.gradient_input: grad_input,
-                               self.factor_input: factor})
+                              {self.state_space_input: state, self.gradient_input: grad_input, self.factor_input: factor})
 
     def reward(self, w, p, a, choices):
         reward = np.zeros(self.batch_input)
@@ -182,11 +175,7 @@ class BI_ONE_MC_TF_2L(Policy):
 
     def discount_rewards(self, time):
         g = np.zeros(self.batch_input)
-        for t, rewards in enumerate(self.rewards[time:]):
-            for i, reward in enumerate(rewards):
-                g[i] += (self.gamma ** t) * reward
+        for t,rewards in enumerate(self.rewards[time:]):
+            for i,reward in enumerate(rewards):
+                g[i] += (self.gamma**t)*reward
         return g
-
-    def save_summarry(self, step, summary):
-        summary = self.sess.run(summary)
-        self.writer.add_summary(summary, step)
