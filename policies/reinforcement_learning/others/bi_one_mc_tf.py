@@ -5,7 +5,7 @@ from policies import *
 from datetime import datetime
 
 
-class BI_ONE_MC_TF_2L(Policy):
+class BI_ONE_MC_TF(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, gamma,
                  greedy, wait_size, sess, batch_input, predictions, probabilities, apply, state_space_input, gradient_input,
                  factor_input,writer,seed):
@@ -23,7 +23,7 @@ class BI_ONE_MC_TF_2L(Policy):
         self.factor_input = factor_input
         self.writer = writer
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
-        self.name = "BI_ONE_MC_TF_2L"
+        self.name = "BI_ONE_MC_TF"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = []
