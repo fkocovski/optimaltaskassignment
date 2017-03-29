@@ -6,7 +6,7 @@ from evaluation.statistics import calculate_statistics
 from policies.reinforcement_learning.others.bi_one_mc_tf import BI_ONE_MC_TF
 from simulations import *
 
-batch_input = 2
+batch_input = 3
 n_input = batch_input + NUMBER_OF_USERS * batch_input + NUMBER_OF_USERS + batch_input  # wj+pij+ai+rj
 n_out = NUMBER_OF_USERS
 hidden_layers_size = int((n_input+n_out)/2)
@@ -14,23 +14,23 @@ n_hidden_1 = hidden_layers_size
 n_hidden_2 = hidden_layers_size
 epochs = 1000
 gamma = 0.5
-learn_rate = 0.001
-var_multiplicator = 0.0001
-policy_name = "{}_BI_ONE_MC_TF_NU{}_GI{}_TRSD{}_SIM{}".format(batch_input, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
+learn_rate = 0.01
+var_multiplicator = 0.001
+policy_name = "{}_BI_ONE_MC_TF_2L_NU{}_GI{}_TRSD{}_SIM{}".format(batch_input, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
                                                               SIM_TIME)
 
 with tf.name_scope("weights"):
     weights = {
         'h1': tf.Variable(var_multiplicator*tf.random_normal([n_input, n_hidden_1]), name="h1"),
         'h2': tf.Variable(var_multiplicator*tf.random_normal([n_hidden_1, n_hidden_2]), name="h2"),
-        'out': [tf.Variable(var_multiplicator*tf.random_normal([n_hidden_2, n_out]), name="out") for b in
+        'out': [tf.Variable(var_multiplicator*tf.random_normal([n_hidden_2, n_out]), name="out") for _ in
                 range(batch_input)]
     }
 with tf.name_scope("biases"):
     biases = {
         'b1': tf.Variable(var_multiplicator*tf.random_normal([n_hidden_1]), name="b1"),
         'b2': tf.Variable(var_multiplicator*tf.random_normal([n_hidden_2]), name="b2"),
-        'out': [tf.Variable(var_multiplicator*tf.random_normal([n_out]), name="out") for b in range(batch_input)]
+        'out': [tf.Variable(var_multiplicator*tf.random_normal([n_out]), name="out") for _ in range(batch_input)]
     }
 
 with tf.name_scope("input"):
@@ -73,7 +73,7 @@ with tf.Session() as sess:
         policy_train = BI_ONE_MC_TF(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, gamma, False, BATCH_SIZE, sess,
                                     batch_input,probabilities,apply,state_space_input,gradient_input,factor_input,None)
 
-        start_event = acquisition_process(env, policy_train, SEED, GENERATION_INTERVAL, False, None, None, None)
+        start_event = acquisition_process(env, policy_train, i, GENERATION_INTERVAL, False, None, None, None)
 
         env.process(start_event.generate_tokens())
 

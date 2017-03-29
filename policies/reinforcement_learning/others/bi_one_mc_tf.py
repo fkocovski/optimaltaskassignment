@@ -26,6 +26,7 @@ class BI_ONE_MC_TF(Policy):
         self.state_space_input = state_space_input
         self.gradient_input = gradient_input
         self.factor_input = factor_input
+        self.global_step = 0
 
 
 
@@ -35,7 +36,6 @@ class BI_ONE_MC_TF(Policy):
             self.reward_sum = tf.placeholder(tf.float32)
             tf.summary.scalar("mean_lateness",tf.reduce_mean(self.reward_sum))
             self.merged_histograms = tf.summary.merge_all()
-            self.global_step = 0
             now = datetime.now()
             self.writer = tf.summary.FileWriter("../tensorboard/{}/{}-{}EP".format(self.name, now.strftime("%d.%m.%y-%H.%M.%S"),epochs),
                                                 tf.get_default_graph())
@@ -65,13 +65,10 @@ class BI_ONE_MC_TF(Policy):
         state, w, p, a = self.state_space()
         output = self.sess.run(self.probabilities, {self.state_space_input: state})
 
-
-        # print(state,"state_space")
-        # print(self.sess.run(self.layer_1,{self.state_space_input: state}),"layer1")
-        # print(self.sess.run(self.layer_2,{self.state_space_input: state}),"layer2")
-        # print(self.sess.run(self.pred,{self.state_space_input: state}),"pred")
-        # print(output,"softmax")
-        # print("=====")
+        if not self.greedy:
+            if self.global_step % 100 == 0:
+                print(output,"softmax")
+            self.global_step +=1
 
         choices = [None]*self.batch_input
 
@@ -156,8 +153,8 @@ class BI_ONE_MC_TF(Policy):
         for t, (state, output, choices) in enumerate(self.history):
             disc_rewards = self.discount_rewards(t)
             tmp_choices = [choice for choice in choices if choice is not None]
+            # print("Choices {}\noutput {}\nRewards {}\ndisc rewards {}\n=====".format(tmp_choices,output,self.rewards[t],disc_rewards))
             for job_index, chosen_user in enumerate(tmp_choices):
-                # print(job_index,chosen_user)
                 prob_value = output[job_index].flatten()[chosen_user]
                 reward = disc_rewards[job_index]
                 factor = reward / prob_value
