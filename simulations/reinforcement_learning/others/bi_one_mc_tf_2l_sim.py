@@ -3,7 +3,7 @@ import tensorflow as tf
 import time
 from evaluation.subplot_evolution import evolution
 from evaluation.statistics import calculate_statistics
-from policies.reinforcement_learning.others.bi_one_mc_tf import BI_ONE_MC_TF
+from policies.reinforcement_learning.others.bi_one_mc_tf_2l import BI_ONE_MC_TF
 from simulations import *
 
 batch_input = 3
@@ -14,7 +14,7 @@ n_hidden_1 = hidden_layers_size
 n_hidden_2 = hidden_layers_size
 epochs = 1000
 gamma = 0.5
-learn_rate = 0.01
+learn_rate = 0.001
 var_multiplicator = 0.001
 policy_name = "{}_BI_ONE_MC_TF_2L_NU{}_GI{}_TRSD{}_SIM{}".format(batch_input, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
                                                               SIM_TIME)
@@ -40,9 +40,9 @@ with tf.name_scope("input"):
 
 with tf.name_scope("neural_network"):
     layer_1 = tf.add(tf.matmul(state_space_input, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.nn.elu(layer_1)
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    layer_2 = tf.nn.elu(layer_2)
     pred = [tf.add(tf.matmul(layer_2, weights['out'][b]), biases['out'][b]) for b in
                  range(batch_input)]
     probabilities = [tf.nn.softmax(pred[b]) for b in range(batch_input)]
@@ -101,8 +101,6 @@ with tf.Session() as sess:
     env.run(until=SIM_TIME)
 
     print("finished test")
-    # wh1 = sess.run(weights["h1"])
-    # print(wh1)
     print("======")
 
     file_policy.close()

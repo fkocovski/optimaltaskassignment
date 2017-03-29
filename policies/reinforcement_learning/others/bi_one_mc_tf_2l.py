@@ -5,9 +5,9 @@ from policies import *
 from datetime import datetime
 
 
-class BI_ONE_MC_TF(Policy):
+class BI_ONE_MC_TF_2L(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, gamma,
-                 greedy, wait_size, sess,batch_input,probabilities,apply,state_space_input,gradient_input,factor_input,epochs):
+                 greedy, wait_size, sess,batch_input,probabilities,apply,state_space_input,gradient_input,factor_input,epochs,weights,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.gamma = gamma
         self.greedy = greedy
@@ -15,7 +15,7 @@ class BI_ONE_MC_TF(Policy):
         self.sess = sess
         self.batch_input = batch_input
         self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
-        self.name = "BI_ONE_MC_TF"
+        self.name = "BI_ONE_MC_TF_2L"
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
         self.history = []
@@ -33,6 +33,7 @@ class BI_ONE_MC_TF(Policy):
         if self.greedy:
             for b in range(self.batch_input):
                 tf.summary.histogram("softmax_{}".format(b),self.probabilities[b])
+            tf.summary.histogram("h1",weights["h1"])
             self.reward_sum = tf.placeholder(tf.float32)
             tf.summary.scalar("mean_lateness",tf.reduce_mean(self.reward_sum))
             self.merged_histograms = tf.summary.merge_all()
@@ -65,10 +66,10 @@ class BI_ONE_MC_TF(Policy):
         state, w, p, a = self.state_space()
         output = self.sess.run(self.probabilities, {self.state_space_input: state})
 
-        if not self.greedy:
-            if self.global_step % 100 == 0:
-                print(output,"softmax")
-            self.global_step +=1
+        # if not self.greedy:
+        #     if self.global_step % 100 == 0:
+        #         print(output,"softmax")
+        #     self.global_step +=1
 
         choices = [None]*self.batch_input
 
