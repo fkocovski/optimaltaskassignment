@@ -38,7 +38,6 @@ plt.legend()
 plt.xticks(np.arange(1, max_length + 1), x_labels)
 
 
-# TODO change outfile to be boolean as other plot scripts
 if not outfile:
     plt.show()
 else:

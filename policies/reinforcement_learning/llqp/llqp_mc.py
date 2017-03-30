@@ -47,7 +47,7 @@ class LLQP_MC(Policy):
             else:
                 busy_times[user_index] = 0
 
-        # FIXME: do not use fixed index for current_state
+        # TODO: do not use fixed index for current_state
         current_state = [None] * self.number_of_users
         for i, a in enumerate(busy_times):
             current_state[i] = int(a)
