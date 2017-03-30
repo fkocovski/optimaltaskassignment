@@ -14,7 +14,7 @@ file_policy = create_files("{}.csv".format(policy_name))
 
 policy = K_BATCHONE(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, BATCH_SIZE, msa)
 
-start_event = simple_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
+start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
 
 env.process(start_event.generate_tokens())
 
