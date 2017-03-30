@@ -28,7 +28,6 @@ class LLQP_MC_PG(Policy):
 
         user_to_release_index = llqp_job.assigned_user
         user_queue_to_free = self.users_queues[user_to_release_index]
-
         user_queue_to_free.popleft()
 
         if len(user_queue_to_free) > 0:
