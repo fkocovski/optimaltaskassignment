@@ -164,6 +164,6 @@ class BI_ONE_MC_TF(Policy):
                 g[i] += (self.gamma ** t) * reward
         return g
 
-    def save_summarry(self, step, summary):
+    def save_summary(self, step, summary):
         summary = self.sess.run(summary)
         self.writer.add_summary(summary, step)

@@ -14,7 +14,7 @@ hidden_layer_size = int((n_input + n_out) / 2)
 n_hidden_1 = hidden_layer_size
 n_hidden_2 = hidden_layer_size
 n_hidden_3 = hidden_layer_size
-epochs = 5000
+epochs = 10000
 gamma = 0.5
 learn_rate = 0.001
 var_multiplicator = 0.001
@@ -56,12 +56,12 @@ with tf.name_scope("neural_network"):
 
 with tf.name_scope("optimizer"):
     cost = [tf.matmul(probabilities[b], gradient_input) for b in range(batch_input)]
-    optimizer = tf.train.AdamOptimizer(learning_rate=learn_rate)
-    gradients = [optimizer.compute_gradients(cost[b], [weights["h1"],weights["h2"],weights["h3"],
+    optimizer = [tf.train.AdamOptimizer(learning_rate=learn_rate) for _ in range(batch_input)]
+    gradients = [optimizer[b].compute_gradients(cost[b], [weights["h1"],weights["h2"],weights["h3"],
                                                        weights["out"][b],
                                                        biases["b1"],biases["b2"],biases["b3"], biases["out"][b]]) for b in range(batch_input)]
     gradients_values = [[(g * factor_input, v) for g, v in gradients[b]] for b in range(batch_input)]
-    apply = [optimizer.apply_gradients(gradients_values[b]) for
+    apply = [optimizer[b].apply_gradients(gradients_values[b]) for
              b in range(batch_input)]
 
 with tf.name_scope("summaries"):
@@ -92,7 +92,7 @@ with tf.Session() as sess:
                                     batch_input, pred, probabilities, apply, state_space_input, gradient_input,
                                     factor_input, writer, i)
 
-        start_event = simple_process(env, policy_train, i, GENERATION_INTERVAL, False, None, None, None)
+        start_event = acquisition_process(env, policy_train, i, GENERATION_INTERVAL, False, None, None, None)
 
         env.process(start_event.generate_tokens())
 
@@ -100,15 +100,15 @@ with tf.Session() as sess:
 
         policy_train.train()
 
-        policy_train.save_summarry(i, summary_h1)
-        policy_train.save_summarry(i, summary_h2)
-        policy_train.save_summarry(i, summary_h3)
-        policy_train.save_summarry(i, summary_b1)
-        policy_train.save_summarry(i, summary_b2)
-        policy_train.save_summarry(i, summary_b3)
+        policy_train.save_summary(i, summary_h1)
+        policy_train.save_summary(i, summary_h2)
+        policy_train.save_summary(i, summary_h3)
+        policy_train.save_summary(i, summary_b1)
+        policy_train.save_summary(i, summary_b2)
+        policy_train.save_summary(i, summary_b3)
         for b in range(batch_input):
-            policy_train.save_summarry(i, summary_wout[b])
-            policy_train.save_summarry(i, summary_bout[b])
+            policy_train.save_summary(i, summary_wout[b])
+            policy_train.save_summary(i, summary_bout[b])
 
         if i % remaining_time_intervals == 0:
             end = time.time()
@@ -124,11 +124,11 @@ with tf.Session() as sess:
                           batch_input, pred, probabilities, apply, state_space_input, gradient_input, factor_input,
                           writer, 1)
 
-    start_event = simple_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
+    start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
 
     env.process(start_event.generate_tokens())
 
-    env.run(until=SIM_TIME)
+    env.run(until=SIM_TIME*10)
 
     print("finished test")
 

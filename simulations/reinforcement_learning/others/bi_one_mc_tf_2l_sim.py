@@ -51,12 +51,12 @@ with tf.name_scope("neural_network"):
 
 with tf.name_scope("optimizer"):
     cost = [tf.matmul(probabilities[b], gradient_input) for b in range(batch_input)]
-    optimizer = tf.train.AdamOptimizer(learning_rate=learn_rate)
-    gradients = [optimizer.compute_gradients(cost[b], [weights["h1"],weights["h2"],
+    optimizer = [tf.train.AdamOptimizer(learning_rate=learn_rate) for _ in range(batch_input)]
+    gradients = [optimizer[b].compute_gradients(cost[b], [weights["h1"],weights["h2"],
                                                        weights["out"][b],
                                                        biases["b1"],biases["b2"], biases["out"][b]]) for b in range(batch_input)]
     gradients_values = [[(g * factor_input, v) for g, v in gradients[b]] for b in range(batch_input)]
-    apply = [optimizer.apply_gradients(gradients_values[b]) for
+    apply = [optimizer[b].apply_gradients(gradients_values[b]) for
              b in range(batch_input)]
 
 with tf.name_scope("summaries"):
@@ -93,13 +93,13 @@ with tf.Session() as sess:
 
         policy_train.train()
 
-        policy_train.save_summarry(i, summary_h1)
-        policy_train.save_summarry(i, summary_h2)
-        policy_train.save_summarry(i, summary_b1)
-        policy_train.save_summarry(i, summary_b2)
+        policy_train.save_summary(i, summary_h1)
+        policy_train.save_summary(i, summary_h2)
+        policy_train.save_summary(i, summary_b1)
+        policy_train.save_summary(i, summary_b2)
         for b in range(batch_input):
-            policy_train.save_summarry(i, summary_wout[b])
-            policy_train.save_summarry(i, summary_bout[b])
+            policy_train.save_summary(i, summary_wout[b])
+            policy_train.save_summary(i, summary_bout[b])
 
         if i % remaining_time_intervals == 0:
             end = time.time()
@@ -120,7 +120,7 @@ with tf.Session() as sess:
 
     env.process(start_event.generate_tokens())
 
-    env.run(until=SIM_TIME)
+    env.run(until=SIM_TIME*10)
 
     print("finished test")
 
