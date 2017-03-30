@@ -82,7 +82,7 @@ with tf.Session() as sess:
 
         env.process(start_event.generate_tokens())
 
-        env.run(until=SIM_TIME)
+        env.run(until=SIM_TIME/10)
 
         policy_train.train()
 
@@ -110,7 +110,7 @@ with tf.Session() as sess:
 
     env.process(start_event.generate_tokens())
 
-    env.run(until=SIM_TIME*10)
+    env.run(until=SIM_TIME)
 
     print("finished test")
 
