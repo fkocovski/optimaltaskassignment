@@ -22,14 +22,16 @@ policy_name = "{}_BI_ONE_MC_TF_1L_NU{}_GI{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_
 
 with tf.name_scope("weights"):
     weights = {
-        'h1': tf.Variable(var_multiplicator * tf.random_normal([n_input, n_hidden_1],seed=SEED), name="h1"),
-        'out': [tf.Variable(var_multiplicator * tf.random_normal([n_hidden_1, n_out],seed=SEED+1), name="out") for _ in
+        'h1': tf.Variable(var_multiplicator * tf.random_normal([n_input, n_hidden_1], seed=SEED), name="h1"),
+        'out': [tf.Variable(var_multiplicator * tf.random_normal([n_hidden_1, n_out], seed=SEED + 1), name="out") for _
+                in
                 range(batch_input)]
     }
 with tf.name_scope("biases"):
     biases = {
-        'b1': tf.Variable(var_multiplicator * tf.random_normal([n_hidden_1],seed=SEED+2), name="b1"),
-        'out': [tf.Variable(var_multiplicator * tf.random_normal([n_out],seed=SEED+3), name="out") for _ in range(batch_input)]
+        'b1': tf.Variable(var_multiplicator * tf.random_normal([n_hidden_1], seed=SEED + 2), name="b1"),
+        'out': [tf.Variable(var_multiplicator * tf.random_normal([n_out], seed=SEED + 3), name="out") for _ in
+                range(batch_input)]
     }
 
 with tf.name_scope("input"):
@@ -48,8 +50,8 @@ with tf.name_scope("optimizer"):
     cost = [tf.matmul(probabilities[b], gradient_input) for b in range(batch_input)]
     optimizer = [tf.train.AdamOptimizer(learning_rate=learn_rate) for _ in range(batch_input)]
     gradients = [optimizer[b].compute_gradients(cost[b], [weights["h1"],
-                                                       weights["out"][b],
-                                                       biases["b1"], biases["out"][b]]) for b in range(batch_input)]
+                                                          weights["out"][b],
+                                                          biases["b1"], biases["out"][b]]) for b in range(batch_input)]
     gradients_values = [[(g * factor_input, v) for g, v in gradients[b]] for b in range(batch_input)]
     apply = [optimizer[b].apply_gradients(gradients_values[b]) for
              b in range(batch_input)]
@@ -82,7 +84,7 @@ with tf.Session() as sess:
 
         env.process(start_event.generate_tokens())
 
-        env.run(until=SIM_TIME/10)
+        env.run(until=SIM_TIME / 10)
 
         policy_train.train()
 
@@ -95,7 +97,7 @@ with tf.Session() as sess:
         if i % remaining_time_intervals == 0:
             end = time.time()
             elapsed = end - start
-            remaining_time = time.gmtime((epochs-i) * elapsed / (i if i != 0 else 1))
+            remaining_time = time.gmtime((epochs - i) * elapsed / (i if i != 0 else 1))
             print("finished {}, training will finish in {}".format(i, time.strftime("%H:%M:%S", remaining_time)))
 
     env = simpy.Environment()
