@@ -6,7 +6,7 @@ from policies.optimization.batch.k_batchone import K_BATCHONE
 from simulations import *
 from solvers.sdmf_solver import sdmf
 
-policy_name = "{}_BATCHONE_SDMF_NU{}_GI{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
+policy_name = "{}_BATCHONE_SDMF_NU{}_GI{}_SIM{}".format(BATCH_SIZE,NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 env = simpy.Environment()
 

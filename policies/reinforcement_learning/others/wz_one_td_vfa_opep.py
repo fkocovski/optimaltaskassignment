@@ -1,11 +1,11 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 
 
 class WZ_ONE_TD_VFA_OPEP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
-                 greedy, wait_size,sim_time_training,sigmoid_param):
+                 greedy, wait_size,sim_time_training,sigmoid_param,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
@@ -14,7 +14,7 @@ class WZ_ONE_TD_VFA_OPEP(Policy):
         self.wait_size = wait_size
         self.sim_time_training = sim_time_training
         self.sigmoid_param = sigmoid_param
-        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(seed)
         self.name = "{}_WZ_ONE_TD_VFA_OPEP".format(self.wait_size)
         self.user_slot = [None] * self.number_of_users
         self.batch_queue = []
@@ -75,14 +75,11 @@ class WZ_ONE_TD_VFA_OPEP(Policy):
         self.history = (state_space, action, combinations)
 
     def state_space(self):
-        # wj
         w = [self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)]
 
-        # pij
         p = [[self.batch_queue[j].service_rate[i] for j in range(self.wait_size)] for i in
              range(self.number_of_users)]
 
-        # ai
         a = [0 if self.user_slot[i] is None else self.user_slot[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 

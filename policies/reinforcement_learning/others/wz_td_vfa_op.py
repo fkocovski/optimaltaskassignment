@@ -1,19 +1,19 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class WZ_TD_VFA_OP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha,
-                 greedy, wait_size):
+                 greedy, wait_size,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
         self.wait_size = wait_size
-        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
         self.name = "{}_WZ_TD_VFA_OP".format(self.wait_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
@@ -70,14 +70,11 @@ class WZ_TD_VFA_OP(Policy):
         self.history = (state_space, action, combinations, w)
 
     def state_space(self):
-        # wj
         w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
 
-        # pij
         p = [[self.batch_queue[j].service_rate[i] for j in range(len(self.batch_queue))] for i in
              range(self.number_of_users)]
 
-        # ai
         current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
         a = [
             0 if current_user_element[i] is None else sum(job.service_rate[i] for job in self.users_queues[i]) for i
