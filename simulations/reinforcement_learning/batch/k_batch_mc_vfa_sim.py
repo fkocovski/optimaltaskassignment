@@ -6,10 +6,10 @@ from policies.reinforcement_learning.batch.k_batch_mc_vfa import K_BATCH_MC_VFA
 from simulations import *
 
 theta = np.zeros(2 * (NUMBER_OF_USERS ** 2))
-gamma = 1
+gamma = 0.5
 epochs = 10
 initial_alpha = 1e-2
-policy_name = "{}BATCH_MC_VFA_NU{}_GI{}_TRSD{}_SIM{}".format(1,NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
+policy_name = "{}_BATCH_MC_VFA_NU{}_GI{}_SIM{}".format(1,NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
 
 for i in range(epochs):
     env = simpy.Environment()
@@ -24,7 +24,7 @@ for i in range(epochs):
     policy_train = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY,None,1, theta, epsilon, gamma,
                                   alpha_disc)
 
-    start_event = acquisition_process(env,policy_train,SEED,GENERATION_INTERVAL,False,None,None,None)
+    start_event = acquisition_process(env,policy_train,i,GENERATION_INTERVAL,False,None,None,None)
 
     env.process(start_event.generate_tokens())
 
@@ -42,7 +42,7 @@ file_policy = create_files("{}.csv".format(policy_name))
 policy = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY,file_policy,1, theta, epsilon, gamma,
                         initial_alpha)
 
-start_event = acquisition_process(env,policy,SEED,GENERATION_INTERVAL,False,None,None,None)
+start_event = acquisition_process(env,policy,1,GENERATION_INTERVAL,False,None,None,None)
 
 env.process(start_event.generate_tokens())
 

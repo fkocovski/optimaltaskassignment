@@ -9,7 +9,7 @@ gamma = 0.5
 epochs = 100
 alpha = 0.001
 epsilon = 0.0
-policy_name = "LLQP_MC_VFA_FS_ETA_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
+policy_name = "LLQP_MC_VFA_FS_ETA_NU{}_GI{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
 
 phis = []
 list_of_rewards = []

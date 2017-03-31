@@ -18,7 +18,7 @@ for i in range(epochs):
 
     policy = LLQP_MC(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, q_table, epsilon, gamma)
 
-    start_event = acquisition_process(env, policy, SEED, GENERATION_INTERVAL, False, None, None, None)
+    start_event = acquisition_process(env, policy, i, GENERATION_INTERVAL, False, None, None, None)
 
     env.process(start_event.generate_tokens())
 

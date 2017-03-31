@@ -1,5 +1,5 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
@@ -44,13 +44,8 @@ class K_BATCH_MC_VFA(Policy):
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
     def evaluate(self, k_batch_job):
-        # wj
-        w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
-
-        # pi
         p = [k_batch_job.service_rate[i] for i in range(self.number_of_users)]
 
-        # ai
         current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
         a = [
             0 if current_user_element[i] is None else sum(job.service_rate[i] for job in self.users_queues[i]) for i

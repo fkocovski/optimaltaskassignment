@@ -1,46 +1,41 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 
 
 class K_BATCHONE_TD_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy,batch_size,theta,gamma,alpha,greedy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, batch_size, theta, gamma, alpha, greedy,
+                 seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
-        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(seed)
         self.name = "{}_BATCHONE_TD_VFA_OP".format(self.batch_size)
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
         self.history = []
 
-    def request(self, user_task,token):
-        k_batchone_job = super().request(user_task,token)
-
+    def request(self, user_task, token):
+        k_batchone_job = super().request(user_task, token)
 
         self.batch_queue.append(k_batchone_job)
 
-
         if len(self.batch_queue) >= self.batch_size:
             self.evaluate()
-
 
         return k_batchone_job
 
     def release(self, k_batchone_job):
         super().release(k_batchone_job)
 
-
         user_to_release_index = k_batchone_job.assigned_user
         self.assigned_job_to_user[user_to_release_index] = None
 
-
         if len(self.batch_queue) >= self.batch_size:
             self.evaluate()
-
 
     def evaluate(self):
         k_batchone_job = self.batch_queue[0]
@@ -55,7 +50,7 @@ class K_BATCHONE_TD_VFA_OP(Policy):
 
         if self.assigned_job_to_user[action] is None:
             reward = state_space[action][action] + k_batchone_job.service_rate[action]
-            self.history.append((state_space,action,reward))
+            self.history.append((state_space, action, reward))
             self.batch_queue[0] = None
             self.assigned_job_to_user[action] = k_batchone_job
             k_batchone_job.assigned_user = action
@@ -68,23 +63,19 @@ class K_BATCHONE_TD_VFA_OP(Policy):
             if len(self.history) == 2:
                 self.update_theta()
 
-    def state_space(self,k_batchone_job):
-        
-        # pi
+    def state_space(self, k_batchone_job):
         p = [k_batchone_job.service_rate[i] for i in range(self.number_of_users)]
 
-        # ai
         current_user_element = [self.assigned_job_to_user[i] for i in range(self.number_of_users)]
         a = [0 if current_user_element[i] is None else current_user_element[i].will_finish() - self.env.now for i
              in range(self.number_of_users)]
 
-        state_space = np.zeros((self.number_of_users,self.number_of_users+1))
+        state_space = np.zeros((self.number_of_users, self.number_of_users + 1))
 
         for i in range(self.number_of_users):
             state_space[i] = a + [p[i]]
 
         return state_space
-
 
     def q(self, states, action):
         features = self.features(states, action)

@@ -1,19 +1,19 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class K_BATCH_TD_VFA_OP(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, batch_size, theta, gamma,
-                 alpha, greedy):
+                 alpha, greedy,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
-        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
+        self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(seed)
         self.name = "{}_BATCH_TD_VFA_OP".format(batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
@@ -72,13 +72,8 @@ class K_BATCH_TD_VFA_OP(Policy):
                 self.update_theta()
 
     def state_space(self, k_batch_job):
-        # wj
-        w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
-
-        # pi
         p = [k_batch_job.service_rate[i] for i in range(self.number_of_users)]
 
-        # ai
         current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
         a = [
             0 if current_user_element[i] is None else sum(job.service_rate[i] for job in self.users_queues[i]) for i
@@ -119,6 +114,6 @@ class K_BATCH_TD_VFA_OP(Policy):
 
     def compose_history(self):
         composed_history = []
-        for i, (states, action) in enumerate(self.history):
-            composed_history.append((states, action, -self.rewards[i]))
+        for i, (states, action,reward) in enumerate(self.history):
+            composed_history.append((states, action, -reward))
         return composed_history
