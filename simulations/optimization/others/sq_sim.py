@@ -5,7 +5,7 @@ from evaluation.subplot_evolution import evolution
 from policies.optimization.others.sq import SQ
 from simulations import *
 
-policy_name = "SQ_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
+policy_name = "SQ_NU{}_GI{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
 
 env = simpy.Environment()
 

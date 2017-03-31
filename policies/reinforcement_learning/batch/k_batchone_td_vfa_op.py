@@ -12,7 +12,7 @@ class K_BATCHONE_TD_VFA_OP(Policy):
         self.alpha = alpha
         self.greedy = greedy
         self.EPSILON_GREEDY_RANDOM_STATE = pcg.RandomState(1)
-        self.name = "{}BATCHONE_TD_VFA_OP".format(self.batch_size)
+        self.name = "{}_BATCHONE_TD_VFA_OP".format(self.batch_size)
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
         self.history = []

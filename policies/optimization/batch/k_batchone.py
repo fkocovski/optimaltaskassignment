@@ -6,7 +6,7 @@ class K_BATCHONE(Policy):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.batch_size = batch_size
         self.solver = solver
-        self.name = "{}BATCH_ONE".format(self.batch_size)
+        self.name = "{}_BATCHONE".format(self.batch_size)
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
 
