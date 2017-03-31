@@ -1,22 +1,22 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
-class LLQP_PG_AVAC(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, w, theta, gamma, alpha,
-                 beta):
+class LLQP_TD_PG_AC(Policy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, w, theta, gamma, alpha, beta,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.w = w
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.beta = beta
-        self.RANDOM_STATE_PROBABILITIES = pcg.RandomState(1)
-        self.name = "LLQP_PG_AVAC"
+        self.RANDOM_STATE_PROBABILITIES = pcg.RandomState(seed)
+        self.name = "LLQP_TD_PG_AC"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
-        self.rewards = []
+        self.episode = 0
+        self.i = 1
 
     def request(self, user_task, token):
         llqp_job = super().request(user_task, token)
@@ -46,7 +46,6 @@ class LLQP_PG_AVAC(Policy):
         chosen_action = self.RANDOM_STATE_PROBABILITIES.choice(self.number_of_users, p=probabilities)
 
         reward = busy_times[chosen_action] + llqp_job.service_rate[chosen_action]
-        self.rewards.append(reward)
 
         llqp_queue = self.users_queues[chosen_action]
         llqp_job.assigned_user = chosen_action
@@ -59,11 +58,12 @@ class LLQP_PG_AVAC(Policy):
 
         busy_times_new = self.get_busy_times()
 
-        probabilities_new = self.policy_probabilities(busy_times_new)
+        self.episode += 1
 
-        chosen_action_new = self.RANDOM_STATE_PROBABILITIES.choice(self.number_of_users, p=probabilities_new)
-
-        self.learn(busy_times, chosen_action, busy_times_new, chosen_action_new, reward)
+        if self.episode % 1 == 0:
+            self.learn(busy_times, chosen_action, busy_times_new, reward, True)
+        else:
+            self.learn(busy_times, chosen_action, busy_times_new, reward, False)
 
     def get_busy_times(self):
         busy_times = [None] * self.number_of_users
@@ -76,18 +76,46 @@ class LLQP_PG_AVAC(Policy):
                 busy_times[user_index] = 0
         return busy_times
 
-    def learn(self, old_state, old_action, new_state, new_action, reward):
-        delta = -reward + self.gamma * self.q_w(new_state, new_action) - self.q_w(old_state, old_action)
-        self.theta += self.alpha * (self.features(old_state, old_action) - sum(
-            self.policy_probabilities(old_state)[a] * self.features(old_state, a) for a in
-            range(self.number_of_users))) * self.q_w(old_state, old_action)
-        self.w += self.beta * delta * self.features(old_state, old_action)
+    def action_value_approximator(self, states, action):
+        value = 0.0
+        for i, busy_time in enumerate(states):
+            value += busy_time * self.theta[i + action * self.number_of_users]
+        return value
+
+    def state_value_approximator(self, states):
+        value = 0.0
+        for i, state in enumerate(states):
+            value += self.w[i] * state
+        return value
+
+    def learn(self, old_state, old_action, new_state, reward, terminal):
+        if terminal:
+            delta = -reward - self.state_value_approximator(old_state)
+            self.w += self.beta * delta * self.state_gradient(old_state)
+            self.theta += self.alpha * self.i * delta * (self.features(old_state, old_action) - sum(
+                self.policy_probabilities(old_state)[a] * self.features(old_state, a) for a in
+                range(self.number_of_users)))
+            self.i = 1
+        else:
+            delta = -reward + self.gamma * self.state_value_approximator(new_state) - self.state_value_approximator(
+                old_state)
+            self.w += self.beta * delta * self.state_gradient(old_state)
+            self.theta += self.alpha * self.i * delta * (self.features(old_state, old_action) - sum(
+                self.policy_probabilities(old_state)[a] * self.features(old_state, a) for a in
+                range(self.number_of_users)))
+            self.i = self.gamma * self.i
+
+    def state_gradient(self, states):
+        state_gradient = np.zeros(self.number_of_users)
+        for i, state in enumerate(states):
+            state_gradient[i] = state
+        return state_gradient
 
     def policy_probabilities(self, busy_times):
         probabilities = [None] * self.number_of_users
         for action in range(self.number_of_users):
-            probabilities[action] = np.exp(np.dot(self.features(busy_times, action), self.theta)) / sum(
-                np.exp(np.dot(self.features(busy_times, a), self.theta)) for a in range(self.number_of_users))
+            probabilities[action] = np.exp(self.action_value_approximator(busy_times, action)) / sum(
+                np.exp(self.action_value_approximator(busy_times, a)) for a in range(self.number_of_users))
         return probabilities
 
     def features(self, states, action):
@@ -95,7 +123,3 @@ class LLQP_PG_AVAC(Policy):
         for act in range(self.number_of_users):
             features[act + action * self.number_of_users] = states[act]
         return features
-
-    def q_w(self, states, action):
-        features = self.features(states, action)
-        return np.dot(features, self.w)

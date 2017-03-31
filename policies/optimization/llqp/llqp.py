@@ -29,6 +29,7 @@ class LLQP(Policy):
 
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
+            next_llqp_job.assigned = self.env.now
             next_llqp_job.started = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 

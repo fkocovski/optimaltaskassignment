@@ -1,17 +1,17 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class LLQP_MC_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha, greedy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha, greedy,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
-        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
         self.name = "LLQP_MC_VFA_OP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = []
@@ -28,9 +28,7 @@ class LLQP_MC_VFA_OP(Policy):
         super().release(llqp_job)
 
         user_to_release_index = llqp_job.assigned_user
-
         user_queue_to_free = self.users_queues[user_to_release_index]
-
         user_queue_to_free.popleft()
 
         if len(user_queue_to_free) > 0:
@@ -87,8 +85,3 @@ class LLQP_MC_VFA_OP(Policy):
             features[act + action * self.number_of_users] = states[act]
         return features
 
-    def compose_history(self):
-        composed_history = []
-        for i, (states, action) in enumerate(self.history):
-            composed_history.append((states, action, -self.rewards[i]))
-        return composed_history

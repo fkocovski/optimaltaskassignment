@@ -8,15 +8,15 @@ from simulations import *
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 w = np.zeros(NUMBER_OF_USERS)
 gamma = 0.5
-epochs = 10
-alpha = 0.0001
-beta = 0.0001
+epochs = 500
+alpha = 0.001
+beta = 0.001
 policy_name = "LLQP_MC_PG_WB_NU{}_GI{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
 
 for i in range(epochs):
     env = simpy.Environment()
 
-    policy_train = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, w, theta, gamma, alpha, beta)
+    policy_train = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, w, theta, gamma, alpha, beta,i)
 
     start_event = acquisition_process(env, policy_train, i, GENERATION_INTERVAL, False, None, None, None)
 
@@ -30,7 +30,7 @@ env = simpy.Environment()
 
 file_policy = create_files("{}.csv".format(policy_name))
 
-policy = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, w, theta, gamma, alpha, beta)
+policy = LLQP_MC_PG_WB(env, NUMBER_OF_USERS, WORKER_VARIABILITY, file_policy, w, theta, gamma, alpha, beta,1)
 
 start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
 

@@ -5,19 +5,19 @@ from collections import deque
 
 
 class LLQP_TD_VFA_OP(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma,alpha,greedy):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha, greedy,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.greedy = greedy
-        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
         self.name = "LLQP_TD_VFA_OP"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = None
 
-    def request(self, user_task,token):
-        llqp_job = super().request(user_task,token)
+    def request(self, user_task, token):
+        llqp_job = super().request(user_task, token)
 
         self.evaluate(llqp_job)
 
@@ -60,7 +60,7 @@ class LLQP_TD_VFA_OP(Policy):
 
             reward = busy_times[action] + llqp_job.service_rate[action]
 
-            self.history = (busy_times, action,reward)
+            self.history = (busy_times, action, reward)
 
     def get_busy_times(self):
         busy_times = np.zeros(self.number_of_users)
@@ -77,7 +77,8 @@ class LLQP_TD_VFA_OP(Policy):
         q = np.dot(states, self.theta[action])
         return q
 
-    def update_theta(self,new_busy_times):
+    def update_theta(self, new_busy_times):
         old_busy_times, old_action, reward = self.history
-        delta = -reward + self.gamma * (max(self.q(new_busy_times, a) for a in range(self.number_of_users))) - self.q(old_busy_times, old_action)
+        delta = -reward + self.gamma * (max(self.q(new_busy_times, a) for a in range(self.number_of_users))) - self.q(
+            old_busy_times, old_action)
         self.theta[old_action] += self.alpha * delta * old_busy_times

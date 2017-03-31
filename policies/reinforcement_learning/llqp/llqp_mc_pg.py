@@ -1,23 +1,23 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class LLQP_MC_PG(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, gamma, alpha, seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
         self.name = "LLQP_MC_PG"
-        self.RANDOM_STATE_PROBABILITIES = pcg.RandomState(1)
+        self.RANDOM_STATE_PROBABILITIES = pcg.RandomState(seed)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = []
         self.jobs_lateness = []
 
     def request(self, user_task, token):
-        llqp_job = super().request(user_task,token)
+        llqp_job = super().request(user_task, token)
 
         self.evaluate(llqp_job)
 
@@ -69,15 +69,9 @@ class LLQP_MC_PG(Policy):
     def policy_probabilities(self, busy_times):
         probabilities = [None] * self.number_of_users
         for action in range(self.number_of_users):
-            probabilities[action] = np.exp(self.action_value_approximator(busy_times, action)) / sum(
-                np.exp(self.action_value_approximator(busy_times, a)) for a in range(self.number_of_users))
+            probabilities[action] = np.exp(np.dot(self.features(busy_times, action), self.theta)) / sum(
+                np.exp(np.dot(self.features(busy_times, a), self.theta)) for a in range(self.number_of_users))
         return probabilities
-
-    def action_value_approximator(self, states, action):
-        value = 0.0
-        for i, busy_time in enumerate(states):
-            value += busy_time * self.theta[i + action * self.number_of_users]
-        return value
 
     def update_theta(self):
         for i, (states, action) in enumerate(self.history):
@@ -94,6 +88,6 @@ class LLQP_MC_PG(Policy):
 
     def discount_rewards(self, time):
         g = 0.0
-        for t in range(time + 1):
-            g += (self.gamma ** t) * self.jobs_lateness[t]
+        for t, reward in enumerate(self.jobs_lateness[time:]):
+            g += (self.gamma ** t) * reward
         return g

@@ -1,18 +1,18 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class LLQP_TD_VFA(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, theta, epsilon, gamma,
-                 alpha):
+                 alpha,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.epsilon = epsilon
         self.gamma = gamma
         self.alpha = alpha
-        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
         self.name = "LLQP_TD_VFA"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.episode = 0

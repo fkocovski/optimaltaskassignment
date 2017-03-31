@@ -1,21 +1,21 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class LLQP_MC_PG_WB(Policy):
     def __init__(self, env, number_of_users, worker_variability, file_policy, w, theta, gamma, alpha,
-                 beta):
+                 beta, seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.w = w
         self.theta = theta
         self.gamma = gamma
         self.alpha = alpha
-        self.RANDOM_STATE_PROBABILITIES = pcg.RandomState(1)
+        self.beta = beta
+        self.RANDOM_STATE_PROBABILITIES = pcg.RandomState(seed)
         self.name = "LLQP_MC_PG_WB"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
-        self.beta = beta
         self.history = []
         self.jobs_lateness = []
 
@@ -36,13 +36,15 @@ class LLQP_MC_PG_WB(Policy):
         if len(user_queue_to_free) > 0:
             next_llqp_job = user_queue_to_free[0]
             next_llqp_job.started = self.env.now
-            next_llqp_job.started = self.env.now
+            next_llqp_job.assigned = self.env.now
             next_llqp_job.request_event.succeed(next_llqp_job.service_rate[user_to_release_index])
 
     def evaluate(self, llqp_job):
         busy_times = self.get_busy_times()
 
         probabilities = self.policy_probabilities(busy_times)
+
+        print(probabilities)
 
         chosen_action = self.RANDOM_STATE_PROBABILITIES.choice(self.number_of_users, p=probabilities)
 
@@ -72,15 +74,9 @@ class LLQP_MC_PG_WB(Policy):
     def policy_probabilities(self, busy_times):
         probabilities = [None] * self.number_of_users
         for action in range(self.number_of_users):
-            probabilities[action] = np.exp(self.action_value_approximator(busy_times, action)) / sum(
-                np.exp(self.action_value_approximator(busy_times, a)) for a in range(self.number_of_users))
+            probabilities[action] = np.exp(np.dot(self.features(busy_times, action), self.theta)) / sum(
+                np.exp(np.dot(self.features(busy_times, a), self.theta)) for a in range(self.number_of_users))
         return probabilities
-
-    def action_value_approximator(self, states, action):
-        value = 0.0
-        for i, busy_time in enumerate(states):
-            value += busy_time * self.theta[i + action * self.number_of_users]
-        return value
 
     def state_value_approximator(self, states):
         value = 0.0
@@ -110,6 +106,6 @@ class LLQP_MC_PG_WB(Policy):
 
     def discount_rewards(self, time):
         g = 0.0
-        for t in range(time + 1):
-            g += (self.gamma ** t) * self.jobs_lateness[t]
+        for t, reward in enumerate(self.jobs_lateness[time:]):
+            g += (self.gamma ** t) * reward
         return g

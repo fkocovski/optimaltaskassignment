@@ -1,17 +1,17 @@
-import numpy as np
 import randomstate.prng.pcg64 as pcg
+import numpy as np
 from policies import *
 from collections import deque
 
 
 class LLQP_MC_VFA(Policy):
-    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, epsilon, gamma, alpha):
+    def __init__(self, env, number_of_users, worker_variability, file_policy, theta, epsilon, gamma, alpha,seed):
         super().__init__(env, number_of_users, worker_variability, file_policy)
         self.theta = theta
         self.epsilon = epsilon
         self.gamma = gamma
         self.alpha = alpha
-        self.RANDOM_STATE_ACTIONS = pcg.RandomState(1)
+        self.RANDOM_STATE_ACTIONS = pcg.RandomState(seed)
         self.name = "LLQP_MC_VFA"
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.history = []
@@ -69,12 +69,6 @@ class LLQP_MC_VFA(Policy):
                 busy_times[user_index] = 0
         return busy_times
 
-    def policy_status(self):
-        current_status = [0]
-        for i in range(self.number_of_users):
-            current_status.append(len(self.users_queues[i]))
-        return current_status
-
     def q(self, states, action):
         features = self.features(states, action)
         return np.dot(features, self.theta)
@@ -88,8 +82,8 @@ class LLQP_MC_VFA(Policy):
 
     def discount_rewards(self, time):
         g = 0.0
-        for t in range(time + 1):
-            g += (self.gamma ** t) * self.jobs_lateness[t]
+        for t, reward in enumerate(self.jobs_lateness[time:]):
+            g += (self.gamma ** t) * reward
         return g
 
     def gradient(self, states, action):
