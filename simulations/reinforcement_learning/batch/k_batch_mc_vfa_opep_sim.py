@@ -8,7 +8,7 @@ from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS + 1))
 gamma = 0.5
-epochs = SIM_TIME*10
+epochs = SIM_TIME*20
 alpha = 0.0001
 epsilon = 0.1
 policy_name = "{}_BATCH_MC_VFA_OPEP_NU{}_GI{}_SIM{}".format(1,NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)

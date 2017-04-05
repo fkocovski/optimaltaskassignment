@@ -15,7 +15,6 @@ policy_name = "{}_BATCH_MC_VFA_NU{}_GI{}_SIM{}".format(1,NUMBER_OF_USERS, GENERA
 for i in range(epochs):
     env = simpy.Environment()
 
-
     # this method only works with batch size 1
     policy_train = K_BATCH_MC_VFA(env, NUMBER_OF_USERS, WORKER_VARIABILITY,None,1, theta, epsilon, gamma,
                                   alpha)
