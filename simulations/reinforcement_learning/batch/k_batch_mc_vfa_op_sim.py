@@ -8,7 +8,7 @@ from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS + 1))
 gamma = 0.5
-epochs = 10
+epochs = SIM_TIME*10
 alpha = 0.0001
 policy_name = "{}_BATCH_MC_VFA_OP_NU{}_GI{}_SIM{}".format(1, NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
 
@@ -35,14 +35,14 @@ start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, No
 
 env.process(start_event.generate_tokens())
 
-env.run(until=SIM_TIME)
+env.run(until=SIM_TIME*20)
 
 # works only for 2 users
-comp_history = policy.compose_history()
+# comp_history = policy.compose_history()
 
 file_policy.close()
 
 calculate_statistics(file_policy.name, outfile=True)
 evolution(file_policy.name, outfile=True)
 # works only for 2 users
-matrix_composed_history(comp_history)
+# matrix_composed_history(comp_history)

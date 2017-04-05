@@ -44,6 +44,48 @@ class K_BATCH_MC_VFA(Policy):
             next_k_batch_job.request_event.succeed(next_k_batch_job.service_rate[user_to_release_index])
 
     def evaluate(self, k_batch_job):
+        state_space = self.state_space(k_batch_job)
+
+        if self.EPSILON_GREEDY_RANDOM_STATE.rand() < self.epsilon:
+            action = self.EPSILON_GREEDY_RANDOM_STATE.randint(0, self.number_of_users)
+        else:
+            action = max(range(self.number_of_users),
+                         key=lambda action: self.q(state_space, action))
+
+        self.history.append((state_space, action))
+        self.rewards.append(state_space[action][action] + k_batch_job.service_rate[action])
+
+        self.users_queues[action].append(k_batch_job)
+        k_batch_job.assigned_user = action
+        k_batch_job.assigned = self.env.now
+        self.batch_queue.clear()
+        if len(self.users_queues[action]) > 0:
+            leftmost_k_batch_element = self.users_queues[action][0]
+            if not leftmost_k_batch_element.is_busy(self.env.now):
+                leftmost_k_batch_element.started = self.env.now
+                leftmost_k_batch_element.request_event.succeed(leftmost_k_batch_element.service_rate[action])
+
+    def q(self, states, action):
+        features = self.features(states, action)
+        q = np.dot(features[action], self.theta[action])
+        return q
+
+    def features(self, states, action):
+        features = np.zeros((self.number_of_users, self.number_of_users + 1))
+        features[action] = states[action]
+        return features
+
+    def update_theta(self):
+        for i, (states, action) in enumerate(self.history):
+            self.theta += self.alpha * (-self.discount_rewards(i) - self.q(states, action)) * self.features(states, action)
+
+    def discount_rewards(self, time):
+        g = 0.0
+        for t, reward in enumerate(self.rewards[time:]):
+            g += (self.gamma ** t) * reward
+        return g
+
+    def state_space(self, k_batch_job):
         p = [k_batch_job.service_rate[i] for i in range(self.number_of_users)]
 
         current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
@@ -56,42 +98,9 @@ class K_BATCH_MC_VFA(Policy):
                 if current_user_element[user_index].is_busy(self.env.now):
                     a[user_index] -= self.env.now - current_user_element[user_index].started
 
-        states = a + p
+        state_space = np.zeros((self.number_of_users, self.number_of_users + 1))
 
-        if self.EPSILON_GREEDY_RANDOM_STATE.rand() < self.epsilon:
-            action = self.EPSILON_GREEDY_RANDOM_STATE.randint(0, self.number_of_users)
-        else:
-            action = max(range(self.number_of_users),
-                         key=lambda action: self.action_value_approximator(states, action))
+        for i in range(self.number_of_users):
+            state_space[i] = a + [p[i]]
 
-        self.history.append((states, action))
-        self.rewards.append(a[action] + p[action])
-
-        self.users_queues[action].append(k_batch_job)
-        k_batch_job.assigned_user = action
-        k_batch_job.assigned = self.env.now
-        self.batch_queue.clear()
-        if len(self.users_queues[action]) > 0:
-            leftmost_llpq_element = self.users_queues[action][0]
-            if not leftmost_llpq_element.is_busy(self.env.now):
-                leftmost_llpq_element.started = self.env.now
-                leftmost_llpq_element.request_event.succeed(leftmost_llpq_element.service_rate[action])
-
-    def action_value_approximator(self, states, action):
-        value = 0.0
-        for i, state_value in enumerate(states):
-            value += state_value * self.theta[i + action * self.number_of_users * 2]
-        return value
-
-    def update_theta(self):
-        for i, (states, action) in enumerate(self.history):
-            self.theta += self.alpha * (
-                self.gamma ** i * -self.rewards[i] - self.action_value_approximator(states, action)) * self.gradient(
-                states,
-                action)
-
-    def gradient(self, states, action):
-        gradient_vector = np.zeros(2 * (self.number_of_users ** 2))
-        for i, state_value in enumerate(states):
-            gradient_vector[i + action * self.number_of_users * 2] = state_value
-        return gradient_vector
+        return state_space

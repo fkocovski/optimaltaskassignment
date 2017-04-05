@@ -17,7 +17,7 @@ class K_BATCH_TD_VFA_OP(Policy):
         self.name = "{}_BATCH_TD_VFA_OP".format(batch_size)
         self.users_queues = [deque() for _ in range(self.number_of_users)]
         self.batch_queue = []
-        self.history = []
+        self.history = None
 
     def request(self, user_task, token):
         k_batch_job = super().request(user_task,token)
@@ -53,8 +53,6 @@ class K_BATCH_TD_VFA_OP(Policy):
 
         reward = state_space[action][action] + k_batch_job.service_rate[action]
 
-        self.history.append((state_space, action, reward))
-
         user_queue = self.users_queues[action]
         k_batch_job.assigned_user = action
         k_batch_job.assigned = self.env.now
@@ -68,8 +66,10 @@ class K_BATCH_TD_VFA_OP(Policy):
                 k_batch_job.request_event.succeed(k_batch_job.service_rate[action])
 
         if not self.greedy:
-            if len(self.history) == 2:
-                self.update_theta()
+            if self.history is not None:
+                self.update_theta(state_space)
+
+        self.history = (state_space,action,reward)
 
     def state_space(self, k_batch_job):
         p = [k_batch_job.service_rate[i] for i in range(self.number_of_users)]
@@ -97,15 +97,11 @@ class K_BATCH_TD_VFA_OP(Policy):
         q = np.dot(features[action], self.theta[action])
         return q
 
-    def update_theta(self):
-        state = self.history[0][0]
-        action = self.history[0][1]
-        reward = self.history[0][2]
-        future_state = self.history[1][0]
+    def update_theta(self,future_state):
+        state,action,reward = self.history
         delta = -reward + self.gamma * (max(self.q(future_state, a) for a in range(self.number_of_users))) - self.q(
             state, action)
         self.theta += self.alpha * delta * self.features(state, action)
-        self.history.clear()
 
     def features(self, states, action):
         features = np.zeros((self.number_of_users, self.number_of_users + 1))

@@ -16,7 +16,7 @@ class K_BATCHONE_TD_VFA_OP(Policy):
         self.name = "{}_BATCHONE_TD_VFA_OP".format(self.batch_size)
         self.assigned_job_to_user = [None] * self.number_of_users
         self.batch_queue = []
-        self.history = []
+        self.history = None
 
     def request(self, user_task, token):
         k_batchone_job = super().request(user_task, token)
@@ -48,9 +48,9 @@ class K_BATCHONE_TD_VFA_OP(Policy):
         else:
             action = self.EPSILON_GREEDY_RANDOM_STATE.randint(0, self.number_of_users)
 
+        reward = state_space[action][action] + k_batchone_job.service_rate[action]
+
         if self.assigned_job_to_user[action] is None:
-            reward = state_space[action][action] + k_batchone_job.service_rate[action]
-            self.history.append((state_space, action, reward))
             self.batch_queue[0] = None
             self.assigned_job_to_user[action] = k_batchone_job
             k_batchone_job.assigned_user = action
@@ -60,8 +60,10 @@ class K_BATCHONE_TD_VFA_OP(Policy):
         self.batch_queue = [job for job in self.batch_queue if job is not None]
 
         if not self.greedy:
-            if len(self.history) == 2:
-                self.update_theta()
+            if self.history is not None:
+                self.update_theta(state_space)
+
+        self.history = (state_space, action, reward)
 
     def state_space(self, k_batchone_job):
         p = [k_batchone_job.service_rate[i] for i in range(self.number_of_users)]
@@ -82,15 +84,11 @@ class K_BATCHONE_TD_VFA_OP(Policy):
         q = np.dot(features[action], self.theta[action])
         return q
 
-    def update_theta(self):
-        state = self.history[0][0]
-        action = self.history[0][1]
-        reward = self.history[0][2]
-        future_state = self.history[1][0]
+    def update_theta(self,future_state):
+        state,action,reward = self.history
         delta = -reward + self.gamma * (max(self.q(future_state, a) for a in range(self.number_of_users))) - self.q(
             state, action)
-        self.theta += self.alpha * delta * self.features(state, action)
-        self.history.clear()
+        self.theta += self.alpha * delta * self.features(state,action)
 
     def features(self, states, action):
         features = np.zeros((self.number_of_users, self.number_of_users + 1))

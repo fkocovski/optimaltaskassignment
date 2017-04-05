@@ -16,7 +16,7 @@ service_st = [0.6785,0.6756,0.7798]
 sys_load_st = [0.2198,0.2054,0.2870]
 kpis_colors = plt.cm.rainbow(np.linspace(0, 1, kpis))
 
-fig = plt.figure(figsize=plt.figaspect(0.5))
+fig = plt.figure()
 ax = fig.add_subplot(131)
 ax2 = fig.add_subplot(132)
 ax3 = fig.add_subplot(133)
@@ -40,4 +40,5 @@ for j,axes,labels in zip(range(policies),(ax,ax2,ax3),("5-Batch","5-Batch-1","1-
     axes.set_xticklabels([labels])
     axes.grid(True)
 
+fig.set_size_inches(25,5)
 plt.savefig("opt_kpis_comp_gain.pdf")

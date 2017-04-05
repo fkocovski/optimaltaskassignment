@@ -8,7 +8,7 @@ from simulations import *
 theta = np.zeros((NUMBER_OF_USERS,NUMBER_OF_USERS+1))
 gamma = 0.5
 alpha = 0.0001
-sim_time_training = SIM_TIME * 2
+sim_time_training = SIM_TIME * 5000
 policy_name = "{}_BATCHONE_TD_VFA_OP_NU{}_GI{}_TRSD{}_SIM{}".format(1,NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 env = simpy.Environment()
@@ -31,7 +31,7 @@ start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, No
 
 env.process(start_event.generate_tokens())
 
-env.run(until=SIM_TIME)
+env.run(until=SIM_TIME*20)
 
 file_policy.close()
 
