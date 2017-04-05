@@ -35,7 +35,7 @@ def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
     ax_ylims = ax.get_ylim()
     ax_xlims = ax.get_xlim()
     ax.text(0.75*max(ax_xlims),0.75*max(ax_ylims), text, bbox=props)
-
+    ax.set_title("KPIs")
 
     ax.grid(True)
 
@@ -49,6 +49,7 @@ def calculate_statistics(filename, outfile=False, delimiter=",", skip_header=1):
     xtl = ["User {}".format(user+1) for user in range(len(user_loads))]
     ax2.bar(xt,user_loads,color=bars_colors,edgecolor="k",tick_label=xtl)
     ax2.legend()
+    ax2.set_title("User Loads")
 
 
     yt = np.arange(max(np.around(ax2.get_ylim(),decimals=1))+0.1,step=0.1)
