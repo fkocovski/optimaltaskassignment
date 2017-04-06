@@ -7,17 +7,17 @@ from evaluation.statistics import calculate_statistics
 from policies.reinforcement_learning.others.bi_one_mc_tf import BI_ONE_MC_TF
 from simulations import *
 
-batch_input = 3
+batch_input = 5
 n_input = batch_input + NUMBER_OF_USERS * batch_input + NUMBER_OF_USERS + batch_input
 n_out = NUMBER_OF_USERS
 hidden_layer_size = int((n_input + n_out) / 2)
 n_hidden_1 = hidden_layer_size
 n_hidden_2 = hidden_layer_size
 n_hidden_3 = hidden_layer_size
-epochs = 10000
+epochs = 5000
 gamma = 0.5
-learn_rate = 0.001
-var_multiplicator = 0.001
+learn_rate = 0.0001
+var_multiplicator = 0.0001
 remaining_time_intervals = 5
 policy_name = "{}_BI_ONE_MC_TF_3L_NU{}_GI{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_USERS, GENERATION_INTERVAL,
                                                           SIM_TIME)

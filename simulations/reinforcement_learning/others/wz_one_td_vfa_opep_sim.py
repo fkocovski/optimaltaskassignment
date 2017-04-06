@@ -8,9 +8,9 @@ from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + 2 * BATCH_SIZE))
 gamma = 0.5
-alpha = 0.001
-sim_time_training = SIM_TIME*10
-sigmoid_param = 0.1/6.5
+alpha = 0.0001
+sim_time_training = SIM_TIME
+sigmoid_param = 0.01
 policy_name = "{}_WZ_ONE_TD_VFA_OPEP_NU{}_GI{}_TRSD{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
                                                              SIM_TIME)
 
@@ -19,7 +19,7 @@ env = simpy.Environment()
 policy_train = WZ_ONE_TD_VFA_OPEP(env, NUMBER_OF_USERS, WORKER_VARIABILITY, None, theta, gamma, alpha, False,
                                 BATCH_SIZE,sim_time_training,sigmoid_param,SEED)
 
-start_event = acquisition_process(env, policy_train,SEED,GENERATION_INTERVAL,True,10,sim_time_training,sigmoid_param)
+start_event = acquisition_process(env, policy_train,SEED,GENERATION_INTERVAL,True,4,sim_time_training,sigmoid_param)
 
 env.process(start_event.generate_tokens())
 

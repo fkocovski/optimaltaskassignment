@@ -75,7 +75,7 @@ class LLQP_MC_VFA_OP(Policy):
 
     def update_theta(self):
         for i, (states, action) in enumerate(self.history):
-            delta = -self.rewards[i] + self.gamma * (
+            delta = -self.discount_rewards(i) + self.gamma * (
             max(self.q(states, a) for a in range(self.number_of_users))) - self.q(states, action)
             self.theta += self.alpha * delta * self.features(states, action)
 
@@ -84,4 +84,10 @@ class LLQP_MC_VFA_OP(Policy):
         for act in range(self.number_of_users):
             features[act + action * self.number_of_users] = states[act]
         return features
+
+    def discount_rewards(self, time):
+        g = 0.0
+        for t, reward in enumerate(self.rewards[time:]):
+            g += (self.gamma ** t) * reward
+        return g
 

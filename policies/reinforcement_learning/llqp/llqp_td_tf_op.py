@@ -33,15 +33,15 @@ class LLQP_TD_TF_OP(Policy):
             optimizer = [tf.train.GradientDescentOptimizer(0.0001) for _ in range(self.number_of_users)]
             self.train = [optimizer[a].minimize(loss[a]) for a in range(self.number_of_users)]
 
-        with tf.name_scope("summaries"):
-            scalars = []
-            user_w = []
-            for i in range(self.number_of_users):
-                scalars.append(tf.summary.scalar("qval_user{}".format(i), self.q_val[i]))
-                user_w.append(tf.summary.histogram("User{}_w".format(i), w[i]))
-
-        self.merged_scalars = tf.summary.merge(scalars)
-        self.merged_histograms = tf.summary.merge(user_w)
+        # with tf.name_scope("summaries"):
+        #     scalars = []
+        #     user_w = []
+        #     for i in range(self.number_of_users):
+        #         scalars.append(tf.summary.scalar("qval_user{}".format(i), self.q_val[i]))
+        #         user_w.append(tf.summary.histogram("User{}_w".format(i), w[i]))
+        #
+        # self.merged_scalars = tf.summary.merge(scalars)
+        # self.merged_histograms = tf.summary.merge(user_w)
 
     def request(self, user_task, token):
         llqp_job = super().request(user_task, token)
@@ -102,9 +102,9 @@ class LLQP_TD_TF_OP(Policy):
 
     def q(self, states, action):
         q = self.sess.run(self.q_val[action], {self.x: states})
-        merged_scalars = self.sess.run(self.merged_scalars, {self.x: states})
-        self.writer.add_summary(merged_scalars, self.update_count)
-        self.q_count += 1
+        # merged_scalars = self.sess.run(self.merged_scalars, {self.x: states})
+        # self.writer.add_summary(merged_scalars, self.update_count)
+        # self.q_count += 1
         return q
 
     def update_theta(self, new_busy_times):
@@ -112,6 +112,6 @@ class LLQP_TD_TF_OP(Policy):
         y = reward + self.gamma * (min(self.q(new_busy_times, a) for a in range(self.number_of_users)))
         self.sess.run(self.train[old_action], {self.x: old_busy_times, self.y[old_action]: y})
 
-        merged_histograms = self.sess.run(self.merged_histograms,{self.x: old_busy_times, self.y[old_action]: y})
-        self.writer.add_summary(merged_histograms,self.update_count)
-        self.update_count += 1
+        # merged_histograms = self.sess.run(self.merged_histograms,{self.x: old_busy_times, self.y[old_action]: y})
+        # self.writer.add_summary(merged_histograms,self.update_count)
+        # self.update_count += 1

@@ -43,7 +43,7 @@ class WZ_TD_VFA_OP(Policy):
             next_wz_job.request_event.succeed(next_wz_job.service_rate[user_to_release_index])
 
     def evaluate(self):
-        state_space, combinations, w = self.state_space()
+        state_space, combinations, w,p,a = self.state_space()
 
         if self.greedy:
             action = max(range(self.number_of_users ** self.wait_size),
@@ -67,12 +67,12 @@ class WZ_TD_VFA_OP(Policy):
             if self.history is not None:
                 self.update_theta(state_space)
 
-        self.history = (state_space, action, combinations, w)
+        self.history = (state_space, action, combinations, w,p,a)
 
     def state_space(self):
-        w = [self.env.now - self.batch_queue[j].arrival for j in range(len(self.batch_queue))]
+        w = [self.env.now - self.batch_queue[j].arrival for j in range(self.wait_size)]
 
-        p = [[self.batch_queue[j].service_rate[i] for j in range(len(self.batch_queue))] for i in
+        p = [[self.batch_queue[j].service_rate[i] for j in range(self.wait_size)] for i in
              range(self.number_of_users)]
 
         current_user_element = [None if len(queue) == 0 else queue[0] for queue in self.users_queues]
@@ -92,21 +92,23 @@ class WZ_TD_VFA_OP(Policy):
         for i, combination in enumerate(combinations):
             state_space[i] = a + [p[user_index][job_index] for job_index, user_index in enumerate(combination)]
 
-        return state_space, combinations, w
+        return state_space, combinations, w,p,a
 
     def q(self, states, action):
         q = np.dot(states[action], self.theta[action])
         return q
 
     def update_theta(self, new_state_space):
-        old_state_space, old_action, old_combinations, w = self.history
-        delta = -self.reward(old_state_space, old_action, old_combinations, w) + self.gamma * (
+        old_state_space, old_action, old_combinations, w,p,a = self.history
+        delta = -self.reward(old_state_space, old_action, old_combinations, w,p,a) + self.gamma * (
             max(self.q(new_state_space, a) for a in range(self.number_of_users ** self.wait_size))) - self.q(
             old_state_space, old_action)
-        self.theta[old_action] += self.alpha * delta * old_state_space[old_action]
+        self.theta += self.alpha * delta * old_state_space[old_action]
 
-    def reward(self, state_space, action, combinations, w):
+    def reward(self, state_space, action, combinations, w,p,a):
         reward = 0.0
+        busy_times = [a[i] for i in range(self.number_of_users)]
         for job_index, user_index in enumerate(combinations[action]):
-            reward += state_space[action][user_index] + state_space[action][self.wait_size + job_index] + w[job_index]
+            reward += w[job_index] + p[user_index][job_index] + busy_times[user_index]
+            busy_times[user_index] += p[user_index][job_index]
         return reward

@@ -7,8 +7,8 @@ from simulations import *
 
 theta = np.zeros(NUMBER_OF_USERS ** 2)
 gamma = 0.5
-epochs = 500
-alpha = 0.001
+epochs = 100
+alpha = 0.0001
 policy_name = "LLQP_MC_VFA_OP_NU{}_GI{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
 
 for i in range(epochs):
@@ -20,11 +20,9 @@ for i in range(epochs):
 
     env.process(start_event.generate_tokens())
 
-    env.run(until=SIM_TIME/10)
+    env.run(until=SIM_TIME)
 
     policy_train.update_theta()
-
-    print(theta)
 
 env = simpy.Environment()
 
