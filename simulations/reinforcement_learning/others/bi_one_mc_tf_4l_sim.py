@@ -7,7 +7,7 @@ from evaluation.statistics import calculate_statistics
 from policies.reinforcement_learning.others.bi_one_mc_tf import BI_ONE_MC_TF
 from simulations import *
 
-batch_input = 3
+batch_input = 5
 n_input = batch_input + NUMBER_OF_USERS * batch_input + NUMBER_OF_USERS + batch_input
 n_out = NUMBER_OF_USERS
 hidden_layer_size = int((n_input + n_out) / 2)
@@ -17,8 +17,8 @@ n_hidden_3 = hidden_layer_size
 n_hidden_4 = hidden_layer_size
 epochs = 5000
 gamma = 0.5
-learn_rate = 0.001
-var_multiplicator = 0.001
+learn_rate = 0.0001
+var_multiplicator = 0.0001
 remaining_time_intervals = 5
 policy_name = "{}_BI_ONE_MC_TF_4L_NU{}_GI{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_USERS, GENERATION_INTERVAL,
                                                           SIM_TIME)
@@ -99,7 +99,7 @@ with tf.Session() as sess:
                                     batch_input, pred, probabilities, apply, state_space_input, gradient_input,
                                     factor_input, writer, i)
 
-        start_event = simple_process(env, policy_train, i, GENERATION_INTERVAL, False, None, None, None)
+        start_event = acquisition_process(env, policy_train, i, GENERATION_INTERVAL, False, None, None, None)
 
         env.process(start_event.generate_tokens())
 
@@ -133,7 +133,7 @@ with tf.Session() as sess:
                           batch_input, pred, probabilities, apply, state_space_input, gradient_input, factor_input,
                           writer, 1)
 
-    start_event = simple_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
+    start_event = acquisition_process(env, policy, 1, GENERATION_INTERVAL, False, None, None, None)
 
     env.process(start_event.generate_tokens())
 
