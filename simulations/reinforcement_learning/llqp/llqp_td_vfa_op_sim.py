@@ -8,7 +8,7 @@ from simulations import *
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS))
 gamma = 0.5
 alpha = 0.001
-sim_time_training = SIM_TIME * 50
+sim_time_training = SIM_TIME * 10
 policy_name = "LLQP_TD_VFA_OP_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 
 env = simpy.Environment()

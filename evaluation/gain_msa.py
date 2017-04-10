@@ -5,16 +5,16 @@ policies = 1
 bar_width = 0.2
 kpis = 4
 # 1batch1
-lateness_msa = [1.0496]
-wait_msa = [0.1600]
-service_msa = [0.8896]
-sys_load_msa = [0.2847]
+lateness_msa = [1.3138]
+wait_msa = [0.0874]
+service_msa = [1.2264]
+sys_load_msa = [0.3924]
 # other
-lateness = [0.8517]
-wait = [0.0400]
-service = [0.8117]
-sys_load = [0.2597]
-labs = ["k_batchone_st"]
+lateness = [1.3422]
+wait = [0.1408]
+service = [1.2014]
+sys_load = [0.3840]
+labs = ["llqp_mc_vfa"]
 kpis_colors = plt.cm.rainbow(np.linspace(0, 1, kpis))
 
 fig = plt.figure()
