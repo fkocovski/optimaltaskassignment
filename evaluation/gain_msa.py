@@ -1,20 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-policies = 1
+policies = 3
 bar_width = 0.2
 kpis = 4
-# 1batch1
-lateness_msa = [1.3138]
-wait_msa = [0.0874]
-service_msa = [1.2264]
-sys_load_msa = [0.3924]
-# other
-lateness = [1.3422]
-wait = [0.1408]
-service = [1.2014]
-sys_load = [0.3840]
-labs = ["llqp_mc_vfa"]
+# msa
+lateness_msa = [2.8752,3.0023,1.0496]
+wait_msa = [1.9429,2.0023,0.1600]
+service_msa = [0.9324,0.9174,0.8896]
+sys_load_msa = [0.2971,0.2929,0.2847]
+# st
+lateness = [2.7066,2.8398,0.8517]
+wait = [1.8747,2.0033,0.0400]
+service = [0.8319,0.8364,0.8117]
+sys_load = [0.2656,0.2669,0.2597]
+labs = ["5-Batch","5-Batch-One","1-Batch-1"]
 kpis_colors = plt.cm.rainbow(np.linspace(0, 1, kpis))
 
 fig = plt.figure()

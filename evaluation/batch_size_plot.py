@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 policy = "BATCHONE"
 solver = "ST"
-nu = 3
+nu = 5
 gi = 3
-sim = 50
+sim = 1000
 folder = "batch"
 outfile = True
 
