@@ -1,4 +1,4 @@
-# Reinforcement Learning Based Optimization in a Discrete Event Simulation Environment for Optimal Job Assignment in Workflow Processes
+# Optimal Job Assignment in a Discrete Event Simulation Environment
 
 Implementation of different policies for optimal role resolution.
 

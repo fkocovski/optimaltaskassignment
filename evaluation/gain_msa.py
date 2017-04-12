@@ -28,7 +28,8 @@ for j, axes, labels in zip(range(policies), (all_axes), labs):
     for i, msa, st, color, lab in zip(range(kpis), (lateness_msa, wait_msa, service_msa, sys_load_msa),
                                       (lateness, wait, service, sys_load), kpis_colors,
                                       ("Lateness", "Wait Time", "Service Time", "Average System Load in %")):
-        gain = (msa[j] / st[j] - 1) * 100
+        # gain = (msa[j] / st[j] - 1) * 100
+        gain = (1- st[j]/msa[j]) * 100
         gains.append(gain)
         axes.bar(bar_width * i, gain, bar_width, label=lab, color=color)
     bars = axes.patches
