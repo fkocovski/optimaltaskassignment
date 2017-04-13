@@ -30,18 +30,18 @@ class BI_ONE_MC_TF(Policy):
         self.batch_queue = []
         self.history = []
         self.rewards = []
-        if self.greedy:
-            self.global_step = 0
-            softmaxes = []
-            preds = []
-            with tf.name_scope("greedy"):
-                for b in range(self.batch_input):
-                    softmaxes.append(tf.summary.histogram("softmax_{}".format(b), self.probabilities[b]))
-                    preds.append(tf.summary.histogram("predictions_{}".format(b), self.predictions[b]))
-                self.summary_softmaxes = tf.summary.merge(softmaxes)
-                self.summary_preds = tf.summary.merge(preds)
-                self.reward_sum = tf.placeholder(tf.float32)
-                self.summary_lateness = tf.summary.scalar("mean_lateness", tf.reduce_mean(self.reward_sum))
+        # if self.greedy:
+        #     self.global_step = 0
+        #     softmaxes = []
+        #     preds = []
+        #     with tf.name_scope("greedy"):
+        #         for b in range(self.batch_input):
+        #             softmaxes.append(tf.summary.histogram("softmax_{}".format(b), self.probabilities[b]))
+        #             preds.append(tf.summary.histogram("predictions_{}".format(b), self.predictions[b]))
+        #         self.summary_softmaxes = tf.summary.merge(softmaxes)
+        #         self.summary_preds = tf.summary.merge(preds)
+        #         self.reward_sum = tf.placeholder(tf.float32)
+        #         self.summary_lateness = tf.summary.scalar("mean_lateness", tf.reduce_mean(self.reward_sum))
 
 
     def request(self, user_task, token):
@@ -88,16 +88,16 @@ class BI_ONE_MC_TF(Policy):
 
         self.batch_queue = [job for job in self.batch_queue if job is not None]
 
-        if self.greedy:
-            if self.global_step % 10 == 0:
-                rewards = self.reward(w, p, a, choices)
-                sum_preds, sum_soft, sum_lat = self.sess.run(
-                    [self.summary_preds, self.summary_softmaxes, self.summary_lateness],
-                    {self.state_space_input: state, self.reward_sum: rewards})
-                self.writer.add_summary(sum_preds, self.global_step)
-                self.writer.add_summary(sum_soft, self.global_step)
-                self.writer.add_summary(sum_lat, self.global_step)
-            self.global_step += 1
+        # if self.greedy:
+        #     if self.global_step % 10 == 0:
+        #         rewards = self.reward(w, p, a, choices)
+        #         sum_preds, sum_soft, sum_lat = self.sess.run(
+        #             [self.summary_preds, self.summary_softmaxes, self.summary_lateness],
+        #             {self.state_space_input: state, self.reward_sum: rewards})
+        #         self.writer.add_summary(sum_preds, self.global_step)
+        #         self.writer.add_summary(sum_soft, self.global_step)
+        #         self.writer.add_summary(sum_lat, self.global_step)
+        #     self.global_step += 1
 
         if not self.greedy:
             self.rewards.append(self.reward(w, p, a, choices))

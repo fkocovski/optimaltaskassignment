@@ -12,7 +12,7 @@ with tf.name_scope("user_w"):
 
 policy_name = "LLQP_TD_TF_OP_NU{}_GI{}_TRSD{}_SIM{}".format(NUMBER_OF_USERS, GENERATION_INTERVAL, SEED, SIM_TIME)
 gamma = 0.5
-sim_time_training = SIM_TIME*20
+sim_time_training = SIM_TIME*100
 
 with tf.Session() as sess:
     tf_init = tf.global_variables_initializer()

@@ -7,7 +7,7 @@ from simulations import *
 
 theta = np.zeros((NUMBER_OF_USERS, NUMBER_OF_USERS + 1))
 gamma = 0.5
-epochs = SIM_TIME*20
+epochs = SIM_TIME
 epsilon = 0.1
 alpha = 0.0001
 policy_name = "{}_BATCH_MC_VFA_NU{}_GI{}_SIM{}".format(1,NUMBER_OF_USERS, GENERATION_INTERVAL, SIM_TIME)
@@ -23,7 +23,7 @@ for i in range(epochs):
 
     env.process(start_event.generate_tokens())
 
-    env.run(until=SIM_TIME)
+    env.run(until=SIM_TIME/10)
 
     K_BATCH_MC_VFA.update_theta(policy_train)
 
@@ -41,7 +41,7 @@ start_event = acquisition_process(env,policy,1,GENERATION_INTERVAL,False,None,No
 
 env.process(start_event.generate_tokens())
 
-env.run(until=SIM_TIME*20)
+env.run(until=SIM_TIME)
 
 file_policy.close()
 

@@ -12,7 +12,7 @@ n_input = batch_input + NUMBER_OF_USERS * batch_input + NUMBER_OF_USERS + batch_
 n_out = NUMBER_OF_USERS
 hidden_layer_size = int((n_input + n_out) / 2)
 n_hidden_1 = hidden_layer_size
-epochs = 5000
+epochs = SIM_TIME*10
 gamma = 0.5
 learn_rate = 0.0001
 var_multiplicator = 0.0001
@@ -88,11 +88,11 @@ with tf.Session() as sess:
 
         policy_train.train()
 
-        policy_train.save_summary(i, summary_h1)
-        policy_train.save_summary(i, summary_b1)
-        for b in range(batch_input):
-            policy_train.save_summary(i, summary_wout[b])
-            policy_train.save_summary(i, summary_bout[b])
+        # policy_train.save_summary(i, summary_h1)
+        # policy_train.save_summary(i, summary_b1)
+        # for b in range(batch_input):
+        #     policy_train.save_summary(i, summary_wout[b])
+        #     policy_train.save_summary(i, summary_bout[b])
 
         if i % remaining_time_intervals == 0:
             end = time.time()

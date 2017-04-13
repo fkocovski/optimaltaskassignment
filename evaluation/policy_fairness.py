@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 fig = plt.figure(figsize=plt.figaspect(0.5))
 
-filename = "1_BATCHONE_ST_NU5_GI3_SIM1000"
+filename = "1_BATCHONE_MSA_NU5_GI3_SIM1000"
 
 path = "../simulations/optimization/batch/{}.csv".format(filename)
 original_data = np.genfromtxt(path, delimiter=",", skip_header=1)
@@ -34,4 +34,4 @@ ytl = ["{} %".format(int(val*100)) for val in yt]
 ax2.set_yticks(yt)
 ax2.set_yticklabels(ytl)
 
-plt.savefig("{}_FAIR.pdf".format(filename))
+plt.savefig("{}_FAIR.png".format(filename))

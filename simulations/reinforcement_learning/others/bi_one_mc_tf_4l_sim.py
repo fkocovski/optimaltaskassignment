@@ -15,11 +15,11 @@ n_hidden_1 = hidden_layer_size
 n_hidden_2 = hidden_layer_size
 n_hidden_3 = hidden_layer_size
 n_hidden_4 = hidden_layer_size
-epochs = 5000
+epochs = SIM_TIME*10
 gamma = 0.5
 learn_rate = 0.0001
 var_multiplicator = 0.0001
-remaining_time_intervals = 5
+remaining_time_intervals = 10
 policy_name = "{}_BI_ONE_MC_TF_4L_NU{}_GI{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_USERS, GENERATION_INTERVAL,
                                                           SIM_TIME)
 
@@ -107,17 +107,17 @@ with tf.Session() as sess:
 
         policy_train.train()
 
-        policy_train.save_summary(i, summary_h1)
-        policy_train.save_summary(i, summary_h2)
-        policy_train.save_summary(i, summary_h3)
-        policy_train.save_summary(i, summary_h4)
-        policy_train.save_summary(i, summary_b1)
-        policy_train.save_summary(i, summary_b2)
-        policy_train.save_summary(i, summary_b3)
-        policy_train.save_summary(i, summary_b4)
-        for b in range(batch_input):
-            policy_train.save_summary(i, summary_wout[b])
-            policy_train.save_summary(i, summary_bout[b])
+        # policy_train.save_summary(i, summary_h1)
+        # policy_train.save_summary(i, summary_h2)
+        # policy_train.save_summary(i, summary_h3)
+        # policy_train.save_summary(i, summary_h4)
+        # policy_train.save_summary(i, summary_b1)
+        # policy_train.save_summary(i, summary_b2)
+        # policy_train.save_summary(i, summary_b3)
+        # policy_train.save_summary(i, summary_b4)
+        # for b in range(batch_input):
+        #     policy_train.save_summary(i, summary_wout[b])
+        #     policy_train.save_summary(i, summary_bout[b])
 
         if i % remaining_time_intervals == 0:
             end = time.time()

@@ -8,7 +8,7 @@ from simulations import *
 theta = np.zeros((NUMBER_OF_USERS ** BATCH_SIZE, NUMBER_OF_USERS + BATCH_SIZE))
 gamma = 0.5
 alpha = 0.001
-sim_time_training = SIM_TIME
+sim_time_training = SIM_TIME*100
 policy_name = "{}_WZ_TD_VFA_OP_NU{}_GI{}_TRSD{}_SIM{}".format(BATCH_SIZE, NUMBER_OF_USERS, GENERATION_INTERVAL, SEED,
                                                              SIM_TIME)
 
