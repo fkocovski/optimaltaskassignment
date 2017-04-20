@@ -12,7 +12,7 @@ Included policies:
 
 For solving the optimization problem present in the batching policies, the [Gurobi Optimization](http://www.gurobi.com) suite was used.
 
-For the reinforcement learning environment all algorithms are based on the new draft of Sutton and Barto (2017)'s book [2017 Version](http://incompleteideas.net/sutton/book/bookdraft2016sep.pdf).
+For the reinforcement learning environment all algorithms are based on the new draft of Sutton and Barto (2017)'s book [2017 Version](http://incompleteideas.net/sutton/book/bookdraft2016sep.pdf) was used.
 
 # References
 
