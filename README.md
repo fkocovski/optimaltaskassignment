@@ -16,5 +16,5 @@ For the reinforcement learning environment all algorithms are based on the new d
 
 # References
 
-* Zeng, D. D., & Zhao, J. L. (2005). Effective role resolution in workflow management. INFORMS journal on computing, 17(3), 374-387.
-* Sutton, R. S., & Barto, A. G. (1998). Reinforcement learning: An introduction (Vol. 1, No. 1). Cambridge: MIT press.
+* Zeng, D. D., & Zhao, J. L. (2005). Effective role resolution in workflow management. *INFORMS journal on computing*, 17(3), 374-387.
+* Sutton, R. S., & Barto, A. G. (1998). *Reinforcement learning: An introduction* (Vol. 1, No. 1). Cambridge: MIT press.
