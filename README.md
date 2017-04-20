@@ -2,7 +2,7 @@
 
 Implementation of different policies for optimal role resolution.
 
-Included policies: test
+Included policies: test test
 
 1. LLQP
 2. SQ
