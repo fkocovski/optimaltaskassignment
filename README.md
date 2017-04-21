@@ -14,6 +14,8 @@ For solving the optimization problem present in the batching policies, the [Guro
 
 For the reinforcement learning environment all algorithms are based on the new draft of Sutton and Barto (2017)'s book [2017 Version](http://incompleteideas.net/sutton/book/bookdraft2016sep.pdf) was used.
 
+The corresponding thesis report can be found [here](https://github.com/fkocovski/thesis) while its presentation can be found [here](https://github.com/fkocovski/mt_presentation).
+
 # References
 
 * Zeng, D. D., & Zhao, J. L. (2005). Effective role resolution in workflow management. *INFORMS journal on computing*, 17(3), 374-387.
